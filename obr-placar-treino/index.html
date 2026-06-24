@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>TitanTech - OBR Placar</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Folha de Estilos -->
+    <link rel="stylesheet" href="style.css?v=1.2">
+</head>
+<body>
+
+    <!-- Header Fixo -->
+    <header class="app-header">
+        <div class="header-top">
+            <h1 class="logo">
+                <span class="brand">TitanTech</span>
+                <span class="divider">|</span>
+                <span class="subtitle">OBR Placar</span>
+            </h1>
+            <button id="btn-settings" class="icon-btn" aria-label="Configurações">
+                <svg viewBox="0 0 24 24" class="svg-icon">
+                    <path fill="currentColor" d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Cronômetro Display -->
+        <div class="timer-container">
+            <div id="timer-display" class="timer-digits">08:00</div>
+            <div class="timer-controls">
+                <button id="btn-timer-start" class="timer-btn play" aria-label="Iniciar">
+                    <svg viewBox="0 0 24 24" class="svg-icon">
+                        <path fill="currentColor" d="M8,5.14V19.14L19,12.14L8,5.14Z"/>
+                    </svg>
+                </button>
+                <button id="btn-timer-pause" class="timer-btn pause" aria-label="Pausar">
+                    <svg viewBox="0 0 24 24" class="svg-icon">
+                        <path fill="currentColor" d="M14,19H18V5H14M6,19H10V5H6V19Z"/>
+                    </svg>
+                </button>
+                <button id="btn-timer-reset" class="timer-btn reset" aria-label="Reiniciar Cronômetro">
+                    <svg viewBox="0 0 24 24" class="svg-icon">
+                        <path fill="currentColor" d="M12,5V1L7,6L12,11V7A6,6 0 0,1 18,13A6,6 0 0,1 12,19A6,6 0 0,1 6,13H4A8,8 0 0,0 12,21A8,8 0 0,0 20,13A8,8 0 0,0 12,5Z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Seletor de Tentativas (Segmented Control) -->
+        <div class="attempt-selector-container">
+            <span class="selector-label">Tentativa do Trecho:</span>
+            <div class="segmented-control">
+                <input type="radio" name="attempt" id="attempt-1" value="1" checked>
+                <label for="attempt-1" class="segment">1ª</label>
+
+                <input type="radio" name="attempt" id="attempt-2" value="2">
+                <label for="attempt-2" class="segment">2ª</label>
+
+                <input type="radio" name="attempt" id="attempt-3" value="3">
+                <label for="attempt-3" class="segment">3ª</label>
+                
+                <div class="glider"></div>
+            </div>
+        </div>
+
+        <!-- Tabs de Navegação -->
+        <div class="tabs-navigation">
+            <button id="tab-pista" class="tab-btn active" onclick="switchTab('pista')">PISTA</button>
+            <button id="tab-resgate" class="tab-btn" onclick="switchTab('resgate')">SALA DE RESGATE</button>
+        </div>
+    </header>
+
+    <!-- Corpo Principal (Scroll Interno) -->
+    <main class="main-content">
+        <!-- Aba: Pista -->
+        <section id="pane-pista" class="tab-pane active">
+            <div class="cards-grid">
+                <!-- Obstáculo -->
+                <div class="action-card color-pista" id="card-obstaculo">
+                    <div class="card-info">
+                        <span class="card-title">Obstáculo</span>
+                        <div class="attempt-badges">
+                            <span class="badge b-1">1ª: <span id="val-obs-1">0</span></span>
+                            <span class="badge b-2">2ª: <span id="val-obs-2">0</span></span>
+                            <span class="badge b-3">3ª: <span id="val-obs-3">0</span></span>
+                        </div>
+                    </div>
+                    <div class="counter-controls">
+                        <button class="cnt-btn dec" onclick="decrement('obstaculo')">−</button>
+                        <span class="count-display" id="total-obs">0</span>
+                        <button class="cnt-btn inc" onclick="increment('obstaculo')">+</button>
+                    </div>
+                </div>
+
+                <!-- Gap -->
+                <div class="action-card color-pista" id="card-gap">
+                    <div class="card-info">
+                        <span class="card-title">Gaps (Falhas)</span>
+                        <div class="attempt-badges">
+                            <span class="badge b-1">1ª: <span id="val-gap-1">0</span></span>
+                            <span class="badge b-2">2ª: <span id="val-gap-2">0</span></span>
+                            <span class="badge b-3">3ª: <span id="val-gap-3">0</span></span>
+                        </div>
+                    </div>
+                    <div class="counter-controls">
+                        <button class="cnt-btn dec" onclick="decrement('gap')">−</button>
+                        <span class="count-display" id="total-gap">0</span>
+                        <button class="cnt-btn inc" onclick="increment('gap')">+</button>
+                    </div>
+                </div>
+
+                <!-- Interseção -->
+                <div class="action-card color-pista" id="card-intersecao">
+                    <div class="card-info">
+                        <span class="card-title">Interseção</span>
+                        <div class="attempt-badges">
+                            <span class="badge b-1">1ª: <span id="val-int-1">0</span></span>
+                            <span class="badge b-2">2ª: <span id="val-int-2">0</span></span>
+                            <span class="badge b-3">3ª: <span id="val-int-3">0</span></span>
+                        </div>
+                    </div>
+                    <div class="counter-controls">
+                        <button class="cnt-btn dec" onclick="decrement('intersecao')">−</button>
+                        <span class="count-display" id="total-int">0</span>
+                        <button class="cnt-btn inc" onclick="increment('intersecao')">+</button>
+                    </div>
+                </div>
+
+                <!-- Redutor de Velocidade -->
+                <div class="action-card color-pista" id="card-redutor">
+                    <div class="card-info">
+                        <span class="card-title">Redutor Velocidade</span>
+                        <div class="attempt-badges">
+                            <span class="badge b-1">1ª: <span id="val-red-1">0</span></span>
+                            <span class="badge b-2">2ª: <span id="val-red-2">0</span></span>
+                            <span class="badge b-3">3ª: <span id="val-red-3">0</span></span>
+                        </div>
+                    </div>
+                    <div class="counter-controls">
+                        <button class="cnt-btn dec" onclick="decrement('redutor')">−</button>
+                        <span class="count-display" id="total-red">0</span>
+                        <button class="cnt-btn inc" onclick="increment('redutor')">+</button>
+                    </div>
+                </div>
+
+                <!-- Ladrilhos -->
+                <div class="action-card color-pista" id="card-ladrilhos">
+                    <div class="card-info">
+                        <span class="card-title">Ladrilhos</span>
+                        <div class="attempt-badges">
+                            <span class="badge b-1">1ª: <span id="val-lad-1">0</span></span>
+                            <span class="badge b-2">2ª: <span id="val-lad-2">0</span></span>
+                            <span class="badge b-3">3ª: <span id="val-lad-3">0</span></span>
+                        </div>
+                    </div>
+                    <div class="counter-controls">
+                        <button class="cnt-btn dec" onclick="decrement('ladrilhos')">−</button>
+                        <span class="count-display" id="total-lad">0</span>
+                        <button class="cnt-btn inc" onclick="increment('ladrilhos')">+</button>
+                    </div>
+                </div>
+
+                <!-- Checkpoint -->
+                <div class="action-card color-pista" id="card-checkpoint">
+                    <div class="card-info">
+                        <span class="card-title">Checkpoint</span>
+                        <div class="attempt-badges">
+                            <span class="badge b-1">1ª: <span id="val-chk-1">0</span></span>
+                            <span class="badge b-2">2ª: <span id="val-chk-2">0</span></span>
+                            <span class="badge b-3">3ª: <span id="val-chk-3">0</span></span>
+                        </div>
+                    </div>
+                    <div class="counter-controls">
+                        <button class="cnt-btn dec" onclick="decrement('checkpoint')">−</button>
+                        <span class="count-display" id="total-chk">0</span>
+                        <button class="cnt-btn inc" onclick="increment('checkpoint')">+</button>
+                    </div>
+                </div>
+
+                <!-- Rampa / Gangorra -->
+                <div class="action-card color-desafio" id="card-rampa">
+                    <div class="card-info">
+                        <span class="card-title text-desafio">Rampa / Gangorra</span>
+                        <div class="attempt-badges">
+                            <span class="badge b-1">1ª: <span id="val-ram-1">0</span></span>
+                            <span class="badge b-2">2ª: <span id="val-ram-2">0</span></span>
+                            <span class="badge b-3">3ª: <span id="val-ram-3">0</span></span>
+                        </div>
+                    </div>
+                    <div class="counter-controls">
+                        <button class="cnt-btn dec" onclick="decrement('rampa')">−</button>
+                        <span class="count-display" id="total-ram">0</span>
+                        <button class="cnt-btn inc" onclick="increment('rampa')">+</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Aba: Resgate -->
+        <section id="pane-resgate" class="tab-pane">
+            <div class="cards-grid">
+                <!-- Vítimas Vivas -->
+                <div class="action-card color-resgate" id="card-vivas">
+                    <div class="card-info">
+                        <span class="card-title text-resgate">Vítimas Vivas</span>
+                        <span class="card-subtitle">Achadas / Resgatadas</span>
+                    </div>
+                    <div class="counter-controls">
+                        <button class="cnt-btn dec" onclick="decrementRescue('vivas')">−</button>
+                        <span class="count-display" id="total-vivas">0</span>
+                        <button class="cnt-btn inc" onclick="incrementRescue('vivas')">+</button>
+                    </div>
+                </div>
+
+                <!-- Vítimas Mortas -->
+                <div class="action-card color-resgate" id="card-mortas">
+                    <div class="card-info">
+                        <span class="card-title text-resgate">Vítimas Mortas</span>
+                        <span class="card-subtitle">Achadas / Resgatadas</span>
+                    </div>
+                    <div class="counter-controls">
+                        <button class="cnt-btn dec" onclick="decrementRescue('mortas')">−</button>
+                        <span class="count-display" id="total-mortas">0</span>
+                        <button class="cnt-btn inc" onclick="incrementRescue('mortas')">+</button>
+                    </div>
+                </div>
+
+                <!-- Seletor de Bônus de Saída (Multiplicador) -->
+                <div class="multiplier-card color-resgate">
+                    <span class="card-title text-resgate block-label">Bônus de Saída (Multiplicador de Resgate)</span>
+                    <div class="multiplier-grid">
+                        <button class="mult-pill active" onclick="setMultiplier(1.0)">1.0x</button>
+                        <button class="mult-pill" onclick="setMultiplier(1.1)">1.1x</button>
+                        <button class="mult-pill" onclick="setMultiplier(1.2)">1.2x</button>
+                        <button class="mult-pill" onclick="setMultiplier(1.3)">1.3x</button>
+                        <button class="mult-pill" onclick="setMultiplier(1.4)">1.4x</button>
+                        <button class="mult-pill" onclick="setMultiplier(1.5)">1.5x</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Rodapé Fixo -->
+    <footer class="app-footer">
+        <div class="score-container">
+            <span class="score-label">TOTAL</span>
+            <span id="score-display" class="score-number">0</span>
+            <span class="score-unit">pts</span>
+        </div>
+        <div class="footer-actions">
+            <button id="btn-export" class="export-btn" onclick="exportarResultado()">
+                <span>Exportar Treino</span>
+            </button>
+            <button id="btn-reset-all" class="reset-all-btn">
+                <span>Zerar Round</span>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Modal de Configurações -->
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Configurações</h2>
+                <button id="btn-close-settings" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="settings-form">
+                    <!-- Configurações de Tempo -->
+                    <div class="form-section">
+                        <h3>Cronômetro</h3>
+                        <div class="form-group">
+                            <label for="cfg-max-time">Tempo Máximo (Minutos):</label>
+                            <input type="number" id="cfg-max-time" min="1" max="30" value="8">
+                        </div>
+                    </div>
+
+                    <!-- Configurações de Pontuação Base -->
+                    <div class="form-section">
+                        <h3>Tabela de Pontuação</h3>
+                        
+                        <div class="cfg-grid">
+                            <div class="form-group">
+                                <label for="cfg-pts-obs">Obstáculo:</label>
+                                <input type="number" id="cfg-pts-obs" value="15">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfg-pts-gap">Gaps (Falhas):</label>
+                                <input type="number" id="cfg-pts-gap" value="10">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfg-pts-int">Interseção:</label>
+                                <input type="number" id="cfg-pts-int" value="10">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfg-pts-red">Redutor:</label>
+                                <input type="number" id="cfg-pts-red" value="5">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfg-pts-lad">Ladrilhos:</label>
+                                <input type="number" id="cfg-pts-lad" value="5">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfg-pts-chk">Checkpoint:</label>
+                                <input type="number" id="cfg-pts-chk" value="5">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfg-pts-ram">Rampa/Gangorra:</label>
+                                <input type="number" id="cfg-pts-ram" value="10">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfg-pts-viv">Vítima Viva:</label>
+                                <input type="number" id="cfg-pts-viv" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfg-pts-mor">Vítima Morta:</label>
+                                <input type="number" id="cfg-pts-mor" value="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configurações de Degradamento por Tentativa -->
+                    <div class="form-section">
+                        <h3>Degradação por Tentativa</h3>
+                        <div class="cfg-grid-3">
+                            <div class="form-group">
+                                <label for="cfg-mult-t1">1ª Tentativa (%):</label>
+                                <input type="number" id="cfg-mult-t1" min="0" max="100" value="100">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfg-mult-t2">2ª Tentativa (%):</label>
+                                <input type="number" id="cfg-mult-t2" min="0" max="100" value="60">
+                            </div>
+                            <div class="form-group">
+                                <label for="cfg-mult-t3">3ª Tentativa (%):</label>
+                                <input type="number" id="cfg-mult-t3" min="0" max="100" value="30">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btn-restore-defaults" class="modal-btn outline">Restaurar Padrões</button>
+                <button type="button" id="btn-save-settings" class="modal-btn primary">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script JavaScript -->
+    <script src="script.js?v=1.2"></script>
+</body>
+</html>

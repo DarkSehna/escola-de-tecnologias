@@ -1,0 +1,636 @@
+/* ==========================================================================
+   CSS GLOBAL - PORTAL DE LABORATÓRIOS (TITANTECH)
+   Tema: Cyberpunk Dark Mode & Glassmorphism Moderno
+   ========================================================================== */
+
+/* 1. RESET E DEFINIÇÕES BASE */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Outfit', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+    /* Cores de Fundo */
+    --color-bg-dark: #070a13;
+    --color-bg-deep: #0b0f19;
+    --color-bg-card: rgba(17, 24, 39, 0.65);
+    --color-border-glass: rgba(255, 255, 255, 0.07);
+    
+    /* Neon Cores / Categorias */
+    --color-purple: #a855f7;
+    --color-purple-glow: rgba(168, 85, 247, 0.35);
+    
+    --color-blue: #3b82f6;
+    --color-blue-glow: rgba(59, 130, 246, 0.35);
+    
+    --color-green: #10b981;
+    --color-green-glow: rgba(16, 185, 129, 0.35);
+    
+    --color-orange: #f97316;
+    --color-orange-glow: rgba(249, 115, 22, 0.35);
+    
+    --color-cyan: #06b6d4;
+    --color-cyan-glow: rgba(6, 182, 212, 0.35);
+    
+    --color-red: #ef4444;
+    --color-red-glow: rgba(239, 68, 68, 0.35);
+    
+    --color-yellow: #eab308;
+    --color-yellow-glow: rgba(234, 179, 8, 0.35);
+    
+    /* Cores de Texto */
+    --color-text-white: #ffffff;
+    --color-text-normal: #9ca3af;
+    --color-text-muted: #6b7280;
+    
+    /* Efeitos */
+    --glass-blur: blur(14px);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+    background-color: var(--color-bg-dark);
+    color: var(--color-text-white);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* 2. GLOW EFEITOS DE FUNDO (AMBIENT LIGHTING) */
+.background-glow {
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    filter: blur(150px);
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.bg-glow-left {
+    background: radial-gradient(circle, var(--color-purple) 0%, transparent 70%);
+    top: -200px;
+    left: -200px;
+}
+
+.bg-glow-right {
+    background: radial-gradient(circle, var(--color-blue) 0%, transparent 70%);
+    bottom: -200px;
+    right: -200px;
+}
+
+/* 3. TELA DE SELEÇÃO DE PROFESSOR */
+.screen-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem 1.5rem;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.screen-container.hidden {
+    display: none !important;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.screen-container.active {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.select-header {
+    text-align: center;
+    margin-bottom: 3.5rem;
+    max-width: 600px;
+    animation: fadeInDown 0.6s ease;
+}
+
+.logo-title {
+    font-size: 2.8rem;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    margin-bottom: 0.75rem;
+    line-height: 1.1;
+}
+
+.brand {
+    background: linear-gradient(135deg, var(--color-text-white) 30%, #a5b4fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.sub-brand {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--color-cyan);
+    margin-top: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.select-subtitle {
+    color: var(--color-text-normal);
+    font-size: 1.1rem;
+    line-height: 1.5;
+}
+
+.teacher-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 350px));
+    gap: 2rem;
+    width: 100%;
+    max-width: 850px;
+    justify-content: center;
+    animation: fadeInUp 0.8s ease;
+}
+
+.teacher-card {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border-glass);
+    border-radius: 24px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    backdrop-filter: var(--glass-blur);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--color-text-white);
+    outline: none;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.teacher-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: transparent;
+    transition: var(--transition-smooth);
+}
+
+.teacher-card:hover {
+    transform: translateY(-8px);
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(17, 24, 39, 0.8);
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+}
+
+.teacher-card:focus-visible {
+    border-color: var(--color-cyan);
+    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.3);
+}
+
+/* Customização dos Cards dos Professores */
+.teacher-card:hover:has(.color-sandro) {
+    box-shadow: 0 20px 40px -15px rgba(249, 115, 22, 0.2);
+}
+.teacher-card:hover:has(.color-sandro)::before {
+    background: var(--color-orange);
+}
+
+.teacher-card:hover:has(.color-gabriel) {
+    box-shadow: 0 20px 40px -15px rgba(168, 85, 247, 0.2);
+}
+.teacher-card:hover:has(.color-gabriel)::before {
+    background: var(--color-purple);
+}
+
+.teacher-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    transition: var(--transition-smooth);
+}
+
+.teacher-svg {
+    width: 42px;
+    height: 42px;
+}
+
+.color-sandro {
+    background: rgba(249, 115, 22, 0.1);
+    color: var(--color-orange);
+    border: 1px solid rgba(249, 115, 22, 0.25);
+}
+.teacher-card:hover .color-sandro {
+    background: var(--color-orange);
+    color: var(--color-bg-dark);
+    box-shadow: 0 0 20px var(--color-orange-glow);
+}
+
+.color-gabriel {
+    background: rgba(168, 85, 247, 0.1);
+    color: var(--color-purple);
+    border: 1px solid rgba(168, 85, 247, 0.25);
+}
+.teacher-card:hover .color-gabriel {
+    background: var(--color-purple);
+    color: var(--color-bg-dark);
+    box-shadow: 0 0 20px var(--color-purple-glow);
+}
+
+.teacher-card h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+.teacher-card p {
+    color: var(--color-text-normal);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 1.75rem;
+    flex-grow: 1;
+}
+
+.enter-btn {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-text-white);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    width: 100%;
+    transition: var(--transition-smooth);
+}
+
+.teacher-card:hover .enter-btn {
+    background: var(--color-text-white);
+    color: var(--color-bg-dark);
+    border-color: var(--color-text-white);
+}
+
+/* 4. DASHBOARD PRINCIPAL */
+#screen-dashboard {
+    justify-content: flex-start;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 1.5rem 0;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--color-border-glass);
+    animation: fadeInDown 0.6s ease;
+}
+
+.header-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.logo-badge {
+    background: linear-gradient(135deg, var(--color-cyan) 0%, var(--color-blue) 100%);
+    color: var(--color-bg-dark);
+    font-weight: 800;
+    font-size: 1.1rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+}
+
+.logo-main {
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.logo-sub {
+    font-size: 0.8rem;
+    color: var(--color-cyan);
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+.teacher-badge-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.teacher-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--color-border-glass);
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--color-cyan);
+    box-shadow: 0 0 8px var(--color-cyan);
+    transition: var(--transition-smooth);
+}
+
+.change-teacher-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--color-text-normal);
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.change-teacher-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--color-text-white);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* NAVEGAÇÃO DE ABAS */
+.dashboard-tabs {
+    display: flex;
+    background: rgba(17, 24, 39, 0.4);
+    border: 1px solid var(--color-border-glass);
+    padding: 0.35rem;
+    border-radius: 16px;
+    margin-bottom: 2.5rem;
+    width: 100%;
+    max-width: 480px;
+    backdrop-filter: var(--glass-blur);
+    animation: fadeInUp 0.6s ease;
+}
+
+.tab-trigger {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: transparent;
+    border: none;
+    color: var(--color-text-normal);
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.tab-trigger:hover {
+    color: var(--color-text-white);
+}
+
+.tab-trigger.active {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--color-text-white);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.tab-icon {
+    font-size: 1.1rem;
+}
+
+/* PAINÉIS DE CONTEÚDO */
+.dashboard-panels {
+    width: 100%;
+    flex-grow: 1;
+}
+
+.tab-panel {
+    display: none;
+    width: 100%;
+    animation: fadeIn 0.4s ease;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+/* 5. CARDS GRID DOS SIMULADORES */
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+    width: 100%;
+}
+
+.tool-card {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border-glass);
+    border-radius: 20px;
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: var(--color-text-white);
+    transition: var(--transition-smooth);
+    backdrop-filter: var(--glass-blur);
+    position: relative;
+    overflow: hidden;
+}
+
+.tool-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(17, 24, 39, 0.85);
+}
+
+.card-icon-box {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+    transition: var(--transition-smooth);
+}
+
+.card-svg {
+    width: 26px;
+    height: 26px;
+}
+
+/* Cores específicas para as caixas de ícone */
+.bg-purple { background: rgba(168, 85, 247, 0.12); color: var(--color-purple); border: 1px solid rgba(168, 85, 247, 0.2); }
+.bg-blue   { background: rgba(59, 130, 246, 0.12);  color: var(--color-blue);   border: 1px solid rgba(59, 130, 246, 0.2); }
+.bg-green  { background: rgba(16, 185, 129, 0.12);  color: var(--color-green);  border: 1px solid rgba(16, 185, 129, 0.2); }
+.bg-orange { background: rgba(249, 115, 22, 0.12);  color: var(--color-orange); border: 1px solid rgba(249, 115, 22, 0.2); }
+.bg-cyan   { background: rgba(6, 182, 212, 0.12);   color: var(--color-cyan);   border: 1px solid rgba(6, 182, 212, 0.2); }
+.bg-red    { background: rgba(239, 68, 68, 0.12);   color: var(--color-red);    border: 1px solid rgba(239, 68, 68, 0.2); }
+.bg-yellow { background: rgba(234, 179, 8, 0.12);   color: var(--color-yellow); border: 1px solid rgba(234, 179, 8, 0.2); }
+
+.card-info {
+    flex-grow: 1;
+}
+
+.card-tag {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    margin-bottom: 0.5rem;
+    display: inline-block;
+}
+
+.tool-card h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    transition: var(--transition-smooth);
+}
+
+.tool-card p {
+    color: var(--color-text-normal);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+}
+
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 1rem;
+    margin-top: 0.5rem;
+}
+
+.action-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    transition: var(--transition-smooth);
+}
+
+.action-arrow {
+    color: var(--color-text-muted);
+    font-size: 1.1rem;
+    transition: var(--transition-smooth);
+}
+
+.tool-card:hover .action-label,
+.tool-card:hover .action-arrow {
+    color: var(--color-text-white);
+}
+
+.tool-card:hover .action-arrow {
+    transform: translateX(4px);
+}
+
+/* 6. GLOW DE CARD DE ACORDO COM A COR NEON */
+.hover-glow-purple:hover { box-shadow: 0 10px 25px -5px var(--color-purple-glow); border-color: rgba(168, 85, 247, 0.4); }
+.hover-glow-purple:hover .card-icon-box { background: var(--color-purple); color: var(--color-bg-dark); }
+
+.hover-glow-blue:hover { box-shadow: 0 10px 25px -5px var(--color-blue-glow); border-color: rgba(59, 130, 246, 0.4); }
+.hover-glow-blue:hover .card-icon-box { background: var(--color-blue); color: var(--color-text-white); }
+
+.hover-glow-green:hover { box-shadow: 0 10px 25px -5px var(--color-green-glow); border-color: rgba(16, 185, 129, 0.4); }
+.hover-glow-green:hover .card-icon-box { background: var(--color-green); color: var(--color-bg-dark); }
+
+.hover-glow-orange:hover { box-shadow: 0 10px 25px -5px var(--color-orange-glow); border-color: rgba(249, 115, 22, 0.4); }
+.hover-glow-orange:hover .card-icon-box { background: var(--color-orange); color: var(--color-bg-dark); }
+
+.hover-glow-cyan:hover { box-shadow: 0 10px 25px -5px var(--color-cyan-glow); border-color: rgba(6, 182, 212, 0.4); }
+.hover-glow-cyan:hover .card-icon-box { background: var(--color-cyan); color: var(--color-bg-dark); }
+
+.hover-glow-red:hover { box-shadow: 0 10px 25px -5px var(--color-red-glow); border-color: rgba(239, 68, 68, 0.4); }
+.hover-glow-red:hover .card-icon-box { background: var(--color-red); color: var(--color-text-white); }
+
+.hover-glow-yellow:hover { box-shadow: 0 10px 25px -5px var(--color-yellow-glow); border-color: rgba(234, 179, 8, 0.4); }
+.hover-glow-yellow:hover .card-icon-box { background: var(--color-yellow); color: var(--color-bg-dark); }
+
+/* FOOTER GERAL */
+footer.app-footer {
+    width: 100%;
+    text-align: center;
+    padding: 3rem 0;
+    margin-top: auto;
+    border-top: 1px solid var(--color-border-glass);
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    animation: fadeIn 1s ease;
+}
+
+/* 7. ANIMAÇÕES */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 8. MEDIA QUERIES E RESPONSIVIDADE */
+@media (max-width: 768px) {
+    .logo-title {
+        font-size: 2.2rem;
+    }
+    .sub-brand {
+        font-size: 1.2rem;
+    }
+    .teacher-grid {
+        grid-template-columns: 1fr;
+    }
+    .app-header {
+        flex-direction: column;
+        gap: 1.25rem;
+        text-align: center;
+    }
+    .header-logo {
+        flex-direction: column;
+    }
+}

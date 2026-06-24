@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab de Física 2D | TitanTech</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=1.0">
+</head>
+<body>
+
+    <!-- Ambient Glow Effects -->
+    <div class="ambient-glow bg-left"></div>
+    <div class="ambient-glow bg-right"></div>
+
+    <div class="app-container">
+        <!-- Voltar para o Dashboard -->
+        <div class="back-nav">
+            <a href="../" class="back-link">← Voltar ao Painel Central</a>
+        </div>
+
+        <header class="app-header">
+            <div class="brand">
+                <span class="logo">🛰️</span>
+                <div>
+                    <h1>Lab de Física 2D & Level Design</h1>
+                    <span class="subtitle">Análise e Simulação de Pulo e Aceleração</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Coluna Esquerda: Canvas e Controles Rápidos -->
+            <section class="simulation-column">
+                <div class="canvas-wrapper panel-glass">
+                    <div class="canvas-header">
+                        <span class="panel-tag">Área de Playground</span>
+                        <span id="resolution-indicator" class="panel-decor">Grade: 20x15</span>
+                    </div>
+                    <div class="canvas-container">
+                        <!-- Canvas principal da simulação -->
+                        <canvas id="sim-canvas" width="640" height="480"></canvas>
+                    </div>
+                </div>
+
+                <!-- Barra de Ferramentas Inferior -->
+                <div class="toolbar panel-glass">
+                    <div class="slow-motion-control">
+                        <label class="switch">
+                            <input type="checkbox" id="switch-slow">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="switch-label">Câmera Lenta (0.25x)</span>
+                    </div>
+                    <div class="toolbar-actions">
+                        <button id="btn-clear-canvas" class="action-btn danger-btn">🧹 Limpar Desenhos</button>
+                        <button id="btn-reset-player" class="action-btn primary-btn">🔄 Reiniciar Bloco</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Coluna Direita: Parâmetros Físicos e Engine Code -->
+            <section class="control-panel panel-glass">
+                <div class="panel-header">
+                    <h2>⚙️ CONTROLES FÍSICOS</h2>
+                </div>
+
+                <!-- Seletor de Engine Preset -->
+                <div class="form-group">
+                    <label for="combo-engine" class="input-label">Motor de Jogo (Preset)</label>
+                    <select id="combo-engine" class="engine-select" aria-label="Engine Preset">
+                        <option value="GameMaker" selected>GameMaker (Física Customizada)</option>
+                        <option value="Construct 3">Construct 3 (Platform)</option>
+                        <option value="Scratch">Scratch (Física Adaptada)</option>
+                    </select>
+                </div>
+                <p id="lbl-engine-desc" class="engine-description">
+                    Física programada manualmente no obj_player e obj_lifeForm, com aceleração e atritos separados para chão/ar.
+                </p>
+
+                <div class="separator"></div>
+
+                <!-- Lista de Inputs Rolável (Mapeia as 8 variáveis físicas) -->
+                <div class="scrollable-inputs">
+                    <!-- Gravidade -->
+                    <div class="input-row" id="row-gravity">
+                        <div class="row-header">
+                            <span class="input-name">Gravidade</span>
+                            <button class="default-btn" onclick="resetToDefault('gravity')">Padrão: 0.30</button>
+                        </div>
+                        <input type="number" id="input-gravity" class="physics-input" step="0.05">
+                    </div>
+
+                    <!-- Pulo -->
+                    <div class="input-row" id="row-jump">
+                        <div class="row-header">
+                            <span class="input-name">Força do Pulo</span>
+                            <button class="default-btn" onclick="resetToDefault('jump')">Padrão: -7.00</button>
+                        </div>
+                        <input type="number" id="input-jump" class="physics-input" step="0.5">
+                    </div>
+
+                    <!-- Velocidade Máxima -->
+                    <div class="input-row" id="row-speed">
+                        <div class="row-header">
+                            <span class="input-name">Velocidade Máxima</span>
+                            <button class="default-btn" onclick="resetToDefault('speed')">Padrão: 4.00</button>
+                        </div>
+                        <input type="number" id="input-speed" class="physics-input" step="0.5">
+                    </div>
+
+                    <!-- Aceleração Chão -->
+                    <div class="input-row" id="row-accelGround">
+                        <div class="row-header">
+                            <span class="input-name">Aceleração Chão</span>
+                            <button class="default-btn" onclick="resetToDefault('accelGround')">Padrão: 0.35</button>
+                        </div>
+                        <input type="number" id="input-accelGround" class="physics-input" step="0.05">
+                    </div>
+
+                    <!-- Atrito Chão -->
+                    <div class="input-row" id="row-frictionGround">
+                        <div class="row-header">
+                            <span class="input-name">Atrito Chão</span>
+                            <button class="default-btn" onclick="resetToDefault('frictionGround')">Padrão: 0.15</button>
+                        </div>
+                        <input type="number" id="input-frictionGround" class="physics-input" step="0.05">
+                    </div>
+
+                    <!-- Aceleração Ar -->
+                    <div class="input-row" id="row-accelAir">
+                        <div class="row-header">
+                            <span class="input-name">Aceleração Ar</span>
+                            <button class="default-btn" onclick="resetToDefault('accelAir')">Padrão: 0.20</button>
+                        </div>
+                        <input type="number" id="input-accelAir" class="physics-input" step="0.05">
+                    </div>
+
+                    <!-- Atrito Ar -->
+                    <div class="input-row" id="row-frictionAir">
+                        <div class="row-header">
+                            <span class="input-name">Atrito Ar</span>
+                            <button class="default-btn" onclick="resetToDefault('frictionAir')">Padrão: 0.05</button>
+                        </div>
+                        <input type="number" id="input-frictionAir" class="physics-input" step="0.01">
+                    </div>
+
+                    <!-- Velocidade de Queda Máxima -->
+                    <div class="input-row" id="row-maxFallSpeed">
+                        <div class="row-header">
+                            <span class="input-name">Vel. Queda Máx</span>
+                            <button class="default-btn" onclick="resetToDefault('maxFallSpeed')">Padrão: 12.00</button>
+                        </div>
+                        <input type="number" id="input-maxFallSpeed" class="physics-input" step="1">
+                    </div>
+                </div>
+
+                <!-- Template de Código Integrado -->
+                <div class="code-container">
+                    <span class="code-header">CÓDIGO DE INTEGRAÇÃO</span>
+                    <pre class="code-block"><code id="code-template-display">grv = 0.30;
+jspd = -7.0;
+// ...</code></pre>
+                </div>
+
+                <button id="btn-copy-code" class="copy-btn">📋 COPIAR VARIÁVEIS</button>
+            </section>
+        </main>
+    </div>
+
+    <!-- Script principal -->
+    <script src="script.js?v=1.0"></script>
+</body>
+</html>

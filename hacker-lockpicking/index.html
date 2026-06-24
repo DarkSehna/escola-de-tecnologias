@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hacker Lockpicking | TitanTech</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=1.1">
+</head>
+<body>
+
+    <!-- Ambient light effects -->
+    <div class="ambient-glow bg-left"></div>
+    <div class="ambient-glow bg-right"></div>
+
+    <div class="app-container">
+        <!-- Voltar para o Dashboard -->
+        <div class="back-nav">
+            <a href="../" class="back-link">← Voltar ao Painel Central</a>
+        </div>
+
+        <header class="app-header">
+            <div class="brand">
+                <span class="logo">📟</span>
+                <div>
+                    <h1>Hacker Lockpicking</h1>
+                    <span class="subtitle">Decodificador de Dial de Segurança</span>
+                </div>
+            </div>
+
+            <!-- Painel de Conexão Física (Serial) -->
+            <div id="serial-panel" class="serial-control">
+                <div class="serial-status">
+                    <span id="led-indicator" class="led disconnected"></span>
+                    <span id="status-text">DESCONECTADO</span>
+                </div>
+                <div class="serial-actions">
+                    <select id="baud-rate" class="console-select" aria-label="Baud Rate">
+                        <option value="9600" selected>9600 Baud</option>
+                        <option value="115200">115200 Baud</option>
+                    </select>
+                    <button id="btn-connect" class="connect-btn">CONECTAR ARDUINO</button>
+                </div>
+            </div>
+
+            <!-- Banner de Alerta para Navegadores sem suporte a Web Serial API -->
+            <div id="browser-warning" class="warning-banner hidden">
+                ⚠️ Navegador incompatível com conexão USB direta. Use o **Modo Simulação** abaixo!
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Coluna Esquerda: O Dial de Segurança (Canvas) -->
+            <section class="dial-section panel-glass">
+                <div class="panel-header">
+                    <h2>DIAL DE SEGURANÇA</h2>
+                    <span class="panel-decor">SYS_DEC_v1.0</span>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="dial-canvas" width="280" height="280"></canvas>
+                </div>
+                <div id="display-status-bar" class="status-bar locked">
+                    SISTEMA TRANCADO
+                </div>
+            </section>
+
+            <!-- Coluna Direita: Slots de Catraca e Controles -->
+            <section class="control-section">
+                <!-- Painel de Slots da Senha -->
+                <div class="slots-panel panel-glass">
+                    <div class="panel-header">
+                        <h2>CATRACAS DE SEGURANÇA</h2>
+                    </div>
+                    <div class="slots-container">
+                        <div class="slot-box" id="slot-0">
+                            <span class="slot-label">CATRACA 1</span>
+                            <span class="slot-value" id="val-slot-0">*</span>
+                        </div>
+                        <div class="slot-box" id="slot-1">
+                            <span class="slot-label">CATRACA 2</span>
+                            <span class="slot-value" id="val-slot-1">*</span>
+                        </div>
+                        <div class="slot-box" id="slot-2">
+                            <span class="slot-label">CATRACA 3</span>
+                            <span class="slot-value" id="val-slot-2">*</span>
+                        </div>
+                    </div>
+                    <div class="panel-actions">
+                        <button id="btn-reset" class="action-btn reset-btn">
+                            🔋 REINICIAR COFRE
+                        </button>
+                        <button id="btn-guide" class="action-btn outline-btn">
+                            📂 CÓDIGO ARDUINO
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Seção Inferior: Modo Simulação (Para uso sem Arduino) -->
+        <section class="simulation-section panel-glass">
+            <div class="panel-header simulation-header" onclick="toggleSimulationPanel()">
+                <h2>📟 PAINEL DE SIMULAÇÃO (MODO DESENVOLVEDOR / SEM HARDWARE)</h2>
+                <span id="simulation-toggle-icon" class="toggle-icon">▼</span>
+            </div>
+            
+            <div id="simulation-body" class="simulation-body collapsed">
+                <div class="sim-grid">
+                    <!-- Controle do Dial Virtual -->
+                    <div class="sim-group">
+                        <label for="scale-sim" class="sim-label">Girar Dial Virtual (0 a 9):</label>
+                        <div class="slider-container">
+                            <span class="slider-val">0</span>
+                            <input type="range" id="scale-sim" min="0" max="9" value="0" class="sim-slider">
+                            <span class="slider-val">9</span>
+                        </div>
+                        <div class="sim-current-dial">Valor atual: <strong id="sim-dial-val">0</strong></div>
+                    </div>
+
+                    <!-- Botões de Trava -->
+                    <div class="sim-group">
+                        <label class="sim-label">Simular Travamento de Catracas:</label>
+                        <div class="sim-buttons-row">
+                            <button onclick="simulateLock(1)" class="sim-btn">Travar 1</button>
+                            <button onclick="simulateLock(2)" class="sim-btn">Travar 2</button>
+                            <button onclick="simulateLock(3)" class="sim-btn">Travar 3</button>
+                        </div>
+                    </div>
+
+                    <!-- Status Finais -->
+                    <div class="sim-group">
+                        <label class="sim-label">Simular Mensagens de Acesso:</label>
+                        <div class="sim-buttons-row">
+                            <button onclick="simulateAccess('liberado')" class="sim-btn success">Liberado</button>
+                            <button onclick="simulateAccess('negado')" class="sim-btn danger">Negado</button>
+                            <button onclick="simulateAccess('reset')" class="sim-btn warning">Resetar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Console Log do Terminal (Integrado) -->
+                <div class="terminal-container-integrated">
+                    <div class="terminal-header-integrated">
+                        <h3>CONSOLE DE DIAGNÓSTICO SERIAL</h3>
+                        <button id="btn-clear-console" class="clear-btn">Limpar Console</button>
+                    </div>
+                    <div id="terminal-log" class="terminal-body-integrated">
+                        <div class="log-line system">[SISTEMA] Decodificador inicializado. Aguardando dados...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modal do Guia do Arduino -->
+    <div id="guide-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Guia de Integração Física (Arduino)</h2>
+                <button id="btn-close-modal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Carregue o código C++ abaixo no seu Arduino. Conecte um potenciômetro na porta <strong>A0</strong> e botões ou botões virtuais nas entradas configuradas para enviar os comandos pela Serial.</p>
+                
+                <h3>Código C++ para o Arduino (.ino):</h3>
+                <pre class="code-block"><code>
+// ==================================================
+// HACKER LOCKPICKING - HARDWARE ARDUINO
+// ==================================================
+const int PIN_POT = A0;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(PIN_POT, INPUT);
+}
+
+void loop() {
+  // Leitura do potenciômetro (mapeado de 0 a 9)
+  int valPot = analogRead(PIN_POT);
+  int dialVal = map(valPot, 0, 1023, 0, 9);
+  
+  // Envia valor atual do dial para o decodificador
+  Serial.print("Visor: ");
+  Serial.println(dialVal);
+  
+  // Escuta comando de RESET do navegador
+  if (Serial.available() > 0) {
+    String input = Serial.readStringUntil('\n');
+    input.trim();
+    if (input == "RESET") {
+      // Reinicia o estado do hardware aqui
+    }
+  }
+  
+  delay(100); // 10 FPS
+}
+                </code></pre>
+
+                <h3>Mensagens suportadas pelo protocolo Serial:</h3>
+                <ul>
+                    <li><code>Visor: X</code> - Atualiza o medidor analógico (X deve ser de 0 a 9).</li>
+                    <li><code>Catraca 1 TRAVADA: X</code> - Grava a Catraca 1 com o valor X.</li>
+                    <li><code>Catraca 2 TRAVADA: X</code> - Grava a Catraca 2 com o valor X.</li>
+                    <li><code>Catraca 3 TRAVADA: X</code> - Grava a Catraca 3 com o valor X.</li>
+                    <li><code>ACESSO LIBERADO</code> - Acende o painel em verde (Senha correta).</li>
+                    <li><code>ACESSO NEGADO</code> - Acende o painel em vermelho (Senha incorreta).</li>
+                    <li><code>Cofre resetado</code> - Reinicia a interface para o modo inicial.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js?v=1.1"></script>
+</body>
+</html>

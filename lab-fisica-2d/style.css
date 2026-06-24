@@ -1,0 +1,562 @@
+/* ==========================================================================
+   STYLE SHEET - LAB DE FÍSICA 2D & LEVEL DESIGN
+   Estilo Cyberpunk Dark Mode & Glassmorphism Consistente
+   ========================================================================== */
+
+/* 1. RESET E DEFINIÇÕES GERAIS */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Outfit', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+    /* Cores de Fundo */
+    --color-bg-dark: #070a13;
+    --color-bg-deep: #0b0f19;
+    --color-bg-panel: rgba(17, 24, 39, 0.65);
+    --color-border-glass: rgba(255, 255, 255, 0.07);
+
+    /* Neon Cores */
+    --color-neon-blue: #00d2ff;
+    --color-neon-blue-glow: rgba(0, 210, 255, 0.3);
+    
+    --color-neon-green: #00ff66;
+    --color-neon-green-glow: rgba(0, 255, 102, 0.3);
+    
+    --color-neon-red: #ff3b30;
+    --color-neon-red-glow: rgba(255, 59, 48, 0.3);
+    
+    --color-neon-yellow: #ffcc00;
+    --color-neon-yellow-glow: rgba(255, 204, 0, 0.3);
+
+    --color-gray-muted: #5e6878;
+    --color-text-white: #ffffff;
+    --color-text-normal: #9ca3af;
+
+    --glass-blur: blur(14px);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+    background-color: var(--color-bg-dark);
+    color: var(--color-text-white);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+    padding: 1.5rem;
+}
+
+/* Ambient light effects */
+.ambient-glow {
+    position: fixed;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    filter: blur(150px);
+    opacity: 0.1;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.bg-left {
+    background: radial-gradient(circle, var(--color-neon-blue) 0%, transparent 70%);
+    top: -150px;
+    left: -150px;
+}
+
+.bg-right {
+    background: radial-gradient(circle, var(--color-neon-green) 0%, transparent 70%);
+    bottom: -150px;
+    right: -150px;
+}
+
+/* 2. LAYOUT PRINCIPAL */
+.app-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.back-nav {
+    margin-bottom: 0.25rem;
+}
+
+.back-link {
+    color: var(--color-text-normal);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: var(--transition-smooth);
+    display: inline-block;
+}
+
+.back-link:hover {
+    color: var(--color-neon-blue);
+    transform: translateX(-4px);
+    text-shadow: 0 0 8px var(--color-neon-blue-glow);
+}
+
+.app-header {
+    background: var(--color-bg-panel);
+    border: 1px solid var(--color-border-glass);
+    border-radius: 20px;
+    padding: 1.25rem 1.75rem;
+    backdrop-filter: var(--glass-blur);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logo {
+    font-size: 2rem;
+}
+
+.brand h1 {
+    font-size: 1.45rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.subtitle {
+    font-size: 0.85rem;
+    color: var(--color-neon-blue);
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+/* Painéis de Vidro */
+.panel-glass {
+    background: var(--color-bg-panel);
+    border: 1px solid var(--color-border-glass);
+    border-radius: 20px;
+    backdrop-filter: var(--glass-blur);
+    padding: 1.5rem;
+}
+
+.panel-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.panel-header h2 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-neon-green);
+}
+
+/* Layout de Duas Colunas */
+.main-content {
+    display: grid;
+    grid-template-columns: 1.3fr 340px;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+/* 3. COLUNA DA ESQUERDA: SIMULAÇÃO E TOOLBAR */
+.simulation-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.canvas-wrapper {
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem;
+}
+
+.canvas-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.panel-tag {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-normal);
+}
+
+.panel-decor {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--color-gray-muted);
+}
+
+.canvas-container {
+    background-color: #0f0f13;
+    border: 1px solid var(--color-border-glass);
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+#sim-canvas {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3; /* Trava proporção original 640x480 */
+    display: block;
+    cursor: crosshair;
+}
+
+/* Barra de Ferramentas (Toolbar) */
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 1.5rem;
+    gap: 1.5rem;
+}
+
+/* Câmera Lenta Toggle (Switch) */
+.slow-motion-control {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: .3s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--color-text-normal);
+    transition: .3s;
+    border-radius: 50%;
+}
+
+.switch input:checked + .slider {
+    border-color: var(--color-neon-green);
+    box-shadow: 0 0 10px var(--color-neon-green-glow);
+}
+
+.switch input:checked + .slider:before {
+    transform: translateX(20px);
+    background-color: var(--color-neon-green);
+    box-shadow: 0 0 8px var(--color-neon-green-glow);
+}
+
+.switch-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-text-white);
+}
+
+.toolbar-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.action-btn {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.primary-btn {
+    background: transparent;
+    border: 1px solid var(--color-text-white);
+    color: var(--color-text-white);
+}
+
+.primary-btn:hover {
+    background: var(--color-text-white);
+    color: var(--color-bg-dark);
+}
+
+.danger-btn {
+    background: transparent;
+    border: 1px solid #ff5555;
+    color: #ff5555;
+}
+
+.danger-btn:hover {
+    background: #ff5555;
+    color: var(--color-text-white);
+    box-shadow: 0 0 12px rgba(255, 85, 85, 0.3);
+}
+
+/* 4. COLUNA DA DIREITA: PAINEL DE CONTROLE */
+.control-panel {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 120px);
+    min-height: 570px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.input-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-text-white);
+}
+
+.engine-select {
+    background: var(--color-bg-dark);
+    border: 1px solid var(--color-border-glass);
+    color: var(--color-text-white);
+    padding: 0.65rem 1rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.engine-select:focus {
+    border-color: var(--color-neon-green);
+    box-shadow: 0 0 10px var(--color-neon-green-glow);
+}
+
+.engine-description {
+    font-size: 0.8rem;
+    color: var(--color-text-normal);
+    line-height: 1.4;
+    margin-bottom: 0.75rem;
+    min-height: 40px;
+}
+
+.separator {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.05);
+    margin: 0.5rem 0 0.75rem 0;
+}
+
+/* Container de Inputs Rolável */
+.scrollable-inputs {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    margin-bottom: 1.25rem;
+}
+
+/* Custom Scrollbar */
+.scrollable-inputs::-webkit-scrollbar {
+    width: 5px;
+}
+.scrollable-inputs::-webkit-scrollbar-track {
+    background: transparent;
+}
+.scrollable-inputs::-webkit-scrollbar-thumb {
+    background: var(--color-border-glass);
+    border-radius: 10px;
+}
+.scrollable-inputs::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.input-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.row-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.input-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-text-white);
+}
+
+.default-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-text-normal);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.default-btn:hover {
+    color: var(--color-neon-green);
+    text-shadow: 0 0 8px var(--color-neon-green-glow);
+}
+
+.physics-input {
+    background: var(--color-bg-dark);
+    border: 1px solid var(--color-border-glass);
+    color: var(--color-text-white);
+    padding: 0.5rem 0.75rem;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    outline: none;
+    transition: var(--transition-smooth);
+}
+
+.physics-input:focus {
+    border-color: var(--color-neon-blue);
+    box-shadow: 0 0 8px var(--color-neon-blue-glow);
+}
+
+.physics-input.error {
+    border-color: var(--color-neon-red) !important;
+    box-shadow: 0 0 8px var(--color-neon-red-glow) !important;
+}
+
+/* Bloco de Código de Integração */
+.code-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 1.25rem;
+}
+
+.code-header {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--color-text-normal);
+    letter-spacing: 0.05em;
+}
+
+.code-block {
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid var(--color-border-glass);
+    border-radius: 12px;
+    padding: 0.85rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: #cbd5e1;
+    overflow-x: auto;
+    max-height: 120px;
+    scrollbar-width: thin;
+}
+
+.code-block::-webkit-scrollbar {
+    height: 4px;
+}
+.code-block::-webkit-scrollbar-thumb {
+    background: var(--color-border-glass);
+    border-radius: 4px;
+}
+
+/* Botão de Copiar */
+.copy-btn {
+    background: var(--color-neon-green);
+    border: none;
+    color: var(--color-bg-dark);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    padding: 0.9rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    box-shadow: 0 0 10px var(--color-neon-green-glow);
+    flex-shrink: 0;
+}
+
+.copy-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(0, 255, 102, 0.5);
+}
+
+.copy-btn:active {
+    transform: translateY(0);
+}
+
+/* Toast Notification (Cyberpunk Gloss) */
+#tt-toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid var(--color-neon-green);
+    color: var(--color-neon-green);
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    box-shadow: 0 0 20px rgba(0, 255, 102, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 9999;
+}
+
+#tt-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+
+/* 5. RESPONSIVIDADE */
+@media (max-width: 900px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .control-panel {
+        max-height: none;
+    }
+}

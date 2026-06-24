@@ -1,0 +1,843 @@
+/* ==========================================================================
+   STYLE SHEET - HACKER LOCKPICKING
+   Estilo Cyberpunk Dark Mode & Glassmorphism Consistente
+   ========================================================================== */
+
+/* 1. VARIÁVEIS E DEFINIÇÕES GERAIS */
+:root {
+    --color-bg-dark: #070a13;
+    --color-bg-deep: #0b0f19;
+    --color-bg-panel: rgba(17, 24, 39, 0.65);
+    --color-border-glass: rgba(255, 255, 255, 0.07);
+
+    /* Cores Neon */
+    --color-neon-blue: #00f5d4;
+    --color-neon-blue-glow: rgba(0, 245, 212, 0.3);
+    
+    --color-neon-green: #00ff66;
+    --color-neon-green-glow: rgba(0, 255, 102, 0.3);
+    
+    --color-neon-yellow: #ffb703;
+    --color-neon-yellow-glow: rgba(255, 183, 3, 0.3);
+    
+    --color-neon-red: #ff2a5f;
+    --color-neon-red-glow: rgba(255, 42, 95, 0.3);
+
+    --color-gray-muted: #4b5563;
+    --color-text-white: #ffffff;
+    --color-text-normal: #9ca3af;
+
+    --glass-blur: blur(14px);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Outfit', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    background-color: var(--color-bg-dark);
+    color: var(--color-text-white);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+    padding: 1.5rem;
+}
+
+/* Efeito de iluminação ambiental de fundo */
+.ambient-glow {
+    position: fixed;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    filter: blur(150px);
+    opacity: 0.1;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.bg-left {
+    background: radial-gradient(circle, var(--color-neon-blue) 0%, transparent 70%);
+    top: -150px;
+    left: -150px;
+}
+
+.bg-right {
+    background: radial-gradient(circle, var(--color-neon-red) 0%, transparent 70%);
+    bottom: -150px;
+    right: -150px;
+}
+
+/* 2. LAYOUT E CONTEÚDO PRINCIPAL */
+.app-container {
+    max-width: 1050px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Navegação Voltar */
+.back-nav {
+    margin-bottom: 0.5rem;
+}
+
+.back-link {
+    color: var(--color-text-normal);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: var(--transition-smooth);
+    display: inline-block;
+}
+
+.back-link:hover {
+    color: var(--color-neon-blue);
+    transform: translateX(-4px);
+    text-shadow: 0 0 8px var(--color-neon-blue-glow);
+}
+
+/* Cabeçalho */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.75rem;
+    background: var(--color-bg-panel);
+    border: 1px solid var(--color-border-glass);
+    border-radius: 20px;
+    backdrop-filter: var(--glass-blur);
+    gap: 1.5rem;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logo {
+    font-size: 2rem;
+}
+
+.brand h1 {
+    font-size: 1.45rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.subtitle {
+    font-size: 0.85rem;
+    color: var(--color-neon-blue);
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+/* Controle Serial */
+.serial-control {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.serial-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.5rem 0.85rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.led {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    transition: var(--transition-smooth);
+}
+
+.led.disconnected {
+    background-color: var(--color-neon-red);
+    box-shadow: 0 0 10px var(--color-neon-red);
+}
+
+.led.connected {
+    background-color: var(--color-neon-green);
+    box-shadow: 0 0 10px var(--color-neon-green);
+}
+
+#status-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.serial-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.console-select {
+    background: var(--color-bg-dark);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--color-text-white);
+    padding: 0.5rem;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+}
+
+.connect-btn {
+    background: transparent;
+    border: 1px solid var(--color-neon-green);
+    color: var(--color-neon-green);
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.connect-btn:hover {
+    background: var(--color-neon-green);
+    color: var(--color-bg-dark);
+    box-shadow: 0 0 15px var(--color-neon-green-glow);
+}
+
+.connect-btn.connected {
+    border-color: var(--color-neon-red);
+    color: var(--color-neon-red);
+}
+
+.connect-btn.connected:hover {
+    background: var(--color-neon-red);
+    color: var(--color-text-white);
+    box-shadow: 0 0 15px var(--color-neon-red-glow);
+}
+
+.warning-banner {
+    background: rgba(255, 42, 95, 0.1);
+    border: 1px solid rgba(255, 42, 95, 0.25);
+    color: #ff5c7d;
+    padding: 0.55rem 1.25rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    text-align: center;
+    width: 100%;
+    max-width: 450px;
+}
+
+.warning-banner.hidden {
+    display: none;
+}
+
+/* Painéis de Vidro */
+.panel-glass {
+    background: var(--color-bg-panel);
+    border: 1px solid var(--color-border-glass);
+    border-radius: 20px;
+    backdrop-filter: var(--glass-blur);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.panel-header h2 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-neon-blue);
+}
+
+.panel-decor {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--color-gray-muted);
+}
+
+/* Corpo do Conteúdo Principal */
+.main-content {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 1.5rem;
+}
+
+/* Coluna do Canvas */
+.dial-section {
+    align-items: center;
+    justify-content: space-between;
+    min-height: 430px;
+}
+
+.canvas-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 1rem 0;
+    background: radial-gradient(circle, rgba(0, 245, 212, 0.03) 0%, transparent 70%);
+}
+
+#dial-canvas {
+    max-width: 100%;
+}
+
+.status-bar {
+    width: 100%;
+    text-align: center;
+    padding: 0.9rem;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    transition: var(--transition-smooth);
+    border: 1px solid transparent;
+}
+
+.status-bar.locked {
+    background: rgba(75, 85, 99, 0.1);
+    border-color: var(--color-gray-muted);
+    color: var(--color-text-normal);
+}
+
+.status-bar.unlocked {
+    background: rgba(0, 255, 102, 0.08);
+    border-color: var(--color-neon-green);
+    color: var(--color-neon-green);
+    box-shadow: 0 0 15px rgba(0, 255, 102, 0.15);
+    animation: pulseGlowGreen 2s infinite;
+}
+
+.status-bar.denied {
+    background: rgba(255, 42, 95, 0.08);
+    border-color: var(--color-neon-red);
+    color: var(--color-neon-red);
+    box-shadow: 0 0 15px rgba(255, 42, 95, 0.15);
+    animation: flashRed 1s infinite;
+}
+
+/* Coluna de Controle */
+.control-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.slots-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    min-height: 430px; /* Alinha com o Dial */
+}
+
+.slots-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    margin: auto 0;
+}
+
+.slot-box {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 18px;
+    padding: 2.2rem 0.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    transition: var(--transition-smooth);
+}
+
+.slot-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-gray-muted);
+    letter-spacing: 0.05em;
+}
+
+.slot-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 3.8rem;
+    font-weight: 800;
+    color: var(--color-gray-muted);
+    line-height: 1;
+}
+
+/* Estados Neon das Catracas */
+.slot-box.active {
+    border-color: var(--color-neon-yellow);
+    box-shadow: 0 0 12px var(--color-neon-yellow-glow);
+}
+.slot-box.active .slot-value {
+    color: var(--color-neon-yellow);
+    text-shadow: 0 0 8px var(--color-neon-yellow-glow);
+}
+
+.slot-box.success {
+    border-color: var(--color-neon-green);
+    box-shadow: 0 0 12px var(--color-neon-green-glow);
+}
+.slot-box.success .slot-value {
+    color: var(--color-neon-green);
+    text-shadow: 0 0 8px var(--color-neon-green-glow);
+}
+
+.slot-box.danger {
+    border-color: var(--color-neon-red);
+    box-shadow: 0 0 12px var(--color-neon-red-glow);
+}
+.slot-box.danger .slot-value {
+    color: var(--color-neon-red);
+    text-shadow: 0 0 8px var(--color-neon-red-glow);
+}
+
+.panel-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.action-btn {
+    flex: 1;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 0.85rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.reset-btn {
+    background: transparent;
+    border: 1px solid var(--color-neon-yellow);
+    color: var(--color-neon-yellow);
+}
+
+.reset-btn:hover {
+    background: var(--color-neon-yellow);
+    color: var(--color-bg-dark);
+    box-shadow: 0 0 15px var(--color-neon-yellow-glow);
+}
+
+.outline-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--color-text-normal);
+}
+
+.outline-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--color-text-white);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Painel do Terminal Integrado (Aparece junto da simulação) */
+.terminal-container-integrated {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.terminal-header-integrated {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.terminal-header-integrated h3 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-neon-blue);
+    letter-spacing: 0.05em;
+}
+
+.clear-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-gray-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.clear-btn:hover {
+    color: var(--color-text-white);
+}
+
+.terminal-body-integrated {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    padding: 1rem;
+    overflow-y: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    height: 140px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.log-line {
+    line-height: 1.4;
+    word-break: break-all;
+}
+
+.log-line.system { color: var(--color-gray-muted); }
+.log-line.incoming { color: var(--color-neon-blue); }
+.log-line.simulated { color: var(--color-neon-yellow); }
+.log-line.success { color: var(--color-neon-green); font-weight: 700; }
+.log-line.danger { color: var(--color-neon-red); font-weight: 700; }
+
+/* Scrollbar Customizada para o Terminal */
+.terminal-body-integrated::-webkit-scrollbar {
+    width: 6px;
+}
+.terminal-body-integrated::-webkit-scrollbar-track {
+    background: transparent;
+}
+.terminal-body-integrated::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+.terminal-body-integrated::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* 3. SEÇÃO DO SIMULADOR (INFERIOR) */
+.simulation-section {
+    padding: 0;
+    overflow: hidden;
+}
+
+.simulation-header {
+    cursor: pointer;
+    padding: 1.25rem 1.5rem;
+    margin: 0;
+    border-bottom: none;
+    user-select: none;
+}
+
+.simulation-header h2 {
+    color: var(--color-neon-yellow);
+}
+
+.toggle-icon {
+    color: var(--color-neon-yellow);
+    font-size: 0.8rem;
+    transition: var(--transition-smooth);
+}
+
+.simulation-section:has(.simulation-body.collapsed) .simulation-header {
+    border-bottom: none;
+}
+
+.simulation-section:has(.simulation-body.collapsed) .toggle-icon {
+    transform: rotate(-90deg);
+}
+
+.simulation-body {
+    padding: 0 1.5rem 1.5rem 1.5rem;
+    transition: var(--transition-smooth);
+    max-height: 500px;
+}
+
+.simulation-body.collapsed {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sim-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr;
+    gap: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sim-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.sim-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text-normal);
+}
+
+.slider-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.slider-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--color-gray-muted);
+}
+
+.sim-slider {
+    flex-grow: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    outline: none;
+    cursor: pointer;
+}
+
+.sim-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-neon-yellow);
+    box-shadow: 0 0 10px var(--color-neon-yellow-glow);
+    transition: transform 0.1s;
+}
+
+.sim-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.sim-current-dial {
+    font-size: 0.85rem;
+    color: var(--color-text-normal);
+}
+
+.sim-current-dial strong {
+    color: var(--color-neon-yellow);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.sim-buttons-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+}
+
+.sim-btn {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--color-text-normal);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.65rem 0.25rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.sim-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--color-text-white);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.sim-btn.success { border-color: var(--color-neon-green); color: var(--color-neon-green); }
+.sim-btn.success:hover { background: var(--color-neon-green); color: var(--color-bg-dark); box-shadow: 0 0 10px var(--color-neon-green-glow); }
+
+.sim-btn.danger { border-color: var(--color-neon-red); color: var(--color-neon-red); }
+.sim-btn.danger:hover { background: var(--color-neon-red); color: var(--color-text-white); box-shadow: 0 0 10px var(--color-neon-red-glow); }
+
+.sim-btn.warning { border-color: var(--color-neon-yellow); color: var(--color-neon-yellow); }
+.sim-btn.warning:hover { background: var(--color-neon-yellow); color: var(--color-bg-dark); box-shadow: 0 0 10px var(--color-neon-yellow-glow); }
+
+/* 4. DESIGN DO MODAL (GUIA ARDUINO) */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+
+.modal-overlay.open {
+    display: flex;
+}
+
+.modal-content {
+    background: #0f172a;
+    border: 1px solid var(--color-border-glass);
+    border-radius: 24px;
+    max-width: 650px;
+    width: 100%;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    animation: modalSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.modal-header h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--color-neon-blue);
+}
+
+.close-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-text-normal);
+    font-size: 1.8rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.close-btn:hover {
+    color: var(--color-text-white);
+}
+
+.modal-body {
+    padding: 1.75rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--color-text-normal);
+}
+
+.modal-body h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-white);
+    margin-top: 0.5rem;
+}
+
+.modal-body ul {
+    list-style-type: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.modal-body li code {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    color: var(--color-neon-blue);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+}
+
+.code-block {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1rem;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: #cbd5e1;
+    max-height: 250px;
+}
+
+/* Scrollbar para o modal */
+.modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+.modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+.modal-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+/* 5. ANIMAÇÕES */
+@keyframes pulseGlowGreen {
+    0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 102, 0.15); border-color: rgba(0, 255, 102, 0.4); }
+    50% { box-shadow: 0 0 22px rgba(0, 255, 102, 0.35); border-color: rgba(0, 255, 102, 0.8); }
+}
+
+@keyframes flashRed {
+    0%, 100% { box-shadow: 0 0 10px rgba(255, 42, 95, 0.15); border-color: rgba(255, 42, 95, 0.4); background: rgba(255, 42, 95, 0.04); }
+    50% { box-shadow: 0 0 25px rgba(255, 42, 95, 0.4); border-color: rgba(255, 42, 95, 0.9); background: rgba(255, 42, 95, 0.15); }
+}
+
+@keyframes modalSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 6. RESPONSIVIDADE */
+@media (max-width: 820px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .sim-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .app-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .serial-control {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
