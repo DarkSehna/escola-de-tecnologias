@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_playerInput",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_playerInput",
+  "parent":{
+    "name":"Sistemas",
+    "path":"folders/Scripts/Player/Sistemas.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

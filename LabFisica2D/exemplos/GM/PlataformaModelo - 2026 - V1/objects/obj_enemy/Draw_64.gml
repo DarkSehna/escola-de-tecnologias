@@ -1,0 +1,1 @@
+//draw_text(256, 64, "state: " + scr_enemyStateName(state));

@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_enemyEnums",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_enemyEnums",
+  "parent":{
+    "name":"Sistemas",
+    "path":"folders/Scripts/Inimigos/Sistemas.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

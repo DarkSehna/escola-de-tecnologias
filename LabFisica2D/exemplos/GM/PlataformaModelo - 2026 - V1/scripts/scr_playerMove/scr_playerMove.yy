@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_playerMove",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_playerMove",
+  "parent":{
+    "name":"Sistemas",
+    "path":"folders/Scripts/Player/Sistemas.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

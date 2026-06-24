@@ -1,0 +1,138 @@
+🔹 1. Input
+
+→ intenção do jogador
+scr_playerInput
+Controlador de estados (nome único e explícito)
+
+🔹 2. Sistemas / Comportamentos reutilizáveis
+
+→ movimento, dano, ataque
+scr_playerMove
+Sistemas / Comportamentos (NÃO terminam com State)
+
+🔹 3. Estados
+
+→ FREE, HURT, DEAD
+scr_playerFreeState
+Estados (sempre terminam com State)
+
+
+📌 Importante:
+Stamina não é estado, é sistema, então:
+
+estados consomem
+
+sistema controla
+
+Isso é arquitetura madura.
+
+
+
+fric → decel
+Porque:
+
+fricção = conceito físico
+
+desaceleração = efeito prático
+
+
+🔹4. Observaçõe pedagógica importantes
+
+Estamos construindo um jogo-modelo onde os alunos vão aprender, na prática:
+
+versionamento (commit antes de feature)
+
+progressão de sistemas
+
+reaproveitamento de padrões (canAirDash → double jump)
+
+separação entre:
+
+lógica (estados)
+
+visual (HUD / sprite)
+
+
+////HURT - DANO
+
+Para o sistema de dano ser "padrão ouro" para seus alunos, ele precisa de 3 pilares:
+
+O Gatilho: Algo que causa o dano (um espinho ou inimigo).
+
+A Reação (Estado HURT): O player perde o controle, é empurrado para trás (Knockback) e muda de cor/animação.
+
+A Proteção: Frames de invulnerabilidade (o famoso "piscar") para ele não morrer instantaneamente no frame seguinte.
+
+
+Tanto player quanto inimigo podem ter:
+
+vida (HP)
+
+invencibilidade temporária (i-frames)
+
+knockback
+
+estado temporário de reação
+
+Então o “HURT” faz sentido para ambos.
+
+
+hitDir
+
+valores esperados: -1 ou 1
+
+significado:
+
+-1 → dano veio da esquerda
+
+1 → dano veio da direita
+
+
+Race Condition (Condição de Corrida) entre o fim da dor e o fim da proteção.
+
+Se hurtTimeMax >= invTimeMax:
+
+O jogador sai do estado HURT (atordoamento), mas a sua invencibilidade já acabou ou acaba exatamente no mesmo frame.
+
+Se você estiver em cima de um espinho (ou se o código de teste detectar a tecla), o jogo entende: "Ele não está em estado de HURT e não está invencível... então DANO NELE!".
+
+Isso cria um loop infinito onde o player nunca consegue fugir da fonte do dano.
+
+
+// CÁLCULO DA DIREÇÃO DO DANO:
+    // Subtraímos a posição X do player pela posição X do espinho.
+    // Se o resultado for positivo, o player está na direita (hitDir = 1).
+    // Se for negativo, o player está na esquerda (hitDir = -1).
+
+
+Quando algo bate no personagem, primeiro decidimos de onde veio o impacto.
+Em jogos 2D, isso é feito comparando distâncias em X e Y.
+
+
+
+Sobre “x/y não são colisão real” (sua preocupação)
+
+Você está certo em tomar cuidado. A forma de explicar sem confundir é:
+
+✅ “x/y são a posição do objeto (na origem do sprite).
+A colisão acontece na caixa (bbox), que pode ser diferente dependendo da origem e do sprite.”
+
+Ou seja: você não diz que x/y “não são reais”, você diz que:
+
+x/y = posição do pivô (origem)
+
+bbox = área ocupada
+
+E aí você escolhe quando usar cada um.
+
+
+
+Blindagem por "Gatekeepers" (Cláusulas de Guarda)
+Para resolver isso de forma elegante, você precisa de "porteiros" no código que impeçam o estado HURT de sequer ser cogitado se o player já estiver morto.
+
+Notas de implementação:
+O Poder do exit: Colocar o if (state == PLAYER_STATE.DEAD) exit; no Step é como um botão de emergência. Ele garante que, uma vez morto, o player não execute mais nada que venha abaixo (como gravidade, pulo ou colisão com espinhos). É uma solução radical, mas muito eficiente para evitar bugs de física pós-morte.
+
+Nota didática: Se no futuro você quiser que o player "caia" enquanto está morto, lembre-se que o código de gravidade/colisão teria que estar acima desse exit.
+
+Ajuste de HP para Teste: Reduzir o hp_max ou aumentar o dano do espinho para testar rápido é o que chamamos de ambiente de desenvolvimento. É muito mais produtivo do que jogar 5 minutos para testar uma única funcionalidade.

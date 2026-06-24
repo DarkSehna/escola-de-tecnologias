@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_playerAirState",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_playerAirState",
+  "parent":{
+    "name":"Estados",
+    "path":"folders/Scripts/Player/Estados.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

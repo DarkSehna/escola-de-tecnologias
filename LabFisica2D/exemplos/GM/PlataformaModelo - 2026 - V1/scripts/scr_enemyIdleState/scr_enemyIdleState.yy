@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_enemyIdleState",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_enemyIdleState",
+  "parent":{
+    "name":"Estados",
+    "path":"folders/Scripts/Inimigos/Estados.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

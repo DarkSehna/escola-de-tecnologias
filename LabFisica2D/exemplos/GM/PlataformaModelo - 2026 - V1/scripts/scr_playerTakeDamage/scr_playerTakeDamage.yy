@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_playerTakeDamage",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_playerTakeDamage",
+  "parent":{
+    "name":"Sistemas",
+    "path":"folders/Scripts/Player/Sistemas.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

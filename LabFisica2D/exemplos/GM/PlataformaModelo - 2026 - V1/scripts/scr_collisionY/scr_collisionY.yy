@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_collisionY",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_collisionY",
+  "parent":{
+    "name":"Mundo",
+    "path":"folders/Scripts/Sistemas/Mundo.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

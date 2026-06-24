@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_playerEnums",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_playerEnums",
+  "parent":{
+    "name":"Sistemas",
+    "path":"folders/Scripts/Player/Sistemas.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

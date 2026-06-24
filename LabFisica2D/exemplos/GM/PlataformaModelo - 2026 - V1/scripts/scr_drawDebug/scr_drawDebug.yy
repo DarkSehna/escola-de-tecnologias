@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_drawDebug",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_drawDebug",
+  "parent":{
+    "name":"HUD",
+    "path":"folders/Scripts/Sistemas/HUD.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

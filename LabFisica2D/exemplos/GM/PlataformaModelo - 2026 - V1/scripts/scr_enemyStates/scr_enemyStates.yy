@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_enemyStates",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_enemyStates",
+  "parent":{
+    "name":"Sistemas",
+    "path":"folders/Scripts/Inimigos/Sistemas.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

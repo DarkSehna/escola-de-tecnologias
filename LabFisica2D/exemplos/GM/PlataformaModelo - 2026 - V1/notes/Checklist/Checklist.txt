@@ -1,0 +1,138 @@
+CHECKLIST COMPLETO DO PROJETO
+✅ FASE 0 — BASE DO PROJETO (CONCLUÍDA)
+
+Arquitetura
+
+ Organização de pastas (Player / Sistema / Inimigos)
+
+ Padronização de nomes (scr_, obj_, spr_)
+
+ Criação do obj_lifeForm (objeto pai)
+
+Física base
+
+ Gravidade (scr_gravity)
+
+ Colisão horizontal (scr_collisionX)
+
+ Colisão vertical (scr_collisionY)
+
+ Variável grounded funcional
+
+Player
+
+ obj_player herdando de obj_lifeForm
+
+ Enum de estados (scr_playerEnums)
+
+ Máquina de estados com enum + switch
+
+ scr_playerStates (dispatcher)
+
+Input
+
+ scr_playerInput
+
+ Teclado + Gamepad
+
+ Separação de Held e Pressed
+
+Movimento inicial
+
+ scr_playerMove
+
+ Estado base scr_playerFreeState
+
+ Player anda, pula, cai e colide corretamente
+
+🟡 FASE 1 — REFINAMENTO DE MOVIMENTO (PRÓXIMO PASSO)
+
+ Aceleração horizontal
+
+ Desaceleração / fricção
+
+ Velocidade máxima
+
+ Diferença de controle no ar vs chão
+
+ Ajuste de “feeling” do player
+
+🟡 FASE 2 — SEPARAÇÃO DE ESTADOS FÍSICOS
+
+ Criar scr_playerGroundState
+
+ Criar scr_playerAirState
+
+ Transição chão → ar
+
+ Transição ar → chão
+
+ Revisar uso de grounded
+
+🟡 FASE 3 — HABILIDADES DE MOVIMENTO
+
+Dash
+
+ Criar scr_playerDashState
+
+ Dash no chão
+
+ Air dash (opcional ou bloqueado)
+
+ Duração do dash
+
+ Cooldown
+
+ Custo de stamina
+
+Outras mecânicas
+
+ Pulo duplo
+
+ Wall jump
+
+ Limitações e condições (ex.: só 1 air dash)
+
+🟡 FASE 4 — SISTEMAS DE STATUS
+
+ Sistema de stamina
+
+ Regeneração de stamina
+
+ Integração com dash / habilidades
+
+ HUD simples (vida / stamina)
+
+🟡 FASE 5 — COMBATE PASSIVO
+
+ Criar scr_playerHurtState
+
+ Knockback
+
+ Invencibilidade temporária
+
+ Transições forçadas de estado
+
+🟡 FASE 6 — ESTADO FINAL
+
+ Criar scr_playerDeadState
+
+ Bloqueio de input
+
+ Respawn ou fim de jogo
+
+🔵 FASE 7 — INIMIGOS E ATAQUE (FUTURO)
+
+ Criar obj_enemy herdando de obj_lifeForm
+
+ Enum de estados do inimigo
+
+ Movimento simples
+
+ Detecção
+
+ Ataque
+
+ Dano no player
+
+ Sistema de hitbox

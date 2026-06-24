@@ -1,0 +1,87 @@
+----------------Dash--------------------------
+/*
+    // =================================================================
+    // 1. AÇÃO DE ENTRADA (Acontece APENAS no primeiro frame)
+    // =================================================================
+    if (state_previous != PLAYER_STATE.DASH) 
+    {
+        // A. Consumir Stamina (e cancelar se não houver)
+        if (stamina < stamina_cost_dash)
+        {
+            state = state_previous; // Volta imediatamente ao estado anterior
+            return;
+        }
+        stamina -= stamina_cost_dash;
+        
+        // B. Definir Cooldown
+        dash_cooldown = dash_cooldown_max;
+    
+        // C. Definir Direção e Velocidade do Dash
+        dash_timer = dash_duration;
+        
+        // Usa a direção que o player estava pressionando, ou a direção atual
+        var _dir = sign(inputX); 
+        if (_dir == 0) 
+        {
+            _dir = image_xscale; // Se não houver input, usa a direção que o player está olhando
+        }
+        
+        // Aplica o impulso extremo
+        hsp = _dir * dash_speed; 
+        vsp = 0; // Zera a velocidade vertical para ter um dash reto
+        
+        // D. Desabilitar Gravidade/Colisão (Se necessário, para evitar que o dash pare em declives)
+        // Para simplificar, vamos manter a gravidade desligada por enquanto.
+    }
+    */
+
+
+
+//Colisão com o Espinho
+  /*
+    var _hitDir = (x < hz.x) ? 1 : -1;
+
+    // Se o player cair EXATAMENTE no meio (raro), usamos o inverso da escala
+    if (x == hz.x) _hitDir = -image_xscale;*/
+    
+    
+    /*
+    //Colisor com o espinho
+    var px = bbox_left + bbox_right >> 1;
+    var py = bbox_top  + bbox_bottom >> 1;
+    
+    var hx = hz.bbox_left + hz.bbox_right >> 1;
+    var hy = hz.bbox_top  + hz.bbox_bottom >> 1;
+    
+    var dx = px - hx;
+    var dy = py - hy;
+    
+    var _hitDir = 0;
+
+    // Decide eixo dominante
+    if (abs(dx) > abs(dy))
+    {
+        // impacto lateral
+        _hitDir = sign(dx);
+        vsp = -knockbackVsp * 0.5;
+    }
+    else
+    {
+        // impacto vertical
+        _hitDir = 0;
+         vsp = -sign(dy) * knockbackVsp;
+    }*/
+
+
+//Assentamento no respawn do player
+// 1) Se nasceu dentro de parede, sobe até sair
+        while (place_meeting(x, y, colMask))
+        {
+            y -= 1;
+        }
+        
+        // 2) Agora “assenta” no chão mais próximo logo abaixo (1px por vez)
+        while (!place_meeting(x, y + 1, colMask))
+        {
+            y += 1;
+        }
