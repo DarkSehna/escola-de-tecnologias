@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giro de Robô 2D | TitanTech</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=1.0">
+</head>
+<body>
+
+    <!-- Ambient Glow Effects -->
+    <div class="ambient-glow bg-left"></div>
+    <div class="ambient-glow bg-right"></div>
+
+    <div class="app-container">
+        
+        <!-- COLUNA ESQUERDA: CONFIGURAÇÕES E CONTROLE -->
+        <aside class="control-sidebar panel-glass">
+            <!-- Voltar para o Dashboard -->
+            <div class="back-nav">
+                <a href="../" class="back-link">← Voltar ao Painel Central</a>
+            </div>
+
+            <header class="app-header">
+                <span class="logo">🤖</span>
+                <div>
+                    <h1>Giro de Robô 2D</h1>
+                    <span class="subtitle">Cinemática Diferencial (LEGO)</span>
+                </div>
+            </header>
+
+            <div class="separator"></div>
+
+            <div class="scrollable-content">
+                <!-- SEÇÃO 1: PARÂMETROS FÍSICOS -->
+                <section class="config-section">
+                    <h2 class="section-title">⚙️ Parâmetros Físicos</h2>
+                    
+                    <div class="form-group">
+                        <label for="combo-motor" class="input-label">Modelo de Motor (Preset)</label>
+                        <select id="combo-motor" class="cyber-select">
+                            <option value="LEGO EV3 (160 RPM)" selected>LEGO EV3 (160 RPM)</option>
+                            <option value="LEGO NXT (170 RPM)">LEGO NXT (170 RPM)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="combo-wheels" class="input-label">Modelo de Roda (Preset)</label>
+                        <select id="combo-wheels" class="cyber-select">
+                            <option value="Padrão (56mm)" selected>Padrão (56mm)</option>
+                            <option value="Pequena (43.2mm)">Pequena (43.2mm)</option>
+                            <option value="Moto (94.2mm)">Moto (94.2mm)</option>
+                            <option value="Esteira (Aplica atrito)">Esteira (Aplica atrito)</option>
+                        </select>
+                    </div>
+
+                    <div class="input-grid">
+                        <div class="form-group">
+                            <label for="input-wheel-diameter" class="input-label">Diâmetro Roda (mm)</label>
+                            <input type="number" id="input-wheel-diameter" class="cyber-input" value="56.0" step="0.5" min="10" max="200">
+                        </div>
+                        <div class="form-group">
+                            <label for="input-chassis-width" class="input-label">Largura Chassi (mm)</label>
+                            <input type="number" id="input-chassis-width" class="cyber-input" value="120.0" step="0.5" min="40" max="300">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="combo-trace" class="input-label">Visualização do Rastro</label>
+                        <select id="combo-trace" class="cyber-select">
+                            <option value="Completo" selected>Completo (3 Linhas)</option>
+                            <option value="Centro">Centro (Verde)</option>
+                            <option value="Rodas">Rodas (Laranja/Azul)</option>
+                            <option value="Ocultar">Ocultar Rastro</option>
+                        </select>
+                    </div>
+                </section>
+
+                <div class="separator"></div>
+
+                <!-- SEÇÃO 2: PROGRAMAÇÃO DO GIRO -->
+                <section class="config-section">
+                    <h2 class="section-title">🕹️ Programação do Movimento</h2>
+
+                    <!-- Motor Esquerdo (Slider + Input) -->
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span class="slider-label">Força Motor Esquerdo (L)</span>
+                            <span id="val-power-l" class="power-display color-orange">0%</span>
+                        </div>
+                        <div class="slider-control-row">
+                            <input type="range" id="slider-power-l" class="cyber-range" min="-100" max="100" value="50">
+                            <input type="number" id="input-power-l" class="cyber-input power-num" min="-100" max="100" value="50">
+                        </div>
+                    </div>
+
+                    <!-- Motor Direito (Slider + Input) -->
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span class="slider-label">Força Motor Direito (R)</span>
+                            <span id="val-power-r" class="power-display color-cyan">0%</span>
+                        </div>
+                        <div class="slider-control-row">
+                            <input type="range" id="slider-power-r" class="cyber-range" min="-100" max="100" value="-50">
+                            <input type="number" id="input-power-r" class="cyber-input power-num" min="-100" max="100" value="-50">
+                        </div>
+                    </div>
+
+                    <div class="input-grid">
+                        <div class="form-group">
+                            <label for="combo-exec-mode" class="input-label">Modo Limite</label>
+                            <select id="combo-exec-mode" class="cyber-select">
+                                <option value="Segundos" selected>Segundos</option>
+                                <option value="Graus">Graus (Roda)</option>
+                                <option value="Rotações">Rotações (Roda)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="input-exec-value" class="input-label">Valor Alvo</label>
+                            <input type="number" id="input-exec-value" class="cyber-input" value="2.50" step="0.05" min="0.01">
+                        </div>
+                    </div>
+
+                    <button id="btn-execute" class="execute-btn">▶️ EXECUTAR GIRO</button>
+                </section>
+            </div>
+        </aside>
+
+        <!-- COLUNA DIREITA: WORKSPACE E CANVAS -->
+        <main class="workspace-area panel-glass">
+            
+            <!-- Toolbar Superior do Canvas -->
+            <div class="canvas-toolbar">
+                <div class="info-tag">
+                    <span class="scale-info">Escala: 1mm = 1.5px</span>
+                    <span class="grid-info">Grade: Principal 50mm / Auxiliar 10mm</span>
+                </div>
+                <div class="action-buttons">
+                    <button id="btn-clear-trace" class="tool-btn danger-btn" title="Limpar todo o trajeto desenhado">🧹 Limpar Trajeto</button>
+                    <button id="btn-reset-pos" class="tool-btn secondary-btn" title="Resetar posição do robô e centralizar a câmera">🎯 Resetar Posição</button>
+                </div>
+            </div>
+
+            <!-- Viewport da Simulação (Grade CAD + Robô) -->
+            <div id="canvas-viewport" class="viewport-container">
+                <canvas id="sim-canvas" width="800" height="550"></canvas>
+            </div>
+
+            <!-- HUD Odometria Digital (Bottom Overlay) -->
+            <footer class="hud-dashboard">
+                <div class="hud-card">
+                    <span class="hud-label">Graus do Motor (Média Absoluta)</span>
+                    <div class="hud-display" id="hud-motor-deg">
+                        <span class="hud-value">0000.0</span><span class="hud-unit">°</span>
+                    </div>
+                </div>
+                <div class="hud-card">
+                    <span class="hud-label">Giro do Chassi (Teórico Final)</span>
+                    <div class="hud-display" id="hud-chassis-deg">
+                        <span class="hud-value">0000.0</span><span class="hud-unit">°</span>
+                    </div>
+                </div>
+            </footer>
+        </main>
+
+    </div>
+
+    <!-- Div para a Notificação Toast flutuante -->
+    <div id="tt-toast" class="toast"></div>
+
+    <!-- Script principal -->
+    <script src="script.js?v=1.0"></script>
+</body>
+</html>

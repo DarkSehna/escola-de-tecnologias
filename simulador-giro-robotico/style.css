@@ -1,0 +1,562 @@
+/* ==========================================================================
+   STYLE SHEET - SIMULADOR GIRO DE ROBÔ 2D
+   Estilo Cyberpunk Dark Mode, Blueprint Grid & LCD Telemetry HUD
+   ========================================================================== */
+
+/* 1. RESET E VARIAVEIS DE CORES */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Outfit', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+    /* Cores de Fundo */
+    --color-bg-dark: #070a13;
+    --color-bg-deep: #0b0f19;
+    --color-bg-panel: rgba(17, 24, 39, 0.65);
+    --color-border-glass: rgba(255, 255, 255, 0.07);
+
+    /* Cores Neon */
+    --color-neon-cyan: #00f0ff;
+    --color-neon-cyan-glow: rgba(0, 240, 255, 0.3);
+    
+    --color-neon-green: #39ff14;
+    --color-neon-green-glow: rgba(57, 255, 20, 0.3);
+    
+    --color-neon-orange: #ff8800;
+    --color-neon-orange-glow: rgba(255, 136, 0, 0.3);
+    
+    --color-neon-red: #ff2a4b;
+    --color-neon-red-glow: rgba(255, 42, 75, 0.3);
+
+    --color-text-white: #ffffff;
+    --color-text-normal: #9ca3af;
+    --color-gray-muted: #4b5563;
+
+    --glass-blur: blur(14px);
+    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+    background-color: var(--color-bg-dark);
+    color: var(--color-text-white);
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+    padding: 1.25rem;
+}
+
+/* Efeito de luz ambiente */
+.ambient-glow {
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    filter: blur(150px);
+    opacity: 0.07;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.bg-left {
+    background: radial-gradient(circle, var(--color-neon-cyan) 0%, transparent 70%);
+    top: -200px;
+    left: -200px;
+}
+
+.bg-right {
+    background: radial-gradient(circle, var(--color-neon-orange) 0%, transparent 70%);
+    bottom: -200px;
+    right: -200px;
+}
+
+/* 2. LAYOUT MASTER */
+.app-container {
+    max-width: 1550px;
+    margin: 0 auto;
+    width: 100%;
+    height: calc(100vh - 2.5rem);
+    display: grid;
+    grid-template-columns: 330px 1fr;
+    gap: 1.25rem;
+}
+
+/* Painéis de Vidro */
+.panel-glass {
+    background: var(--color-bg-panel);
+    border: 1px solid var(--color-border-glass);
+    border-radius: 20px;
+    backdrop-filter: var(--glass-blur);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* 3. COLUNA DA ESQUERDA (SIDEBAR) */
+.control-sidebar {
+    padding: 1.25rem;
+    gap: 1rem;
+}
+
+.back-nav {
+    margin-bottom: 0.15rem;
+}
+
+.back-link {
+    color: var(--color-text-normal);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: var(--transition-smooth);
+    display: inline-block;
+}
+
+.back-link:hover {
+    color: var(--color-neon-cyan);
+    transform: translateX(-4px);
+    text-shadow: 0 0 8px var(--color-neon-cyan-glow);
+}
+
+.app-header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.logo {
+    font-size: 1.75rem;
+}
+
+.app-header h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.subtitle {
+    font-size: 0.8rem;
+    color: var(--color-neon-cyan);
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+.separator {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.06);
+    margin: 0.35rem 0;
+    flex-shrink: 0;
+}
+
+.scrollable-content {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding-right: 0.25rem;
+}
+
+/* Customização da Scrollbar */
+.scrollable-content::-webkit-scrollbar {
+    width: 4px;
+}
+.scrollable-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+.scrollable-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+}
+
+/* Seções de Configuração */
+.config-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.section-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-normal);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    padding-bottom: 0.35rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.input-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-normal);
+}
+
+/* Selects, Inputs e Buttons Estilizados */
+.cyber-select {
+    background: #0d111c;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 0.6rem 0.8rem;
+    color: var(--color-text-white);
+    font-size: 0.85rem;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    width: 100%;
+}
+
+.cyber-select:focus {
+    border-color: var(--color-neon-cyan);
+    box-shadow: 0 0 10px var(--color-neon-cyan-glow);
+}
+
+.cyber-input {
+    background: #0d111c;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 0.6rem 0.8rem;
+    color: var(--color-text-white);
+    font-size: 0.85rem;
+    font-weight: 600;
+    outline: none;
+    transition: var(--transition-smooth);
+    width: 100%;
+}
+
+.cyber-input:focus {
+    border-color: var(--color-neon-cyan);
+    box-shadow: 0 0 10px var(--color-neon-cyan-glow);
+}
+
+.input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+/* Sliders de Potência dos Motores */
+.slider-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.slider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.slider-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-normal);
+}
+
+.power-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.color-orange {
+    color: var(--color-neon-orange);
+    text-shadow: 0 0 8px rgba(255, 136, 0, 0.2);
+}
+
+.color-cyan {
+    color: var(--color-neon-cyan);
+    text-shadow: 0 0 8px rgba(0, 240, 255, 0.2);
+}
+
+.slider-control-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.cyber-range {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: #0d111c;
+    outline: none;
+    cursor: pointer;
+}
+
+/* Sliders de Roda Esquerda (Laranja) */
+#slider-power-l::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-neon-orange);
+    box-shadow: 0 0 10px var(--color-neon-orange-glow);
+    transition: transform 0.1s;
+}
+
+#slider-power-l::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+/* Sliders de Roda Direita (Ciano) */
+#slider-power-r::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-neon-cyan);
+    box-shadow: 0 0 10px var(--color-neon-cyan-glow);
+    transition: transform 0.1s;
+}
+
+#slider-power-r::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.power-num {
+    width: 70px !important;
+    text-align: center;
+    padding: 0.45rem 0.5rem !important;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem !important;
+}
+
+/* Botão de Execução Executar */
+.execute-btn {
+    background: transparent;
+    border: 2px solid var(--color-neon-green);
+    color: var(--color-neon-green);
+    border-radius: 10px;
+    padding: 0.85rem;
+    font-weight: 800;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    letter-spacing: 0.05em;
+    margin-top: 0.5rem;
+    text-transform: uppercase;
+}
+
+.execute-btn:hover {
+    background: var(--color-neon-green);
+    color: #070a13;
+    box-shadow: 0 0 16px var(--color-neon-green-glow);
+}
+
+.execute-btn:disabled {
+    border-color: var(--color-gray-muted);
+    color: var(--color-gray-muted);
+    background: rgba(255, 255, 255, 0.02);
+    cursor: not-allowed;
+    box-shadow: none;
+    animation: pulseSimulating 1.5s infinite alternate;
+}
+
+/* 4. COLUNA DA DIREITA: VIEWPORT E HUD */
+.workspace-area {
+    position: relative;
+    height: 100%;
+}
+
+.canvas-toolbar {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    right: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.info-tag {
+    background: rgba(11, 15, 25, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 0.5rem 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    backdrop-filter: blur(5px);
+}
+
+.scale-info {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-neon-cyan);
+}
+
+.grid-info {
+    font-size: 0.65rem;
+    color: var(--color-text-normal);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    pointer-events: auto;
+}
+
+.tool-btn {
+    background: rgba(11, 15, 25, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 0.5rem 0.85rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--color-text-white);
+    transition: var(--transition-smooth);
+}
+
+.tool-btn:hover {
+    background: #242f47;
+    border-color: var(--color-neon-cyan);
+    box-shadow: 0 0 8px var(--color-neon-cyan-glow);
+}
+
+.danger-btn:hover {
+    border-color: var(--color-neon-red) !important;
+    background: rgba(255, 42, 75, 0.1) !important;
+    box-shadow: 0 0 8px var(--color-neon-red-glow) !important;
+}
+
+/* Viewport Container */
+.viewport-container {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    background-color: #0c0f16;
+}
+
+#sim-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: grab;
+}
+
+#sim-canvas:active {
+    cursor: grabbing;
+}
+
+/* HUD de Odometria (Displays Digitais) */
+.hud-dashboard {
+    position: absolute;
+    bottom: 0.75rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(11, 15, 25, 0.85);
+    border: 1.5px solid var(--color-border-glass);
+    border-radius: 16px;
+    padding: 0.85rem 1.5rem;
+    display: flex;
+    gap: 2rem;
+    backdrop-filter: var(--glass-blur);
+    z-index: 10;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.hud-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.hud-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-normal);
+}
+
+.hud-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    display: flex;
+    align-items: baseline;
+    padding: 0.2rem 0.75rem;
+    background: #05080f;
+    border: 1px solid rgba(255,255,255,0.03);
+    border-radius: 8px;
+    min-width: 140px;
+    justify-content: center;
+}
+
+#hud-motor-deg .hud-value {
+    color: var(--color-neon-cyan);
+    text-shadow: 0 0 10px var(--color-neon-cyan-glow);
+    font-size: 1.45rem;
+}
+
+#hud-motor-deg .hud-unit {
+    color: var(--color-neon-cyan);
+    opacity: 0.8;
+    font-size: 1rem;
+    margin-left: 0.15rem;
+}
+
+#hud-chassis-deg .hud-value {
+    color: var(--color-neon-green);
+    text-shadow: 0 0 10px var(--color-neon-green-glow);
+    font-size: 1.45rem;
+}
+
+#hud-chassis-deg .hud-unit {
+    color: var(--color-neon-green);
+    opacity: 0.8;
+    font-size: 1rem;
+    margin-left: 0.15rem;
+}
+
+/* 5. TOAST NOTIFICATION */
+.toast {
+    position: fixed;
+    top: 2rem;
+    left: 50%;
+    transform: translate(-50%, -20px);
+    background: rgba(11, 15, 25, 0.95);
+    border: 1px solid var(--color-neon-cyan);
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28), opacity 0.3s;
+    box-shadow: 0 0 15px var(--color-neon-cyan-glow);
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+/* 6. KEYFRAMES */
+@keyframes pulseSimulating {
+    from { opacity: 0.7; }
+    to { opacity: 1; }
+}

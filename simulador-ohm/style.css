@@ -1,0 +1,746 @@
+/* ==========================================================================
+   STYLE SHEET - SIMULADOR LEI DE OHM
+   Estilo Cyberpunk, HUD Amperímetro LCD & Visualizador de Fórmulas Dinâmico
+   ========================================================================== */
+
+/* 1. RESET E DEFINIÇÕES DO DESIGN SYSTEM */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Outfit', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+    /* Cores de Fundo */
+    --color-bg-dark: #07090d;
+    --color-bg-deep: #0b0f18;
+    --color-bg-panel: rgba(12, 15, 24, 0.7);
+    --color-border-glass: rgba(27, 34, 52, 0.4);
+
+    /* Cores do Circuito (Conforme config.py) */
+    --color-wire-high: #ff9d00;      /* Laranja Neon - Alto Potencial */
+    --color-wire-high-glow: rgba(255, 157, 0, 0.3);
+    
+    --color-wire-low: #00bfff;       /* Ciano Neon - Baixo Potencial */
+    --color-wire-low-glow: rgba(0, 191, 255, 0.3);
+    
+    --color-battery: #00ff66;        /* Verde Neon - Bateria */
+    --color-battery-glow: rgba(0, 255, 102, 0.3);
+    
+    --color-resistor: #ff3344;       /* Vermelho Neon - Resistor */
+    --color-resistor-glow: rgba(255, 51, 68, 0.3);
+    
+    --color-electron: #ffffff;
+    --color-electron-glow: #ffff33;
+    
+    --color-text-primary: #ffffff;
+    --color-text-muted: #6f7d95;
+    --color-border: #1b2234;
+
+    --glass-blur: blur(14px);
+    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+    background-color: var(--color-bg-dark);
+    color: var(--color-text-primary);
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+    padding: 1.25rem;
+}
+
+/* Ambient glow effects */
+.ambient-glow {
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    filter: blur(150px);
+    opacity: 0.07;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.bg-left {
+    background: radial-gradient(circle, var(--color-wire-high) 0%, transparent 70%);
+    top: -200px;
+    left: -200px;
+}
+
+.bg-right {
+    background: radial-gradient(circle, var(--color-wire-low) 0%, transparent 70%);
+    bottom: -200px;
+    right: -200px;
+}
+
+/* 2. LAYOUT MASTER */
+.app-container {
+    max-width: 1550px;
+    margin: 0 auto;
+    width: 100%;
+    height: calc(100vh - 2.5rem);
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+}
+
+.panel-glass {
+    background: var(--color-bg-panel);
+    border: 1px solid var(--color-border-glass);
+    border-radius: 16px;
+    backdrop-filter: var(--glass-blur);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* 3. CABEÇALHO */
+.app-header {
+    padding: 1.15rem 1.5rem;
+    flex-shrink: 0;
+}
+
+.header-main-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.app-branding {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.back-nav {
+    margin-bottom: 0.15rem;
+}
+
+.back-link {
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: var(--transition-smooth);
+    display: inline-block;
+}
+
+.back-link:hover {
+    color: var(--color-wire-low);
+    transform: translateX(-4px);
+    text-shadow: 0 0 8px var(--color-wire-low-glow);
+}
+
+.title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.logo-icon {
+    font-size: 1.85rem;
+    color: var(--color-wire-high);
+    text-shadow: 0 0 10px var(--color-wire-high-glow);
+}
+
+.title-row h1 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.subtitle {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    font-weight: 500;
+}
+
+.header-badges {
+    display: flex;
+    gap: 0.65rem;
+}
+
+.badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    border: 1px solid var(--color-border);
+}
+
+.badge-volt {
+    color: var(--color-wire-high);
+    border-color: var(--color-wire-high-glow);
+    background: rgba(255, 157, 0, 0.05);
+}
+
+.badge-amp {
+    color: var(--color-wire-low);
+    border-color: var(--color-wire-low-glow);
+    background: rgba(0, 191, 255, 0.05);
+}
+
+/* 4. NAVEGAÇÃO DE ABAS */
+.circuit-tabs {
+    display: flex;
+    background: #0d111c;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 0.35rem;
+    flex-shrink: 0;
+    gap: 0.35rem;
+}
+
+.tab-trigger {
+    flex: 1;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.tab-trigger:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.02);
+    color: #ffffff;
+}
+
+.tab-trigger.active {
+    background: var(--color-wire-high);
+    color: #07090d;
+    box-shadow: 0 0 10px var(--color-wire-high-glow);
+}
+
+/* 5. GRID PRINCIPAL SPLIT */
+.workspace-split {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 1.25rem;
+    flex: 1;
+    min-height: 0;
+}
+
+.simulator-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    height: 100%;
+}
+
+.canvas-panel {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.5rem;
+    background: #05070c;
+}
+
+#circuit-canvas {
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+}
+
+.controls-panel {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    flex-shrink: 0;
+}
+
+.separator-line {
+    height: 1px;
+    background: #181d2c;
+    width: 100%;
+}
+
+/* Seletor de Carga */
+.load-selector-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.row-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.load-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.load-btn {
+    background: #0d121c;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.5rem 0.9rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.load-btn:hover:not(.active) {
+    border-color: var(--color-text-muted);
+    color: var(--color-text-primary);
+}
+
+.load-btn.active {
+    background: rgba(255, 157, 0, 0.05);
+    color: var(--color-wire-high);
+    border: 2px solid var(--color-wire-high);
+    box-shadow: 0 0 10px var(--color-wire-high-glow);
+}
+
+/* Grid de Controles */
+.controls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.control-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.block-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+}
+
+.digital-input-wrapper {
+    display: flex;
+    align-items: center;
+    background: #090c12;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 0.2rem 0.5rem;
+}
+
+.digital-input-wrapper input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #ffffff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-align: center;
+    width: 60px;
+}
+
+.digital-input-wrapper .unit {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-left: 2px;
+}
+
+.color-voltage {
+    border-color: var(--color-wire-high-glow);
+}
+.color-voltage input, .color-voltage .unit {
+    color: var(--color-wire-high);
+}
+
+.color-resistance {
+    border-color: var(--color-resistor-glow);
+}
+.color-resistance input, .color-resistance .unit {
+    color: var(--color-resistor);
+}
+
+.color-resistance2 {
+    border-color: var(--color-wire-low-glow);
+}
+.color-resistance2 input, .color-resistance2 .unit {
+    color: var(--color-wire-low);
+}
+
+.block-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+}
+
+/* Estilização Customizada de Sliders */
+.cyber-range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    background: #090c12;
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+}
+
+.cyber-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #ffffff;
+    transition: var(--transition-smooth);
+}
+
+.range-voltage::-webkit-slider-thumb {
+    border: 2px solid var(--color-wire-high);
+    box-shadow: 0 0 8px var(--color-wire-high-glow);
+}
+
+.range-resistance::-webkit-slider-thumb {
+    border: 2px solid var(--color-resistor);
+    box-shadow: 0 0 8px var(--color-resistor-glow);
+}
+
+.range-resistance2::-webkit-slider-thumb {
+    border: 2px solid var(--color-wire-low);
+    box-shadow: 0 0 8px var(--color-wire-low-glow);
+}
+
+/* HUD do Amperímetro */
+.ammeter-hud {
+    background: #05070c;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.hud-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.hud-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-electron-glow);
+    text-shadow: 0 0 6px rgba(255, 255, 51, 0.2);
+}
+
+.hud-subtitle {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+}
+
+.hud-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--color-electron-glow);
+    text-shadow: 0 0 10px rgba(255, 255, 51, 0.4);
+}
+
+/* Coluna de Informações (Direita) */
+.info-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    height: 100%;
+}
+
+.panel-header {
+    padding: 0.65rem 1rem;
+    background: #0d111c;
+    border-bottom: 1px solid var(--color-border-glass);
+    flex-shrink: 0;
+}
+
+.panel-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    letter-spacing: 0.05em;
+}
+
+/* Painel de Fórmulas */
+.formula-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.formula-display-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1.5rem;
+    position: relative;
+}
+
+.formula-canvas-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+/* Caixa de Alerta de Lâmpada Queimada */
+.formula-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+    color: #ff3344;
+    animation: pulseWarning 1.5s infinite alternate;
+}
+
+.warning-icon {
+    font-size: 2.2rem;
+}
+
+.warning-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+.warning-text {
+    font-size: 0.75rem;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Desenho matemático da fórmula */
+.formula-math {
+    display: flex;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.formula-math.math-parallel {
+    font-size: 1.12rem;
+}
+
+.parallel-resistance-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.math-left {
+    display: flex;
+    align-items: center;
+}
+
+.math-var {
+    display: inline-block;
+    transition: transform 0.15s ease-out;
+    transform-origin: center;
+}
+
+.var-i {
+    color: var(--color-electron-glow);
+    text-shadow: 0 0 10px rgba(255, 255, 51, 0.3);
+}
+
+.var-v {
+    color: var(--color-wire-high);
+    text-shadow: 0 0 10px var(--color-wire-high-glow);
+}
+
+.var-r {
+    color: var(--color-resistor);
+    text-shadow: 0 0 10px var(--color-resistor-glow);
+}
+
+.math-equal {
+    margin: 0 0.75rem;
+    color: var(--color-text-primary);
+}
+
+.math-fraction {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.fraction-line {
+    width: 110%;
+    height: 2.5px;
+    background: var(--color-border);
+    margin: 0.35rem 0;
+}
+
+.formula-labels {
+    display: flex;
+    justify-content: space-around;
+    padding: 0 1.5rem 0.5rem 1.5rem;
+    font-size: 0.7rem;
+    font-family: 'Outfit', sans-serif;
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+.lbl-desc {
+    min-width: 80px;
+    text-align: center;
+}
+
+.formula-footer-calc {
+    padding: 0.75rem 1rem;
+    background: #05070c;
+    border-top: 1px solid var(--color-border-glass);
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+}
+
+/* Painel de Cores do Resistor */
+.resistor-bands-panel {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 0.85rem;
+}
+
+.bands-widget-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.15rem 1rem 0.65rem 1rem;
+}
+
+.bands-widget-header {
+    width: 100%;
+    border-top: 1px dashed rgba(27, 34, 52, 0.5);
+    padding-top: 0.65rem;
+    margin-bottom: 0.5rem;
+}
+
+.widget-subtitle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+}
+
+.graphic-resistor {
+    display: flex;
+    align-items: center;
+    position: relative;
+    width: 130px;
+    height: 24px;
+}
+
+.wire-lead {
+    height: 2px;
+    background: #4f5e75;
+    flex: 1;
+}
+
+.resistor-body {
+    width: 58px;
+    height: 14px;
+    background: #ded4c5;
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    position: relative;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.band {
+    position: absolute;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    transition: var(--transition-smooth);
+}
+
+.band-1 { left: 8px; }
+.band-2 { left: 17px; }
+.band-3 { left: 26px; }
+.band-4 { left: 42px; }
+
+.resistor-colors-text {
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    font-family: 'Outfit', sans-serif;
+    padding: 0 0.5rem;
+}
+
+/* 6. BARRA DE STATUS */
+.app-status-bar {
+    padding: 0.45rem 1.5rem;
+    background: rgba(11, 15, 25, 0.8);
+    border: 1px solid var(--color-border-glass);
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+#lbl-status-message {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+.sound-enable-cb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+.sound-enable-cb input {
+    width: 12px;
+    height: 12px;
+    accent-color: var(--color-wire-low);
+}
+
+/* 7. ANIMATIONS */
+@keyframes pulseWarning {
+    from { opacity: 0.65; }
+    to { opacity: 1; }
+}

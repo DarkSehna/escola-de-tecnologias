@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratório de Física: Lei de Ohm | TitanTech</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=1.0">
+</head>
+<body>
+
+    <!-- Ambient Glow Effects -->
+    <div class="ambient-glow bg-left"></div>
+    <div class="ambient-glow bg-right"></div>
+
+    <div class="app-container">
+        
+        <!-- CABEÇALHO -->
+        <header class="app-header panel-glass">
+            <div class="header-main-row">
+                <div class="app-branding">
+                    <div class="back-nav">
+                        <a href="../" class="back-link">← Voltar ao Painel Central</a>
+                    </div>
+                    <div class="title-row">
+                        <span class="logo-icon">⚡</span>
+                        <div>
+                            <h1>LABORATÓRIO DE FÍSICA: LEI DE OHM</h1>
+                            <span class="subtitle">Ensino Prático de Tensão, Resistência e Corrente</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-badges">
+                    <span class="badge badge-volt">V = R · I</span>
+                    <span class="badge badge-amp">I = V / R</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- NAVEGAÇÃO DE ABAS DO CIRCUITO (SÉRIE vs PARALELO) -->
+        <nav class="circuit-tabs" aria-label="Abas do Simulador">
+            <button id="tab-btn-series" class="tab-trigger active">[ 🔄 CIRCUITO EM SÉRIE ]</button>
+            <button id="tab-btn-parallel" class="tab-trigger">[ 🔀 CIRCUITO EM PARALELO ]</button>
+        </nav>
+
+        <!-- CONTAINER PRINCIPAL SPLIT -->
+        <div class="workspace-split">
+            
+            <!-- COLUNA ESQUERDA: SIMULADOR (CANVAS + CONTROLES) -->
+            <section class="simulator-column">
+                
+                <!-- Painel do Canvas do Circuito -->
+                <div class="canvas-panel panel-glass">
+                    <canvas id="circuit-canvas" width="680" height="380"></canvas>
+                </div>
+
+                <!-- Painel Inferior de Controles -->
+                <div class="controls-panel panel-glass">
+                    
+                    <!-- 1. Seletor de Carga (Componente) -->
+                    <div class="control-row load-selector-row">
+                        <span class="row-label">🔌 COMPONENTE DE CARGA:</span>
+                        <div class="load-buttons" id="load-selector-group">
+                            <button id="btn-load-resistor" class="load-btn active" data-load="resistor">🛑 Apenas Resistor</button>
+                            <button id="btn-load-bulb" class="load-btn" data-load="bulb">💡 Resistor + Lâmpada</button>
+                            <button id="btn-load-motor" class="load-btn" data-load="motor">⚙️ Resistor + Motor</button>
+                        </div>
+                    </div>
+
+                    <div class="separator-line"></div>
+
+                    <!-- 2. Sliders e Entradas Digitais -->
+                    <div class="controls-grid">
+                        
+                        <!-- Bloco de Tensão (V) -->
+                        <div class="control-block block-voltage">
+                            <div class="block-header">
+                                <span class="block-title">⚡ TENSÃO (BATERIA)</span>
+                                <div class="digital-input-wrapper color-voltage">
+                                    <input type="text" id="input-voltage" value="12.0" maxlength="4" autocomplete="off">
+                                    <span class="unit">V</span>
+                                </div>
+                            </div>
+                            <input type="range" id="slider-voltage" min="10" max="240" value="120" class="cyber-range range-voltage">
+                            <span class="block-hint">Representa a força da bateria empurrando elétrons.</span>
+                        </div>
+
+                        <!-- Bloco de Resistência (R ou R1/R2) -->
+                        <div class="control-block block-resistance" id="resistance-control-container">
+                            <!-- Injetado dinamicamente para Série ou Paralelo -->
+                        </div>
+
+                    </div>
+
+                    <!-- 3. HUD do Amperímetro -->
+                    <div class="ammeter-hud">
+                        <div class="hud-info">
+                            <span class="hud-title">AMPERÍMETRO (CORRENTE TOTAL)</span>
+                            <span class="hud-subtitle">Taxa de fluxo: Quantos elétrons entram/saem da bateria por segundo.</span>
+                        </div>
+                        <div class="hud-value" id="ammeter-readout">1.20 A</div>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- COLUNA DIREITA: VISUALIZADOR DE FÓRMULA & CORES -->
+            <section class="info-column">
+                
+                <!-- Painel da Fórmula Dinâmica -->
+                <div class="formula-panel panel-glass">
+                    <div class="panel-header">
+                        <span class="panel-title">📊 LEI DE OHM EM SÉRIE</span>
+                    </div>
+                    <div class="formula-display-container">
+                        <div id="formula-canvas-wrapper" class="formula-canvas-wrapper">
+                            <!-- Visualização procedural da fórmula -->
+                            <div id="formula-error-msg" class="formula-error hidden">
+                                <span class="warning-icon">⚠️</span>
+                                <span class="warning-title">LÂMPADA QUEIMADA!</span>
+                                <p class="warning-text">Corrente excedeu 1.5 A.<br>Aumente a resistência para limitar a corrente e restaurar.</p>
+                            </div>
+                            <div id="formula-math-display" class="formula-math">
+                                <div class="math-left">
+                                    <span id="math-var-i" class="math-var var-i">I</span>
+                                </div>
+                                <div class="math-equal">=</div>
+                                <div class="math-fraction">
+                                    <span id="math-var-v" class="math-var var-v">V</span>
+                                    <div class="fraction-line"></div>
+                                    <span id="math-var-r" class="math-var var-r">R</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="formula-labels">
+                        <span class="lbl-desc desc-i">Corrente (I)</span>
+                        <span class="lbl-desc desc-v">Tensão (V)</span>
+                        <span class="lbl-desc desc-r" id="formula-denom-lbl">Resistência (R)</span>
+                    </div>
+
+                    <div class="formula-footer-calc" id="formula-calculation-details">
+                        Resistência Total: R (10Ω) = 10Ω
+                    </div>
+                </div>
+
+                <!-- Painel de Bandas de Cores do Resistor -->
+                <div class="resistor-bands-panel panel-glass" id="resistor-colors-panel">
+                    <div class="panel-header">
+                        <span class="panel-title">🎨 CÓDIGO DE CORES DO RESISTOR (E24)</span>
+                    </div>
+                    
+                    <div class="bands-widget-container">
+                        <!-- Desenho vetorial do resistor -->
+                        <div class="graphic-resistor">
+                            <div class="wire-lead lead-left"></div>
+                            <div class="resistor-body">
+                                <div class="band band-1" id="band-1"></div>
+                                <div class="band band-2" id="band-2"></div>
+                                <div class="band band-3" id="band-3"></div>
+                                <div class="band band-4" id="band-4"></div>
+                            </div>
+                            <div class="wire-lead lead-right"></div>
+                        </div>
+                    </div>
+
+                    <div class="resistor-colors-text" id="resistor-colors-text-list">
+                        Cores: Marrom, Preto, Preto, Ouro
+                    </div>
+
+                    <div class="bands-widget-container hidden" id="resistor2-widget-container">
+                        <div class="bands-widget-header">
+                            <span class="widget-subtitle">🎨 CÓDIGO DE CORES DO RESISTOR 2 (E24)</span>
+                        </div>
+                        <div class="graphic-resistor">
+                            <div class="wire-lead lead-left"></div>
+                            <div class="resistor-body">
+                                <div class="band band-1" id="band2-1"></div>
+                                <div class="band band-2" id="band2-2"></div>
+                                <div class="band band-3" id="band2-3"></div>
+                                <div class="band band-4" id="band2-4"></div>
+                            </div>
+                            <div class="wire-lead lead-right"></div>
+                        </div>
+                        <div class="resistor-colors-text" id="resistor2-colors-text-list">
+                            Cores: Vermelho, Vermelho, Preto, Ouro
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+        </div>
+
+        <!-- BARRA DE STATUS -->
+        <footer class="app-status-bar">
+            <span id="lbl-status-message">[ STATUS ] Inicializando laboratório de física...</span>
+            <label class="sound-enable-cb">
+                <input type="checkbox" id="checkbox-sound" checked>
+                <span>Habilitar Sons (Beeps)</span>
+            </label>
+        </footer>
+
+    </div>
+
+    <!-- Script principal -->
+    <script src="script.js?v=1.0"></script>
+</body>
+</html>

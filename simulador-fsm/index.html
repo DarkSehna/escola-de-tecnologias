@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Máquina de Estados (FSM) | TitanTech</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=1.0">
+</head>
+<body>
+
+    <!-- Ambient Glow Effects -->
+    <div class="ambient-glow bg-left"></div>
+    <div class="ambient-glow bg-right"></div>
+
+    <div class="app-container">
+        
+        <!-- BARRA LATERAL (CONTROLADORA) -->
+        <aside class="sidebar panel-glass">
+            <!-- Voltar para o Dashboard -->
+            <div class="back-nav">
+                <a href="../" class="back-link">← Voltar ao Painel Central</a>
+            </div>
+
+            <header class="sidebar-header">
+                <span class="logo">⚙️</span>
+                <div>
+                    <h1>Simulador FSM</h1>
+                    <span class="subtitle">Editor Visual de Estados</span>
+                </div>
+            </header>
+
+            <div class="separator"></div>
+
+            <!-- Adicionar Estado -->
+            <div class="control-group">
+                <label for="input-state-name" class="group-label">NOVO ESTADO</label>
+                <div class="input-with-btn">
+                    <input type="text" id="input-state-name" placeholder="Ex: DASH, PULO..." maxlength="15" autocomplete="off">
+                    <button id="btn-create-state" class="cyber-btn">CRIAR</button>
+                </div>
+            </div>
+
+            <!-- Lista de Estados do Projeto -->
+            <div class="control-group">
+                <label class="group-label">ESTADOS NO PROJETO (Arraste p/ Canvas)</label>
+                <div class="state-list-container">
+                    <ul id="project-states-list" class="states-list">
+                        <!-- Gerado dinamicamente -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- HUD Estado Ativo -->
+            <div class="control-group active-state-hud">
+                <label class="group-label">ESTADO ATIVO ATUAL</label>
+                <div class="active-state-display">
+                    <span id="active-state-val">&lt; NENHUM &gt;</span>
+                </div>
+            </div>
+
+            <!-- Configurar Transição Selecionada -->
+            <div id="transition-config-panel" class="control-group trans-config-card" style="display: none;">
+                <label class="group-label text-neon-green">CONFIGURAR GATILHO</label>
+                <div class="trans-info">
+                    <span id="lbl-trans-path">De: A ➔ Para: B</span>
+                </div>
+                <div class="trans-trigger-hud">
+                    <span id="lbl-current-trigger">GATILHO: n/a</span>
+                </div>
+                
+                <button id="btn-record-trigger" class="record-btn">⌨️ GRAVAR TECLA / CLIQUE</button>
+
+                <div class="timer-selector">
+                    <label for="combo-timer" class="sub-label">OU TEMPO DE ESPERA:</label>
+                    <select id="combo-timer" class="cyber-select">
+                        <option value="NONE">[Sem temporizador]</option>
+                        <option value="0.5s">0.5s (Meio segundo)</option>
+                        <option value="1s">1.0s (1 segundo)</option>
+                        <option value="2s">2.0s (2 segundos)</option>
+                        <option value="3s">3.0s (3 segundos)</option>
+                        <option value="5s">5.0s (5 segundos)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Exportar Código -->
+            <div class="control-group code-export-section">
+                <label for="combo-export-engine" class="group-label">EXPORTAR CÓDIGO</label>
+                <select id="combo-export-engine" class="cyber-select">
+                    <option value="GameMaker">GameMaker (GML Switch)</option>
+                    <option value="C++">C++ / Arduino (Enum Case)</option>
+                    <option value="JSON">JSON (Estrutura FSM)</option>
+                </select>
+                
+                <div class="code-container">
+                    <pre><code id="code-template-display">// Código FSM</code></pre>
+                </div>
+                
+                <button id="btn-copy-code" class="copy-btn">📋 COPIAR VARIÁVEIS</button>
+            </div>
+        </aside>
+
+        <!-- ESPAÇO DE TRABALHO (CANVAS EDITOR) -->
+        <main class="workspace-container panel-glass">
+            
+            <div class="workspace-header">
+                <div class="instructions-panel">
+                    <span class="instruction-item">🖱️ <strong>Botão Direito + Arrastar</strong>: Conecta Nós</span>
+                    <span class="instruction-item">🖱️ <strong>Botão do Meio / Espaço+Arrastar</strong>: Mover Tela</span>
+                    <span class="instruction-item">⚙️ <strong>Duplo Clique</strong>: Testar Transição</span>
+                    <span class="instruction-item">⌨️ <strong>Delete</strong>: Deleta Selecionado</span>
+                </div>
+                <div class="workspace-controls">
+                    <button id="btn-reset-view" class="control-icon-btn" title="Centralizar Visualização">🎯</button>
+                    <button id="btn-clear-canvas" class="control-icon-btn danger-btn" title="Limpar Canvas">🧹</button>
+                </div>
+            </div>
+
+            <!-- Área Infinita com Grid de Blueprint -->
+            <div id="fsm-workspace" class="fsm-workspace-viewport">
+                <div id="fsm-canvas-container" class="fsm-canvas-transform">
+                    
+                    <!-- Overlay SVG para linhas de transição e setas -->
+                    <svg id="fsm-svg-overlay">
+                        <defs>
+                            <!-- Definição da ponta da seta (Arrowhead) -->
+                            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="22" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#5e6878" id="arrowhead-poly" />
+                            </marker>
+                            <marker id="arrowhead-selected" markerWidth="10" markerHeight="7" refX="22" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#00d2ff" />
+                            </marker>
+                            <marker id="arrowhead-active" markerWidth="10" markerHeight="7" refX="22" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#00ff66" />
+                            </marker>
+                        </defs>
+                        <!-- Linhas de conexões criadas -->
+                        <g id="svg-paths-group"></g>
+                        <!-- Linha temporária durante o arraste de conexão -->
+                        <path id="temp-svg-path" d="" stroke="#00d2ff" stroke-width="2" stroke-dasharray="4,4" fill="none" style="display: none;" />
+                    </svg>
+
+                    <!-- Div para conter os State Nodes (Nós HTML) -->
+                    <div id="nodes-layer"></div>
+
+                </div>
+            </div>
+
+            <!-- Terminal Console Logs (Dobrável) -->
+            <footer class="console-logs-footer">
+                <div class="console-header" id="btn-toggle-console">
+                    <span class="console-title">[ SYSTEM CONSOLE LOGS ]</span>
+                    <button id="console-toggle-icon" class="console-toggle-btn">[+] ABRIR</button>
+                </div>
+                <div id="console-output" class="console-output-body" style="display: none;">
+                    <!-- Mensagens do log appended aqui -->
+                </div>
+            </footer>
+
+        </main>
+
+    </div>
+
+    <!-- Div para a Notificação Toast flutuante -->
+    <div id="tt-toast" class="toast"></div>
+
+    <!-- Script principal -->
+    <script src="script.js?v=1.0"></script>
+</body>
+</html>

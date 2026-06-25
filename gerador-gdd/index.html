@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Game Design Document (GDD) | TitanTech</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=1.0">
+</head>
+<body>
+
+    <!-- Ambient Glow Effects -->
+    <div class="ambient-glow bg-left"></div>
+    <div class="ambient-glow bg-right"></div>
+
+    <div class="app-container">
+        
+        <!-- CABEÇALHO E TOOLBAR DE AÇÕES -->
+        <header class="app-header panel-glass">
+            <div class="header-main-row">
+                <!-- Identificação do Aplicativo -->
+                <div class="app-branding">
+                    <div class="back-nav">
+                        <a href="../" class="back-link">← Voltar ao Painel Central</a>
+                    </div>
+                    <div class="title-row">
+                        <span class="logo-icon">🎮</span>
+                        <div>
+                            <h1>GERADOR DE GAME DESIGN DOCUMENT (GDD)</h1>
+                            <span class="subtitle">Planeje e estruture as regras, histórias, personagens e mecânicas!</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botões de Ações de Arquivos -->
+                <div class="toolbar-actions">
+                    <button id="btn-new-gdd" class="tool-btn secondary-btn">🆕 Novo Documento</button>
+                    
+                    <!-- File input oculto para carregar arquivos -->
+                    <input type="file" id="file-uploader" accept=".md,.json" style="display: none;">
+                    <button id="btn-load-gdd" class="tool-btn secondary-btn">📁 Carregar Projeto</button>
+                    
+                    <button id="btn-save-gdd" class="tool-btn primary-btn disabled-style">💾 Salvar GDD (Incompleto)</button>
+                </div>
+            </div>
+
+            <!-- XP Progress Tracker (Barra de Experiência do GDD) -->
+            <div class="xp-progress-tracker">
+                <span id="lbl-xp-percentage" class="xp-label">QUEST PROGRESS: 0%</span>
+                <div class="xp-bar-container">
+                    <div id="xp-bar-fill" class="xp-bar-fill-style" style="width: 0%;"></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- GRID PRINCIPAL DE DUAS COLUNAS (FORMULÁRIO VS PREVIEW) -->
+        <div class="workspace-split">
+            
+            <!-- COLUNA DA ESQUERDA: FORMULÁRIO COM ABAS -->
+            <section class="editor-section panel-glass">
+                
+                <!-- Gatilhos de Abas Segmentadas -->
+                <nav class="form-tabs" aria-label="Abas do GDD">
+                    <button id="tab-btn-overview" class="tab-trigger active">[ 🌍 1. DIRETRIZES DO SISTEMA ]</button>
+                    <button id="tab-btn-character" class="tab-trigger">[ 👤 2. AVATAR & CONTROLES ]</button>
+                    <button id="tab-btn-mechanics" class="tab-trigger">[ ⚙️ 3. REGRAS & AMEAÇAS ]</button>
+                </nav>
+
+                <!-- CONTEÚDO DAS ABAS (ROLÁVEL) -->
+                <div class="tab-content-container">
+                    
+                    <!-- ABA 1: DIRETRIZES DO SISTEMA (OVERVIEW) -->
+                    <div id="panel-overview" class="tab-panel active">
+                        <div class="section-title-wrapper">
+                            <span class="section-badge">[ SYSTEM INITIALIZATION - IDENTIFICAÇÃO BANCO ]</span>
+                        </div>
+
+                        <!-- Título do Projeto -->
+                        <div class="form-group">
+                            <div class="group-header">
+                                <label for="input-game-name" class="input-label">Título do Projeto (Game Name) *</label>
+                                <span id="status-game-name" class="status-badge status-warning">[ ! ]</span>
+                            </div>
+                            <input type="text" id="input-game-name" class="cyber-input" placeholder="Ex: A Aventura de Pixel" maxlength="40" autocomplete="off">
+                            <span class="hint-text">Escolha um nome marcante para o seu projeto. Este campo é obrigatório!</span>
+                        </div>
+
+                        <!-- Gênero -->
+                        <div class="form-group">
+                            <div class="group-header">
+                                <label for="combo-genre" class="input-label">Gênero / Arquétipo</label>
+                                <span class="status-badge status-success">[ OK ]</span>
+                            </div>
+                            <select id="combo-genre" class="cyber-select">
+                                <option value="Plataforma" selected>Plataforma</option>
+                                <option value="Top-Down (RPG / Aventura)">Top-Down (RPG / Aventura)</option>
+                                <option value="Metroidvania">Metroidvania</option>
+                                <option value="Puzzle">Puzzle</option>
+                                <option value="Shooter / Shooter 2D">Shooter / Shooter 2D</option>
+                                <option value="Outro">Outro</option>
+                            </select>
+                            <span class="hint-text">Define o estilo principal de regras de colisão e movimentação do jogo.</span>
+                        </div>
+
+                        <div class="section-title-wrapper">
+                            <span class="section-badge">[ WORLD ENGINE - O UNIVERSO DO JOGO ]</span>
+                        </div>
+
+                        <!-- Objetivo Geral -->
+                        <div class="form-group">
+                            <div class="group-header">
+                                <label for="input-objective" class="input-label">Objetivo do Jogo (O que o jogador faz para vencer?)</label>
+                                <span id="status-objective" class="status-badge status-muted">[ - ]</span>
+                            </div>
+                            <textarea id="input-objective" class="cyber-textarea" placeholder="Exemplo: Chegar ao fim da fase coletando pelo menos 3 chaves para abrir o portal final antes que o tempo se esgote."></textarea>
+                            <span class="hint-text">Defina a meta principal que encerra o nível ou o jogo.</span>
+                        </div>
+
+                        <!-- História / Premissa -->
+                        <div class="form-group">
+                            <div class="group-header">
+                                <label for="input-story" class="input-label">Lore / Premissa do Mundo (História)</label>
+                                <span id="status-story" class="status-badge status-muted">[ - ]</span>
+                            </div>
+                            <textarea id="input-story" class="cyber-textarea" placeholder="Explique resumidamente quem é o protagonista, onde ele começa, qual problema surge e o que ele busca resolver."></textarea>
+                            <span class="hint-text">Conte o início da história e o que impulsiona a jogabilidade.</span>
+                        </div>
+
+                        <!-- Mundo / Cenário -->
+                        <div class="form-group">
+                            <div class="group-header">
+                                <label for="input-world" class="input-label">Ambiente / Cenário das Fases</label>
+                                <span id="status-world" class="status-badge status-muted">[ - ]</span>
+                            </div>
+                            <textarea id="input-world" class="cyber-textarea" placeholder="Descreva o ambiente visual e sonoro: uma masmorra escura cheia de lava, uma ilha flutuante pacífica e ensolarada, ou um planeta alienígena roxo."></textarea>
+                            <span class="hint-text">Descreva os temas visuais e cores predominantes do cenário.</span>
+                        </div>
+                    </div>
+
+                    <!-- ABA 2: AVATAR & CONTROLES -->
+                    <div id="panel-character" class="tab-panel">
+                        <div class="section-title-wrapper">
+                            <span class="section-badge">[ AVATAR INITIALIZATION - O PROTAGONISTA ]</span>
+                        </div>
+
+                        <!-- Nome do Protagonista -->
+                        <div class="form-group">
+                            <div class="group-header">
+                                <label for="input-hero-name" class="input-label">Identidade do Herói (Nome)</label>
+                                <span id="status-hero-name" class="status-badge status-muted">[ - ]</span>
+                            </div>
+                            <input type="text" id="input-hero-name" class="cyber-input" placeholder="Ex: Alex, Spark, Robô X" maxlength="30" autocomplete="off">
+                            <span class="hint-text">Digite o nome oficial ou codinome do personagem principal.</span>
+                        </div>
+
+                        <!-- Descrição / Aparência -->
+                        <div class="form-group">
+                            <div class="group-header">
+                                <label for="input-hero-desc" class="input-label">Aparência & Atributos</label>
+                                <span id="status-hero-desc" class="status-badge status-muted">[ - ]</span>
+                            </div>
+                            <textarea id="input-hero-desc" class="cyber-textarea" placeholder="Descreva como o herói se parece (Ex: Um gato com botas espaciais vermelhas, uma guerreira cibernética com armadura brilhante)."></textarea>
+                            <span class="hint-text">Descreva a aparência visual do protagonista para orientar os artistas.</span>
+                        </div>
+
+                        <!-- Habilidades e Ações -->
+                        <div class="form-group">
+                            <div class="group-header">
+                                <label for="input-hero-skills" class="input-label">Habilidades de Gameplay (Ações)</label>
+                                <span id="status-hero-skills" class="status-badge status-muted">[ - ]</span>
+                            </div>
+                            <textarea id="input-hero-skills" class="cyber-textarea" placeholder="Descreva as habilidades básicas e especiais (Ex: Andar, Pular, Pulo Duplo, Escalar Paredes, Disparar Laser)."></textarea>
+                            <span class="hint-text">Descreva todas as ações físicas que o protagonista pode realizar.</span>
+                        </div>
+
+                        <div class="section-title-wrapper">
+                            <span class="section-badge">[ CONTROL ENGINE - MAPEAMENTO DE INPUTS ]</span>
+                        </div>
+                        <span class="hint-text controls-intro">Mapeie quais teclas ou botões ativam cada ação do jogador durante a partida.</span>
+
+                        <!-- Container Dinâmico de Linhas de Controles -->
+                        <div id="controls-list" class="dynamic-rows-list">
+                            <!-- Injetado via Javascript -->
+                        </div>
+                        <button id="btn-add-control" class="add-row-btn">+ Adicionar Controle</button>
+                    </div>
+
+                    <!-- ABA 3: REGRAS & AMEAÇAS -->
+                    <div id="panel-mechanics" class="tab-panel">
+                        <div class="section-title-wrapper">
+                            <span class="section-badge">[ MAP ENGINE - OBSTÁCULOS E ELEMENTOS DO MAPA ]</span>
+                        </div>
+                        <span class="hint-text cbs-intro">Selecione quais elementos ou obstáculos estarão presentes nas fases do seu jogo:</span>
+
+                        <!-- Checkbox Cards (Mapeado em Grid) -->
+                        <div class="checkbox-grid">
+                            <label class="cb-card">
+                                <input type="checkbox" value="Armadilhas" class="cyber-cb">
+                                <span>Armadilhas (Espinhos, serras...)</span>
+                            </label>
+                            <label class="cb-card">
+                                <input type="checkbox" value="Paredes Falsas" class="cyber-cb">
+                                <span>Paredes Falsas (Passagens secretas)</span>
+                            </label>
+                            <label class="cb-card">
+                                <input type="checkbox" value="Paredes Quebráveis" class="cyber-cb">
+                                <span>Paredes Quebráveis (Ataques destroem)</span>
+                            </label>
+                            <label class="cb-card">
+                                <input type="checkbox" value="Ciclo Dia/Noite" class="cyber-cb">
+                                <span>Ciclo Dia/Noite (Luzes e cores)</span>
+                            </label>
+                            <label class="cb-card">
+                                <input type="checkbox" value="Limite de Tempo" class="cyber-cb">
+                                <span>Limite de Tempo / Cronômetro</span>
+                            </label>
+                            <label class="cb-card">
+                                <input type="checkbox" value="Plataformas Móveis" class="cyber-cb">
+                                <span>Plataformas Móveis (Direções)</span>
+                            </label>
+                            <label class="cb-card">
+                                <input type="checkbox" value="Plataformas Falsas" class="cyber-cb">
+                                <span>Plataformas Falsas (Caem ao pisar)</span>
+                            </label>
+                            <label class="cb-card">
+                                <input type="checkbox" value="Outros Obstáculos" class="cyber-cb">
+                                <span>Outros Obstáculos (Especifique)</span>
+                            </label>
+                        </div>
+
+                        <!-- Detalhamento dos Elementos do Mapa -->
+                        <div class="form-group">
+                            <div class="group-header">
+                                <label for="input-world-desc" class="input-label">Funcionamento dos Elementos do Mapa</label>
+                                <span id="status-world-desc" class="status-badge status-muted">[ - ]</span>
+                            </div>
+                            <textarea id="input-world-desc" class="cyber-textarea" placeholder="Exemplo: Ao pisar na plataforma falsa, ela treme por 1 segundo antes de cair física e visualmente, forçando o jogador a agir rápido."></textarea>
+                            <span class="hint-text">Explique como o cenário interage com o jogador.</span>
+                        </div>
+
+                        <div class="section-title-wrapper">
+                            <span class="section-badge">[ BESTIARY ENGINE - AMEAÇAS LOCAIS & CHEFES ]</span>
+                        </div>
+
+                        <!-- Minions -->
+                        <div class="form-group">
+                            <div class="group-header">
+                                <label for="input-minions" class="input-label">Bestiário (Ameaças Locais / Minions)</label>
+                                <span id="status-minions" class="status-badge status-muted">[ - ]</span>
+                            </div>
+                            <textarea id="input-minions" class="cyber-textarea" placeholder="Exemplo: 1) Slime Verde que se move horizontalmente batendo nas paredes. 2) Morcego Vermelho que persegue o jogador se ele se aproximar."></textarea>
+                            <span class="hint-text">Descreva os tipos de inimigos mais comuns no caminho.</span>
+                        </div>
+
+                        <!-- Chefes -->
+                        <div class="form-group">
+                            <div class="group-header">
+                                <label for="input-bosses" class="input-label">Grandes Oponentes (Chefes / Bosses)</label>
+                                <span id="status-bosses" class="status-badge status-muted">[ - ]</span>
+                            </div>
+                            <textarea id="input-bosses" class="cyber-textarea" placeholder="Exemplo: Um único dragão no final do jogo. Ele atira 3 bolas de fogo sequenciais, depois fica cansado por 2 segundos."></textarea>
+                            <span class="hint-text">Descreva o grande oponente e a mecânica para derrotá-lo.</span>
+                        </div>
+
+                        <div class="section-title-wrapper">
+                            <span class="section-badge">[ SYSTEM STATUS - REGRAS DO JOGO ]</span>
+                        </div>
+
+                        <!-- Condição de Vitória -->
+                        <div class="form-group">
+                            <div class="group-header">
+                                <label for="input-victory" class="input-label">Vitória do Jogador (Win State) *</label>
+                                <span id="status-victory" class="status-badge status-warning">[ ! ]</span>
+                            </div>
+                            <textarea id="input-victory" class="cyber-textarea" placeholder="Explique o gatilho lógico de vitória. Exemplo: Derrotar o chefe final, resgatar o pet preso ou encostar na bandeira de fim de fase."></textarea>
+                            <span class="hint-text">Esta regra é obrigatória para definir o fim de um nível com sucesso!</span>
+                        </div>
+
+                        <!-- Condição de Derrota -->
+                        <div class="form-group">
+                            <div class="group-header">
+                                <label for="input-defeat" class="input-label">Game Over: O que destrói seu herói? *</label>
+                                <span id="status-defeat" class="status-badge status-warning">[ ! ]</span>
+                            </div>
+                            <textarea id="input-defeat" class="cyber-textarea" placeholder="Explique o que penaliza o jogador. Exemplo: A barra de vida zerar devido a ataques inimigos, cair em um buraco ou esgotar o tempo."></textarea>
+                            <span class="hint-text">Esta regra é obrigatória para definir o fim de jogo em derrota!</span>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- COLUNA DA DIREITA: LIVE DOCUMENT PREVIEW -->
+            <section class="preview-section panel-glass">
+                <div class="preview-header">
+                    <span class="preview-title">📄 LIVE DOCUMENT PREVIEW (MARKDOWN)</span>
+                    <button id="btn-copy-markdown" class="copy-markdown-btn">📋 Copiar Markdown</button>
+                </div>
+                <div class="preview-body-container">
+                    <!-- Folha Física Simulado contendo a renderização GDD formatada -->
+                    <div id="gdd-document-sheet" class="document-sheet">
+                        <!-- Conteúdo de preview gerado dinamicamente -->
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- BARRA DE STATUS INFERIOR -->
+        <footer class="app-status-bar">
+            <span id="lbl-status-message">[ STATUS ] Inicializando sistemas da HUD...</span>
+            <label class="sound-enable-cb">
+                <input type="checkbox" id="checkbox-sound" checked>
+                <span>Habilitar Sons (Beeps)</span>
+            </label>
+        </footer>
+
+    </div>
+
+    <!-- Div para a Notificação Toast flutuante -->
+    <div id="tt-toast" class="toast"></div>
+
+    <!-- Script principal -->
+    <script src="script.js?v=1.0"></script>
+</body>
+</html>

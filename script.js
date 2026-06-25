@@ -11,12 +11,7 @@ const state = {
 
 // Ao carregar o documento
 document.addEventListener('DOMContentLoaded', () => {
-    // Tenta carregar o professor previamente selecionado do localStorage
-    const savedTeacher = localStorage.getItem('titanTech_selectedTeacher');
-    
-    if (savedTeacher && (savedTeacher === 'sandro' || savedTeacher === 'gabriel')) {
-        selectTeacher(savedTeacher, false); // Restaura sem animações agressivas
-    }
+    // Sempre inicia na tela de seleção de professor por padrão
 });
 
 /**
