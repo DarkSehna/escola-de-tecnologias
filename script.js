@@ -11,7 +11,29 @@ const state = {
 
 // Ao carregar o documento
 document.addEventListener('DOMContentLoaded', () => {
-    // Sempre inicia na tela de seleção de professor por padrão
+    // Se o usuário veio de algum dos simuladores via link de voltar
+    const cameFromSimulator = document.referrer && (
+        document.referrer.includes('/simulador-') ||
+        document.referrer.includes('/gerador-') ||
+        document.referrer.includes('/obr-') ||
+        document.referrer.includes('/lab-') ||
+        document.referrer.includes('/hacker-')
+    );
+
+    if (cameFromSimulator) {
+        const savedTeacher = localStorage.getItem('titanTech_selectedTeacher');
+        const savedTab = localStorage.getItem('titanTech_activeTab');
+        if (savedTeacher) {
+            selectTeacher(savedTeacher, false); // Seleciona professor sem animação suave
+            if (savedTab) {
+                switchTab(savedTab);
+            }
+        }
+    } else {
+        // Acesso novo/direto: limpa os dados anteriores para exibir a tela de seleção limpa
+        localStorage.removeItem('titanTech_selectedTeacher');
+        localStorage.removeItem('titanTech_activeTab');
+    }
 });
 
 /**
@@ -94,6 +116,7 @@ function backToTeacherSelect() {
  */
 function switchTab(tabName) {
     state.activeTab = tabName;
+    localStorage.setItem('titanTech_activeTab', tabName);
 
     // 1. Remove classe ativa de todos os botões e painéis
     const tabTriggers = document.querySelectorAll('.tab-trigger');
