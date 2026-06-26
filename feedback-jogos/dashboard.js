@@ -52,16 +52,6 @@ class SynthAudio {
 }
 const audio = new SynthAudio();
 
-// --- DADOS MOCK (FALLBACK PARA QUANDO NÃO CONECTADO A PLANILHA) ---
-const MOCK_FEEDBACKS = [
-    { "Data/Hora": new Date(Date.now() - 300000).toISOString(), "Turma": "Turma A", "Jogo": "Alana - Retro Pong Arena", "Estrelas": "4", "Dificuldade": "Na Medida", "Tags": "🎮 Controles Bons, 🎨 Visual Legal" },
-    { "Data/Hora": new Date(Date.now() - 600000).toISOString(), "Turma": "Turma A", "Jogo": "Benício - Hacker Vault Breaker", "Estrelas": "5", "Dificuldade": "Impossível", "Tags": "🎨 Visual Legal, 🧩 Fiquei Preso" },
-    { "Data/Hora": new Date(Date.now() - 900000).toISOString(), "Turma": "Turma B", "Jogo": "Cyber Platformer 2026", "Estrelas": "3", "Dificuldade": "Muito Fácil", "Tags": "⚠️ Travou/Bug, 📉 Fácil Demais" },
-    { "Data/Hora": new Date(Date.now() - 1200000).toISOString(), "Turma": "Turma B", "Jogo": "Space Ranger 2D", "Estrelas": "5", "Dificuldade": "Na Medida", "Tags": "🎮 Controles Bons, 🎨 Visual Legal, 🎵 Áudio Legal" },
-    { "Data/Hora": new Date(Date.now() - 1500000).toISOString(), "Turma": "Turma B", "Jogo": "Retro Pong Arena", "Estrelas": "2", "Dificuldade": "Muito Fácil", "Tags": "📉 Fácil Demais, ⚠️ Travou/Bug" },
-    { "Data/Hora": new Date(Date.now() - 1800000).toISOString(), "Turma": "Turma A", "Jogo": "Frederico - Gravity Physics Sandbox", "Estrelas": "4", "Dificuldade": "Na Medida", "Tags": "🎮 Controles Bons, 🧩 Fiquei Preso" }
-];
-
 // --- ESTADO DO DASHBOARD ---
 const dashboardState = {
     enteredPin: "",
@@ -71,7 +61,6 @@ const dashboardState = {
         tags: null
     },
     pollingIntervalId: null,
-    isMocking: false,
     selectedClass: "",
     selectedGame: "",
     allRecords: []
@@ -294,36 +283,16 @@ function fetchAndRenderData() {
             return response.json();
         })
         .then(data => {
-            dashboardState.isMocking = false;
             dashboardState.allRecords = data || [];
-            // Se a planilha estiver vazia, carrega dados mock para demonstração
-            if (!data || data.length === 0) {
-                loadMockData("Planilha vazia! Exibindo dados simulados de treino.");
-            } else {
-                processAndRenderFeedbacks(data);
-            }
+            processAndRenderFeedbacks(dashboardState.allRecords);
         })
         .catch(err => {
-            // Caso falhe por CORS ou URL inválida, caímos no Mock Data de forma inteligente
-            if (!dashboardState.isMocking) {
-                console.warn("API indisponível ou CORS bloqueado. Usando dados Mock para visualização local.", err);
-                loadMockData("Planilha desconectada. Exibindo dados mock locais.");
-            }
+            console.warn("API indisponível ou CORS bloqueado.", err);
+            // Renderiza estado vazio se falhar, sem usar mock data
+            dashboardState.allRecords = [];
+            processAndRenderFeedbacks([]);
+            showToast("Erro ao conectar com a planilha. Verifique a URL do Apps Script.");
         });
-}
-
-// Carrega os dados mockados de simulação
-function loadMockData(noticeMsg) {
-    dashboardState.isMocking = true;
-    dashboardState.allRecords = MOCK_FEEDBACKS;
-    const badge = document.querySelector(".refresh-badge");
-    if (badge) {
-        badge.innerHTML = `<span class="refresh-dot" style="background: var(--color-neon-yellow); box-shadow: 0 0 8px var(--color-neon-yellow-glow);"></span> MOCK MODE`;
-        badge.style.borderColor = "var(--color-neon-yellow)";
-        badge.style.color = "var(--color-neon-yellow)";
-        badge.title = noticeMsg;
-    }
-    processAndRenderFeedbacks(MOCK_FEEDBACKS);
 }
 
 // Processa o array de feedbacks e plota nos gráficos/tabela
