@@ -72,7 +72,7 @@ const DEFAULT_PROJECT_STATES = ["GROUND", "AIR", "DASH", "ATTACK", "HURT", "DEAD
 
 const DEFAULT_CONNECTIONS = {
     "GROUND": { "AIR": "SPACE", "DASH": "SHIFT", "ATTACK": "X", "HURT": "H", "DEAD": "K" },
-    "AIR": { "GROUND": "DOWN", "DASH": "SHIFT", "HURT": "H", "DEAD": "K" },
+    "AIR": { "GROUND": "1s", "DASH": "SHIFT", "HURT": "H", "DEAD": "K" },
     "DASH": { "GROUND": "NONE", "AIR": "NONE", "HURT": "H", "DEAD": "K" },
     "ATTACK": { "GROUND": "NONE", "AIR": "NONE", "HURT": "H", "DEAD": "K" },
     "HURT": { "GROUND": "NONE", "AIR": "NONE", "DEAD": "K" },
@@ -189,6 +189,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 4. Console logs toggle
     btnToggleConsole.addEventListener("click", toggleConsole);
+
+    // 4b. Code export toggle
+    const btnToggleCodeExport = document.getElementById("btn-toggle-code-export");
+    if (btnToggleCodeExport) {
+        btnToggleCodeExport.addEventListener("click", toggleCodeExport);
+    }
 
     // 5. Cliques em áreas vazias para deseleção
     viewport.addEventListener("click", (e) => {
@@ -1302,5 +1308,19 @@ function toggleConsole() {
         consoleOutput.style.display = "flex";
         consoleToggleIcon.textContent = "[-] FECHAR";
         consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    }
+}
+
+function toggleCodeExport() {
+    const codeExportBody = document.getElementById("code-export-body");
+    const codeExportToggleIcon = document.getElementById("code-export-toggle-icon");
+    
+    const isVisible = codeExportBody.style.display !== "none";
+    if (isVisible) {
+        codeExportBody.style.display = "none";
+        codeExportToggleIcon.textContent = "[+] ABRIR";
+    } else {
+        codeExportBody.style.display = "flex";
+        codeExportToggleIcon.textContent = "[-] FECHAR";
     }
 }

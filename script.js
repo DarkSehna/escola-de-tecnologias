@@ -11,28 +11,14 @@ const state = {
 
 // Ao carregar o documento
 document.addEventListener('DOMContentLoaded', () => {
-    // Se o usuário veio de algum dos simuladores via link de voltar
-    const cameFromSimulator = document.referrer && (
-        document.referrer.includes('/simulador-') ||
-        document.referrer.includes('/gerador-') ||
-        document.referrer.includes('/obr-') ||
-        document.referrer.includes('/lab-') ||
-        document.referrer.includes('/hacker-')
-    );
-
-    if (cameFromSimulator) {
-        const savedTeacher = localStorage.getItem('titanTech_selectedTeacher');
-        const savedTab = localStorage.getItem('titanTech_activeTab');
-        if (savedTeacher) {
-            selectTeacher(savedTeacher, false); // Seleciona professor sem animação suave
-            if (savedTab) {
-                switchTab(savedTab);
-            }
+    // Restaura o estado da sessão se o professor estiver salvo na sessionStorage
+    const savedTeacher = sessionStorage.getItem('titanTech_selectedTeacher');
+    const savedTab = sessionStorage.getItem('titanTech_activeTab');
+    if (savedTeacher) {
+        if (savedTab) {
+            state.activeTab = savedTab;
         }
-    } else {
-        // Acesso novo/direto: limpa os dados anteriores para exibir a tela de seleção limpa
-        localStorage.removeItem('titanTech_selectedTeacher');
-        localStorage.removeItem('titanTech_activeTab');
+        selectTeacher(savedTeacher, false); // Seleciona professor sem animação suave
     }
 });
 
@@ -43,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 function selectTeacher(teacherName, smooth = true) {
     state.selectedTeacher = teacherName;
-    localStorage.setItem('titanTech_selectedTeacher', teacherName);
+    sessionStorage.setItem('titanTech_selectedTeacher', teacherName);
 
     const screenSelect = document.getElementById('screen-select-teacher');
     const screenDashboard = document.getElementById('screen-dashboard');
@@ -82,8 +68,8 @@ function selectTeacher(teacherName, smooth = true) {
         screenDashboard.classList.add('active');
     }
 
-    // Por padrão, seleciona a primeira aba ("Games")
-    switchTab('games');
+    // Seleciona a aba ativa correspondente
+    switchTab(state.activeTab);
 }
 
 /**
@@ -91,7 +77,7 @@ function selectTeacher(teacherName, smooth = true) {
  */
 function backToTeacherSelect() {
     state.selectedTeacher = null;
-    localStorage.removeItem('titanTech_selectedTeacher');
+    sessionStorage.removeItem('titanTech_selectedTeacher');
 
     const screenSelect = document.getElementById('screen-select-teacher');
     const screenDashboard = document.getElementById('screen-dashboard');
@@ -116,7 +102,7 @@ function backToTeacherSelect() {
  */
 function switchTab(tabName) {
     state.activeTab = tabName;
-    localStorage.setItem('titanTech_activeTab', tabName);
+    sessionStorage.setItem('titanTech_activeTab', tabName);
 
     // 1. Remove classe ativa de todos os botões e painéis
     const tabTriggers = document.querySelectorAll('.tab-trigger');

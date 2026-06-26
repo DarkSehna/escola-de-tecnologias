@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Dashboard de feedbacks dos alunos em tempo real - Escola de Tecnologias.">
+    <title>Painel do Professor | Escola de Tecnologias</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Folha de Estilos -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Ambient Glow BG -->
+    <div class="bg-glow glow-pink"></div>
+    <div class="bg-glow glow-cyan"></div>
+
+    <!-- TELA 1: BLOQUEIO POR PIN (TECLADO CYBERPUNK) -->
+    <main id="lock-screen" class="pin-lock-container">
+        <!-- Voltar para a Avaliação (Aluno) -->
+        <div class="back-nav" style="width: 100%; text-align: left; margin-bottom: 0.25rem;">
+            <a href="index.html" class="back-link">← Voltar para Avaliação (Aluno)</a>
+        </div>
+        <div class="lock-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+        </div>
+        <header class="pin-header">
+            <h2>Painel do Professor</h2>
+            <p>Digite seu PIN de 4 dígitos para liberar os dados em tempo real</p>
+        </header>
+
+        <!-- Display de Bolinhas do PIN -->
+        <div class="pin-dots-display" id="pin-dots-container">
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+        </div>
+
+        <!-- Teclado Numérico (Grid 3x4) -->
+        <div class="pin-grid">
+            <button class="pin-btn num" data-val="1">1</button>
+            <button class="pin-btn num" data-val="2">2</button>
+            <button class="pin-btn num" data-val="3">3</button>
+
+            <button class="pin-btn num" data-val="4">4</button>
+            <button class="pin-btn num" data-val="5">5</button>
+            <button class="pin-btn num" data-val="6">6</button>
+
+            <button class="pin-btn num" data-val="7">7</button>
+            <button class="pin-btn num" data-val="8">8</button>
+            <button class="pin-btn num" data-val="9">9</button>
+
+            <button class="pin-btn action-btn clear" id="btn-pin-clear">Limpar</button>
+            <button class="pin-btn num" data-val="0">0</button>
+            <button class="pin-btn action-btn enter" id="btn-pin-enter">Entrar</button>
+        </div>
+    </main>
+
+    <!-- TELA 2: CONTEÚDO DO DASHBOARD (OCULTO POR PADRÃO) -->
+    <main id="dashboard-content" class="dashboard-container" style="display: none;">
+        <!-- Cabeçalho Administrativo -->
+        <header class="dashboard-header" style="flex-direction: column; align-items: flex-start; gap: 0.75rem;">
+            <div class="back-nav">
+                <a href="index.html" class="back-link">← Voltar para Avaliação (Aluno)</a>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 1.5rem; flex-wrap: wrap;">
+                <div class="dashboard-title">
+                    <h1>Painel de <span>Feedback</span></h1>
+                    <p>Estatísticas e Gráficos das turmas de Game Design em tempo real</p>
+                </div>
+                <div class="dashboard-controls">
+                    <!-- Filtro por Turma -->
+                    <div class="cyber-select-wrapper" style="width: 180px; text-align: left;">
+                        <select id="filter-class" class="cyber-select">
+                            <option value="">Todas as Turmas</option>
+                        </select>
+                    </div>
+                    <!-- Filtro por Jogo -->
+                    <div class="cyber-select-wrapper" style="width: 200px; text-align: left;">
+                        <select id="filter-game" class="cyber-select">
+                            <option value="">Todos os Jogos</option>
+                        </select>
+                    </div>
+                    <div class="refresh-badge">
+                        <span class="refresh-dot"></span>
+                        Live Update
+                    </div>
+                    <button class="pin-btn action-btn clear" id="btn-logout" style="width: auto; padding: 0.45rem 1rem; border-radius: 8px; font-size: 0.75rem;">Sair</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Feedbacks em Detalhe (Mover para Cima) -->
+        <section class="feedback-list-card">
+            <h2>Lista de Feedbacks Recentes</h2>
+            <div class="feedback-table-wrapper">
+                <table class="feedback-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 12%;">Data/Hora</th>
+                            <th style="width: 12%;">Turma</th>
+                            <th style="width: 16%;">Jogo Selecionado</th>
+                            <th style="width: 11%;">Diversão</th>
+                            <th style="width: 11%;">Dificuldade</th>
+                            <th style="width: 12%;">Onde Parou</th>
+                            <th style="width: 12%;">Tags Marcadas</th>
+                            <th style="width: 14%;">Comentários</th>
+                        </tr>
+                    </thead>
+                    <tbody id="feedback-table-body">
+                        <tr>
+                            <td colspan="8" class="no-data-msg" style="text-align: center; padding: 2rem;">Aguardando liberação de dados...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Grid de Gráficos (Mover para Baixo) -->
+        <section class="charts-grid">
+            <!-- Gráfico de Diversão -->
+            <div class="chart-card">
+                <h2>Média de Diversão</h2>
+                <div class="chart-wrapper">
+                    <canvas id="chart-stars"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfico de Dificuldade -->
+            <div class="chart-card">
+                <h2>Distribuição de Dificuldade</h2>
+                <div class="chart-wrapper">
+                    <canvas id="chart-difficulty"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfico de Tags Frequentes -->
+            <div class="chart-card">
+                <h2>Tags de Feedback Mais Marcadas</h2>
+                <div class="chart-wrapper">
+                    <canvas id="chart-tags"></canvas>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="tt-toast" class="toast"></div>
+
+    <!-- Script Administrativo -->
+    <script src="dashboard.js"></script>
+</body>
+</html>

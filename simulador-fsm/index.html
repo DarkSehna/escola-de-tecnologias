@@ -54,13 +54,7 @@
                 </div>
             </div>
 
-            <!-- HUD Estado Ativo -->
-            <div class="control-group active-state-hud">
-                <label class="group-label">ESTADO ATIVO ATUAL</label>
-                <div class="active-state-display">
-                    <span id="active-state-val">&lt; NENHUM &gt;</span>
-                </div>
-            </div>
+            <!-- HUD Estado Ativo movido para o cabeçalho do Canvas -->
 
             <!-- Configurar Transição Selecionada -->
             <div id="transition-config-panel" class="control-group trans-config-card" style="display: none;">
@@ -87,20 +81,25 @@
                 </div>
             </div>
 
-            <!-- Exportar Código -->
+            <!-- Exportar Código (Dobrável) -->
             <div class="control-group code-export-section">
-                <label for="combo-export-engine" class="group-label">EXPORTAR CÓDIGO</label>
-                <select id="combo-export-engine" class="cyber-select">
-                    <option value="GameMaker">GameMaker (GML Switch)</option>
-                    <option value="C++">C++ / Arduino (Enum Case)</option>
-                    <option value="JSON">JSON (Estrutura FSM)</option>
-                </select>
-                
-                <div class="code-container">
-                    <pre><code id="code-template-display">// Código FSM</code></pre>
+                <div class="code-export-header" id="btn-toggle-code-export" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+                    <label for="combo-export-engine" class="group-label" style="cursor: pointer; margin-bottom: 0; flex: 1;">EXPORTAR CÓDIGO</label>
+                    <span id="code-export-toggle-icon" style="font-size: 0.7rem; font-weight: 700; color: var(--color-neon-blue); border: 1px solid var(--color-neon-blue); border-radius: 4px; padding: 0.15rem 0.5rem; transition: var(--transition-smooth);">[+] ABRIR</span>
                 </div>
-                
-                <button id="btn-copy-code" class="copy-btn">📋 COPIAR VARIÁVEIS</button>
+                <div id="code-export-body" style="display: none; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
+                    <select id="combo-export-engine" class="cyber-select">
+                        <option value="GameMaker">GameMaker (GML Switch)</option>
+                        <option value="C++">C++ / Arduino (Enum Case)</option>
+                        <option value="JSON">JSON (Estrutura FSM)</option>
+                    </select>
+                    
+                    <div class="code-container">
+                        <pre><code id="code-template-display">// Código FSM</code></pre>
+                    </div>
+                    
+                    <button id="btn-copy-code" class="copy-btn">📋 COPIAR VARIÁVEIS</button>
+                </div>
             </div>
         </aside>
 
@@ -114,10 +113,17 @@
                     <span class="instruction-item">⚙️ <strong>Duplo Clique</strong>: Testar Transição</span>
                     <span class="instruction-item">⌨️ <strong>Delete</strong>: Deleta Selecionado</span>
                 </div>
+
                 <div class="workspace-controls">
                     <button id="btn-reset-view" class="control-icon-btn" title="Centralizar Visualização">🎯</button>
                     <button id="btn-clear-canvas" class="control-icon-btn danger-btn" title="Limpar Canvas">🧹</button>
                 </div>
+            </div>
+
+            <!-- HUD de Estado Ativo Centralizado (logo abaixo da barra superior) -->
+            <div class="active-state-canvas-hud">
+                <span class="hud-label">ESTADO ATIVO:</span>
+                <span id="active-state-val">&lt; NENHUM &gt;</span>
             </div>
 
             <!-- Área Infinita com Grid de Blueprint -->

@@ -22,13 +22,13 @@
     /* Neon Cores */
     --color-neon-blue: #00d2ff;
     --color-neon-blue-glow: rgba(0, 210, 255, 0.3);
-    
+
     --color-neon-green: #00ff66;
     --color-neon-green-glow: rgba(0, 255, 102, 0.3);
-    
+
     --color-neon-red: #ff3b30;
     --color-neon-red-glow: rgba(255, 59, 48, 0.3);
-    
+
     --color-neon-yellow: #ffcc00;
     --color-neon-yellow-glow: rgba(255, 204, 0, 0.3);
 
@@ -218,7 +218,7 @@ body {
     background: #07090d;
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 8px;
-    max-height: 140px;
+    height: 350px;
     overflow-y: auto;
     padding: 0.35rem;
 }
@@ -287,21 +287,49 @@ body {
     background: #090e17;
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 8px;
-    padding: 0.75rem;
-    text-align: center;
+    padding: 0.45rem 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 #active-state-val {
-    font-size: 1.15rem;
+    font-size: 1rem;
     font-weight: 800;
     color: var(--color-neon-yellow);
-    text-shadow: 0 0 10px var(--color-neon-yellow-glow);
+    text-shadow: 0 0 8px var(--color-neon-yellow-glow);
     letter-spacing: 0.05em;
 }
 
 #active-state-val.has-active {
     color: var(--color-neon-green);
-    text-shadow: 0 0 12px var(--color-neon-green-glow);
+    text-shadow: 0 0 10px var(--color-neon-green-glow);
+}
+
+/* HUD Estado Ativo (Workspace) */
+.active-state-canvas-hud {
+    position: absolute;
+    top: 4.25rem;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: auto;
+    background: rgba(11, 15, 25, 0.88);
+    border: 1.5px solid var(--color-neon-blue);
+    border-radius: 12px;
+    padding: 0.45rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    backdrop-filter: var(--glass-blur);
+    z-index: 10;
+}
+
+.active-state-canvas-hud .hud-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--color-text-normal);
+    letter-spacing: 0.05em;
 }
 
 /* Painel de Transição Selecionada */
@@ -353,7 +381,7 @@ body {
     border-color: #ffffff;
     color: #ffffff;
     animation: flashRed 1s infinite;
-    text-shadow: 0 0 5px rgba(255,255,255,0.5);
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
 }
 
 .timer-selector {
@@ -394,7 +422,7 @@ body {
 
 .code-container {
     background: #05070c;
-    border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 8px;
     padding: 0.65rem;
     height: 120px;
@@ -507,7 +535,7 @@ body {
     overflow: hidden;
     position: relative;
     background-color: #070a13;
-    background-image: 
+    background-image:
         radial-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 0),
         linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
@@ -529,7 +557,8 @@ body {
     top: 0;
     transform-origin: 0 0;
     transform: translate(-1700px, -1700px) scale(1);
-    pointer-events: none; /* Apenas os filhos escutam clicks */
+    pointer-events: none;
+    /* Apenas os filhos escutam clicks */
 }
 
 /* Camada SVG de Conexões */
@@ -543,8 +572,10 @@ body {
     pointer-events: none;
 }
 
-#fsm-svg-overlay path, #fsm-svg-overlay g {
-    pointer-events: visibleStroke; /* Permite clicar nas linhas */
+#fsm-svg-overlay path,
+#fsm-svg-overlay g {
+    pointer-events: visibleStroke;
+    /* Permite clicar nas linhas */
 }
 
 .transition-path {
@@ -598,7 +629,8 @@ body {
     cursor: move;
     user-select: none;
     z-index: 3;
-    pointer-events: auto; /* Habilita clicks no nó */
+    pointer-events: auto;
+    /* Habilita clicks no nó */
     transition: border-color 0.25s, box-shadow 0.25s, transform 0.15s;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
     padding: 0 1rem;
@@ -652,7 +684,7 @@ body {
     pointer-events: auto;
     user-select: none;
     transition: var(--transition-smooth);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .transition-label:hover {
@@ -780,6 +812,7 @@ body {
         border-color: rgba(0, 255, 102, 0.4);
         box-shadow: 0 0 6px rgba(0, 255, 102, 0.1);
     }
+
     to {
         border-color: var(--color-neon-green);
         box-shadow: 0 0 12px var(--color-neon-green-glow);
@@ -787,19 +820,35 @@ body {
 }
 
 @keyframes flashRed {
-    0%, 100% { background: var(--color-neon-red); }
-    50% { background: #b91c1c; }
+
+    0%,
+    100% {
+        background: var(--color-neon-red);
+    }
+
+    50% {
+        background: #b91c1c;
+    }
 }
 
 @keyframes flashRedBorder {
-    0%, 100% { border-color: var(--color-gray-muted); }
-    50% { border-color: var(--color-neon-red); box-shadow: 0 0 12px var(--color-neon-red-glow); }
+
+    0%,
+    100% {
+        border-color: var(--color-gray-muted);
+    }
+
+    50% {
+        border-color: var(--color-neon-red);
+        box-shadow: 0 0 12px var(--color-neon-red-glow);
+    }
 }
 
 @keyframes pulseActive {
     from {
         box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
     }
+
     to {
         box-shadow: 0 0 20px rgba(0, 255, 102, 0.5);
     }

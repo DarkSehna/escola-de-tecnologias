@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Avalie os jogos dos seus colegas e envie seu feedback de forma anônima e rápida.">
+    <title>Avaliação de Jogos | Escola de Tecnologias</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Folha de Estilos -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Ambient Glow BG -->
+    <div class="bg-glow glow-pink"></div>
+    <div class="bg-glow glow-cyan"></div>
+
+    <div class="app-container">
+        
+        <!-- CABEÇALHO DO APLICATIVO -->
+        <header class="app-header panel-glass">
+            <div class="header-main-row">
+                <div class="app-branding">
+                    <div class="back-nav">
+                        <a href="../" class="back-link" id="link-back-dashboard">← Voltar ao Painel Central</a>
+                    </div>
+                    <div class="title-row">
+                        <span class="logo-icon">🎮</span>
+                        <div>
+                            <h1>Game <span>Feedback</span></h1>
+                            <span class="subtitle">Avalie o jogo do seu colega de forma rápida, construtiva e anônima!</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Botão de acesso do professor -->
+                <div class="header-actions">
+                    <a href="dashboard.html" class="teacher-access-btn" title="Acesso ao Painel do Professor">
+                        <span class="icon">🔒</span> Painel do Professor
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- FORMULÁRIO DE AVALIAÇÃO -->
+        <main class="form-container panel-glass">
+            <form id="feedback-form" onsubmit="return false;" class="form-grid-layout">
+                
+                <!-- COLUNA 1: IDENTIFICAÇÃO, DIVERSÃO & CLAREZA -->
+                <div class="form-col">
+                    <h2 class="col-title">1. Geral & Diversão</h2>
+                    
+                    <!-- 1. Seleção da Turma -->
+                    <div class="form-group">
+                        <label for="select-class" class="label-title">Selecione sua Turma</label>
+                        <div class="cyber-select-wrapper">
+                            <select id="select-class" class="cyber-select" required>
+                                <option value="" disabled selected>Selecione a turma...</option>
+                                <!-- Preenchido dinamicamente via JS -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 2. Seleção do Jogo -->
+                    <div class="form-group">
+                        <label for="select-game" class="label-title">Qual jogo você jogou?</label>
+                        <div class="cyber-select-wrapper">
+                            <select id="select-game" class="cyber-select" required disabled>
+                                <option value="" disabled selected>Selecione a turma primeiro...</option>
+                                <!-- Preenchido dinamicamente via JS -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 2. Nota de Diversão (Estrelas) -->
+                    <div class="form-group">
+                        <label class="label-title">Nota de Diversão (Estrelas)</label>
+                        <div class="stars-wrapper" id="stars-container">
+                            <input type="radio" name="stars-rating" id="star-5" class="star-input" value="5">
+                            <label for="star-5" class="star-label" title="Excelente/Muito Divertido">★</label>
+
+                            <input type="radio" name="stars-rating" id="star-4" class="star-input" value="4">
+                            <label for="star-4" class="star-label" title="Divertido/Bom">★</label>
+
+                            <input type="radio" name="stars-rating" id="star-3" class="star-input" value="3">
+                            <label for="star-3" class="star-label" title="Legal/Ok">★</label>
+
+                            <input type="radio" name="stars-rating" id="star-2" class="star-input" value="2">
+                            <label for="star-2" class="star-label" title="Mais ou Menos">★</label>
+
+                            <input type="radio" name="stars-rating" id="star-1" class="star-input" value="1">
+                            <label for="star-1" class="star-label" title="Sem Graça/Chato">★</label>
+                        </div>
+                    </div>
+
+                    <!-- 3. Entendimento do Jogo -->
+                    <div class="form-group">
+                        <label class="label-title">O jogo é fácil de entender?</label>
+                        <div class="entendimento-grid" id="entendimento-container">
+                            <button type="button" class="entendimento-btn" data-val="Muito Claro">
+                                <span class="emoji">💡</span>
+                                Muito Claro
+                            </button>
+                            <button type="button" class="entendimento-btn" data-val="Confuso">
+                                <span class="emoji">❓</span>
+                                Confuso
+                            </button>
+                            <button type="button" class="entendimento-btn" data-val="Não Entendi">
+                                <span class="emoji">🌀</span>
+                                Não Entendi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLUNA 2: GAMEPLAY, DESAFIO & BUGS -->
+                <div class="form-col">
+                    <h2 class="col-title">2. Desafio & bugs</h2>
+                    
+                    <!-- 4. Nível de Dificuldade -->
+                    <div class="form-group">
+                        <label class="label-title">Nível de Dificuldade</label>
+                        <div class="difficulty-grid" id="difficulty-container">
+                            <button type="button" class="difficulty-btn" data-val="Muito Fácil">
+                                <span class="emoji">🟢</span>
+                                Muito Fácil
+                            </button>
+                            <button type="button" class="difficulty-btn" data-val="Na Medida">
+                                <span class="emoji">🟡</span>
+                                Na Medida
+                            </button>
+                            <button type="button" class="difficulty-btn" data-val="Impossível">
+                                <span class="emoji">🔴</span>
+                                Impossível
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 5. Onde você parou? -->
+                    <div class="form-group">
+                        <label class="label-title">Onde você parou?</label>
+                        <div class="progress-grid" id="progress-container">
+                            <button type="button" class="progress-btn" data-val="Cheguei ao Final">
+                                <span class="emoji">🏆</span>
+                                Cheguei ao Final
+                            </button>
+                            <button type="button" class="progress-btn" data-val="Desisti de Raiva">
+                                <span class="emoji">😡</span>
+                                Desisti de Raiva
+                            </button>
+                            <button type="button" class="progress-btn" data-val="O Jogo Quebrou">
+                                <span class="emoji">💥</span>
+                                Jogo Quebrou
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 6. Presença de Bugs -->
+                    <div class="form-group">
+                        <label class="label-title">Encontrou algum bug?</label>
+                        <div class="bugs-grid" id="bugs-container">
+                            <button type="button" class="bugs-btn" data-val="Sem Bugs">
+                                <span class="emoji">🟢</span>
+                                Nenhum Bug
+                            </button>
+                            <button type="button" class="bugs-btn" data-val="Bugs Leves">
+                                <span class="emoji">🟡</span>
+                                Bugs Leves
+                            </button>
+                            <button type="button" class="bugs-btn" data-val="Injogável">
+                                <span class="emoji">🔴</span>
+                                Injogável
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLUNA 3: DETALHES DE UX & ENVIAR -->
+                <div class="form-col">
+                    <h2 class="col-title">3. UX & Feedback</h2>
+                    
+                    <!-- 7. O que você mais gostou? (Destaques) -->
+                    <div class="form-group">
+                        <label class="label-title">O que mais gostou? (Pontos Fortes)</label>
+                        <div class="tags-grid highlight-tags" id="highlights-container">
+                            <button type="button" class="tag-btn highlight-btn" data-val="🎮 Controles Bons">🎮 Controles Bons</button>
+                            <button type="button" class="tag-btn highlight-btn" data-val="🎨 Visual Legal">🎨 Visual Legal</button>
+                            <button type="button" class="tag-btn highlight-btn" data-val="🎵 Sons Legais">🎵 Sons Legais</button>
+                            <button type="button" class="tag-btn highlight-btn" data-val="🌀 Ideia Criativa">🌀 Ideia Criativa</button>
+                            <button type="button" class="tag-btn highlight-btn" data-val="🔥 Muito Divertido">🔥 Muito Divertido</button>
+                        </div>
+                    </div>
+
+                    <!-- 8. O que precisa de atenção? (Sugestões) -->
+                    <div class="form-group">
+                        <label class="label-title">O que melhorar? (Sugestões)</label>
+                        <div class="tags-grid improvement-tags" id="improvements-container">
+                            <button type="button" class="tag-btn improvement-btn" data-val="🧩 Fiquei Preso">🧩 Fiquei Preso</button>
+                            <button type="button" class="tag-btn improvement-btn" data-val="⚠️ Travou/Bug">⚠️ Travou/Bug</button>
+                            <button type="button" class="tag-btn improvement-btn" data-val="📈 Muito Difícil">📈 Muito Difícil</button>
+                            <button type="button" class="tag-btn improvement-btn" data-val="📉 Fácil Demais">📉 Fácil Demais</button>
+                            <button type="button" class="tag-btn improvement-btn" data-val="📖 Falta Tutorial">📖 Falta Tutorial</button>
+                            <button type="button" class="tag-btn improvement-btn" data-val="🔧 Ajustar Controles">🔧 Ajustar Controles</button>
+                        </div>
+                    </div>
+
+                    <!-- 9. Comentários & Sugestões (Opcional) -->
+                    <div class="form-group">
+                        <label for="input-comments" class="label-title">Mensagem (Opcional)</label>
+                        <textarea id="input-comments" class="cyber-textarea" placeholder="Dicas de melhoria, bugs, elogios..." maxlength="250" style="min-height: 60px;"></textarea>
+                    </div>
+
+                    <!-- Botão de Envio -->
+                    <button type="submit" id="submit-btn" class="btn-submit">
+                        Enviar Feedback
+                        <span class="loader-spinner" id="submit-spinner"></span>
+                    </button>
+                </div>
+
+            </form>
+        </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="tt-toast" class="toast"></div>
+
+    <!-- Script Principal -->
+    <script src="script.js"></script>
+</body>
+</html>
