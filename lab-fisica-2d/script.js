@@ -50,14 +50,14 @@ frictionAir = {frictionAir};   // Fricção no ar`
     "Construct 3": {
         title: "Construct 3 (Platform)",
         description: "Variáveis mapeadas para as propriedades nativas do comportamento 'Platform'.",
-        gravity: { min: 100.0, max: 5000.0, default: 1080.0, step: 50.0 },
-        jump: { min: 100.0, max: 1500.0, default: 420.0, step: 10.0 },
-        speed: { min: 50.0, max: 1000.0, default: 240.0, step: 10.0 },
-        accelGround: { min: 50.0, max: 5000.0, default: 1260.0, step: 50.0 },
-        frictionGround: { min: 50.0, max: 5000.0, default: 540.0, step: 50.0 },
-        accelAir: { min: 50.0, max: 5000.0, default: 720.0, step: 50.0 },
-        frictionAir: { min: 10.0, max: 2000.0, default: 180.0, step: 10.0 },
-        maxFallSpeed: { min: 100.0, max: 2500.0, default: 720.0, step: 50.0 },
+        gravity: { min: 100.0, max: 5000.0, default: 1500.0, step: 50.0 },
+        jump: { min: 100.0, max: 1500.0, default: 650.0, step: 10.0 },
+        speed: { min: 50.0, max: 1000.0, default: 330.0, step: 10.0 },
+        accelGround: { min: 50.0, max: 5000.0, default: 1500.0, step: 50.0 },
+        frictionGround: { min: 50.0, max: 5000.0, default: 1500.0, step: 50.0 },
+        accelAir: { min: 50.0, max: 5000.0, default: 1500.0, step: 50.0 },
+        frictionAir: { min: 10.0, max: 2000.0, default: 1500.0, step: 10.0 },
+        maxFallSpeed: { min: 100.0, max: 2500.0, default: 1000.0, step: 50.0 },
         code_template: 
 `// Ajuste estas propriedades no comportamento 'Platform' do seu Objeto:
 Max Speed = {speed}

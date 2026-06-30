@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=1.0">
+    <link rel="stylesheet" href="style.css?v=1.3">
 </head>
 <body>
 
@@ -33,36 +33,7 @@
         </header>
 
         <main class="main-content">
-            <!-- Coluna Esquerda: Canvas e Controles Rápidos -->
-            <section class="simulation-column">
-                <div class="canvas-wrapper panel-glass">
-                    <div class="canvas-header">
-                        <span class="panel-tag">Área de Playground</span>
-                        <span id="resolution-indicator" class="panel-decor">Grade: 20x15</span>
-                    </div>
-                    <div class="canvas-container">
-                        <!-- Canvas principal da simulação -->
-                        <canvas id="sim-canvas" width="640" height="480"></canvas>
-                    </div>
-                </div>
-
-                <!-- Barra de Ferramentas Inferior -->
-                <div class="toolbar panel-glass">
-                    <div class="slow-motion-control">
-                        <label class="switch">
-                            <input type="checkbox" id="switch-slow">
-                            <span class="slider"></span>
-                        </label>
-                        <span class="switch-label">Câmera Lenta (0.25x)</span>
-                    </div>
-                    <div class="toolbar-actions">
-                        <button id="btn-clear-canvas" class="action-btn danger-btn">🧹 Limpar Desenhos</button>
-                        <button id="btn-reset-player" class="action-btn primary-btn">🔄 Reiniciar Bloco</button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Coluna Direita: Parâmetros Físicos e Engine Code -->
+            <!-- Coluna 1: Parâmetros Físicos -->
             <section class="control-panel panel-glass">
                 <div class="panel-header">
                     <h2>⚙️ CONTROLES FÍSICOS</h2>
@@ -157,8 +128,47 @@
                         <input type="number" id="input-maxFallSpeed" class="physics-input" step="1">
                     </div>
                 </div>
+            </section>
 
-                <!-- Template de Código Integrado -->
+            <!-- Coluna 2: Canvas e Controles Rápidos -->
+            <section class="simulation-column">
+                <div class="canvas-wrapper panel-glass">
+                    <div class="canvas-header">
+                        <span class="panel-tag">Área de Playground</span>
+                        <span id="resolution-indicator" class="panel-decor">Grade: 20x15</span>
+                    </div>
+                    <div class="canvas-container">
+                        <!-- Canvas principal da simulação -->
+                        <canvas id="sim-canvas" width="640" height="480"></canvas>
+                    </div>
+                </div>
+
+                <!-- Barra de Ferramentas Inferior -->
+                <div class="toolbar panel-glass">
+                    <div class="slow-motion-control">
+                        <label class="switch">
+                            <input type="checkbox" id="switch-slow">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="switch-label">Câmera Lenta (0.25x)</span>
+                    </div>
+                    <div class="toolbar-actions">
+                        <button id="btn-clear-canvas" class="action-btn danger-btn">🧹 Limpar Desenhos</button>
+                        <button id="btn-reset-player" class="action-btn primary-btn">🔄 Reiniciar Bloco</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Coluna 3: Código de Integração -->
+            <section class="code-panel panel-glass">
+                <div class="panel-header">
+                    <h2>💻 INTEGRAÇÃO</h2>
+                </div>
+
+                <p class="panel-description">
+                    Copie as variáveis abaixo e cole no seu motor de jogo para obter exatamente o mesmo comportamento físico simulado.
+                </p>
+
                 <div class="code-container">
                     <span class="code-header">CÓDIGO DE INTEGRAÇÃO</span>
                     <pre class="code-block"><code id="code-template-display">grv = 0.30;
@@ -172,6 +182,6 @@ jspd = -7.0;
     </div>
 
     <!-- Script principal -->
-    <script src="script.js?v=1.0"></script>
+    <script src="script.js?v=1.3"></script>
 </body>
 </html>

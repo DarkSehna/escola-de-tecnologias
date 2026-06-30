@@ -75,7 +75,7 @@ body {
 
 /* 2. LAYOUT PRINCIPAL */
 .app-container {
-    max-width: 1100px;
+    max-width: 1600px;
     margin: 0 auto;
     width: 100%;
     display: flex;
@@ -160,7 +160,7 @@ body {
 /* Layout de Duas Colunas */
 .main-content {
     display: grid;
-    grid-template-columns: 1.3fr 340px;
+    grid-template-columns: 310px 1.2fr 310px;
     gap: 1.5rem;
     align-items: start;
 }
@@ -327,11 +327,12 @@ body {
     box-shadow: 0 0 12px rgba(255, 85, 85, 0.3);
 }
 
-/* 4. COLUNA DA DIREITA: PAINEL DE CONTROLE */
-.control-panel {
+/* 4. COLUNAS LATERAIS: CONTROLE E CÓDIGO */
+.control-panel,
+.code-panel {
     display: flex;
     flex-direction: column;
-    max-height: calc(100vh - 120px);
+    max-height: calc(100vh - 125px);
     min-height: 570px;
 }
 
@@ -372,6 +373,13 @@ body {
     line-height: 1.4;
     margin-bottom: 0.75rem;
     min-height: 40px;
+}
+
+.panel-description {
+    font-size: 0.8rem;
+    color: var(--color-text-normal);
+    line-height: 1.4;
+    margin-bottom: 1rem;
 }
 
 .separator {
@@ -468,6 +476,7 @@ body {
     flex-direction: column;
     gap: 0.4rem;
     margin-bottom: 1.25rem;
+    flex-grow: 1;
 }
 
 .code-header {
@@ -486,7 +495,8 @@ body {
     font-size: 0.75rem;
     color: #cbd5e1;
     overflow-x: auto;
-    max-height: 120px;
+    max-height: 320px;
+    height: 100%;
     scrollbar-width: thin;
 }
 
@@ -551,12 +561,28 @@ body {
 }
 
 /* 5. RESPONSIVIDADE */
+@media (max-width: 1200px) {
+    .main-content {
+        grid-template-columns: 1fr 340px;
+    }
+    .code-panel {
+        grid-column: span 2;
+        max-height: none;
+    }
+    .code-block {
+        max-height: 160px;
+    }
+}
+
 @media (max-width: 900px) {
     .main-content {
         grid-template-columns: 1fr;
     }
-    
-    .control-panel {
+    .control-panel,
+    .code-panel {
         max-height: none;
+    }
+    .code-panel {
+        grid-column: span 1;
     }
 }
