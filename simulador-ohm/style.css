@@ -47,7 +47,7 @@ body {
     background-color: var(--color-bg-dark);
     color: var(--color-text-primary);
     min-height: 100vh;
-    overflow: hidden;
+    overflow-y: auto;
     position: relative;
     padding: 1.25rem;
 }
@@ -81,7 +81,7 @@ body {
     max-width: 1550px;
     margin: 0 auto;
     width: 100%;
-    height: calc(100vh - 2.5rem);
+    min-height: calc(100vh - 2.5rem);
     display: flex;
     flex-direction: column;
     gap: 1.15rem;
@@ -280,6 +280,7 @@ body {
 
 .load-buttons {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem;
 }
 

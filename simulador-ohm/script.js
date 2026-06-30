@@ -136,6 +136,7 @@ const state = {
     bulb2Burned: false,
     // Ângulo de rotação do motor
     motorRotation: 0.0,
+    motor2Rotation: 0.0,
     // Animação de elétrons (distâncias ao longo do fio)
     electronsSeries: [],
     electronsParallelMain: [],
@@ -182,9 +183,6 @@ const tabBtnSeries = document.getElementById("tab-btn-series");
 const tabBtnParallel = document.getElementById("tab-btn-parallel");
 
 const loadSelectorGroup = document.getElementById("load-selector-group");
-const btnLoadResistor = document.getElementById("btn-load-resistor");
-const btnLoadBulb = document.getElementById("btn-load-bulb");
-const btnLoadMotor = document.getElementById("btn-load-motor");
 
 const inputVoltage = document.getElementById("input-voltage");
 const sliderVoltage = document.getElementById("slider-voltage");
@@ -328,23 +326,47 @@ function updateResistorColorsUI() {
     }
 }
 
+// --- CONSTRUTOR DINÂMICO DO SELETOR DE CARGA ---
+function rebuildLoadSelector() {
+    if (state.mode === 'series') {
+        loadSelectorGroup.innerHTML = `
+            <button class="load-btn ${state.loadType === 'resistor' ? 'active' : ''}" data-load="resistor">🛑 Apenas Resistor</button>
+            <button class="load-btn ${state.loadType === 'bulb' ? 'active' : ''}" data-load="bulb">💡 Resistor + Lâmpada</button>
+            <button class="load-btn ${state.loadType === 'motor' ? 'active' : ''}" data-load="motor">⚙️ Resistor + Motor</button>
+        `;
+    } else { // parallel
+        loadSelectorGroup.innerHTML = `
+            <button class="load-btn ${state.loadType === 'resistor' ? 'active' : ''}" data-load="resistor">🛑 Apenas Resistores (R1 // R2)</button>
+            <button class="load-btn ${state.loadType === 'indiv_bulb' ? 'active' : ''}" data-load="indiv_bulb">💡 Resistores Indiv. + Lâmpadas</button>
+            <button class="load-btn ${state.loadType === 'indiv_motor' ? 'active' : ''}" data-load="indiv_motor">⚙️ Resistores Indiv. + Motores</button>
+            <button class="load-btn ${state.loadType === 'common_bulb' ? 'active' : ''}" data-load="common_bulb">🔀 Resistor Comum + Lâmpadas</button>
+            <button class="load-btn ${state.loadType === 'common_motor' ? 'active' : ''}" data-load="common_motor">🔄 Resistor Comum + Motores</button>
+        `;
+    }
+}
+
 // --- CONSTRUTOR DINÂMICO DE CONTROLES DE RESISTÊNCIA ---
 function rebuildResistanceControls() {
-    if (state.mode === 'series') {
+    if (state.mode === 'series' || state.loadType === 'common_bulb' || state.loadType === 'common_motor') {
         resistor2WidgetContainer.classList.add("hidden");
         
         const idx = getE24Index(state.resistance);
+        let title = state.mode === 'series' ? "🛑 RESISTÊNCIA LIMITADORA (E24)" : "🛑 RESISTOR COMUM: R1 (E24)";
+        let hint = state.mode === 'series' 
+            ? "O resistor reduz a corrente para proteger a lâmpada/motor."
+            : "O resistor comum no cabo principal limita a corrente total antes da divisão nos ramos.";
+            
         resistanceControlContainer.innerHTML = `
             <div class="control-block">
                 <div class="block-header">
-                    <span class="block-title" style="color: var(--color-resistor);">🛑 RESISTÊNCIA LIMITADORA (E24)</span>
+                    <span class="block-title" style="color: var(--color-resistor);">${title}</span>
                     <div class="digital-input-wrapper color-resistance">
                         <input type="text" id="input-resistance" value="${formatValue(state.resistance)}" autocomplete="off">
                         <span class="unit">Ω</span>
                     </div>
                 </div>
                 <input type="range" id="slider-resistance" min="0" max="120" value="${idx}" class="cyber-range range-resistance">
-                <span class="block-hint">O resistor reduz a corrente para proteger a lâmpada/motor.</span>
+                <span class="block-hint">${hint}</span>
             </div>
         `;
 
@@ -369,7 +391,7 @@ function rebuildResistanceControls() {
             calculateOhm();
         });
 
-    } else { // parallel
+    } else { // parallel with R1 and R2
         resistor2WidgetContainer.classList.remove("hidden");
         
         const idx1 = getE24Index(state.resistance);
@@ -397,7 +419,7 @@ function rebuildResistanceControls() {
                     </div>
                     <input type="range" id="slider-resistance2" min="0" max="120" value="${idx2}" class="cyber-range range-resistance2">
                 </div>
-                <span class="block-hint" style="margin-top: 0.35rem; display: block;">Em paralelo, a corrente se divide. Cada ramo tem brilho/corrente independente.</span>
+                <span class="block-hint" style="margin-top: 0.35rem; display: block;">Em paralelo com resistores individuais, cada ramo possui controle independente de corrente.</span>
             </div>
         `;
 
@@ -470,7 +492,11 @@ function calculateOhm() {
     } else { // parallel mode
         state.bulbBurned = false;
         
-        if (state.loadType === 'bulb') {
+        if (state.loadType === 'resistor') {
+            state.bulb1Burned = false;
+            state.bulb2Burned = false;
+            state.current = (state.voltage / state.resistance) + (state.voltage / state.resistance2);
+        } else if (state.loadType === 'indiv_bulb') {
             let i1 = state.voltage / (state.resistance + 10.0);
             if (i1 > 1.5) {
                 state.bulb1Burned = true;
@@ -488,10 +514,78 @@ function calculateOhm() {
             }
 
             state.current = i1 + i2;
+        } else if (state.loadType === 'indiv_motor') {
+            state.bulb1Burned = false;
+            state.bulb2Burned = false;
+            let i1 = state.voltage / (state.resistance + 15.0);
+            let i2 = state.voltage / (state.resistance2 + 15.0);
+            state.current = i1 + i2;
+        } else if (state.loadType === 'common_bulb') {
+            // Reset check: check if the current would be safe if both were working
+            let rp_init = 5.0;
+            let rt_init = state.resistance + rp_init;
+            let it_init = state.voltage / rt_init;
+            let i_branch_init = it_init / 2;
+            
+            let b1 = state.bulb1Burned;
+            let b2 = state.bulb2Burned;
+            
+            if (i_branch_init <= 1.5) {
+                // Safe current! Recover both bulbs
+                b1 = false;
+                b2 = false;
+            } else {
+                // Not safe current. If they were working, they burn now.
+                if (!b1 && !b2) {
+                    b1 = true;
+                    b2 = true;
+                }
+            }
+            
+            let i1 = 0.0, i2 = 0.0, it = 0.0;
+            if (b1 && b2) {
+                i1 = 0.0; i2 = 0.0; it = 0.0;
+            } else if (b1) {
+                let rt = state.resistance + 10.0;
+                it = state.voltage / rt;
+                i1 = 0.0;
+                i2 = it;
+                if (i2 > 1.5) {
+                    b2 = true;
+                    i2 = 0.0;
+                    it = 0.0;
+                }
+            } else if (b2) {
+                let rt = state.resistance + 10.0;
+                it = state.voltage / rt;
+                i1 = it;
+                i2 = 0.0;
+                if (i1 > 1.5) {
+                    b1 = true;
+                    i1 = 0.0;
+                    it = 0.0;
+                }
+            } else {
+                let rp = 5.0;
+                let rt = state.resistance + rp;
+                it = state.voltage / rt;
+                i1 = it / 2;
+                i2 = it / 2;
+            }
+            
+            state.bulb1Burned = b1;
+            state.bulb2Burned = b2;
+            state.current = it;
+        } else if (state.loadType === 'common_motor') {
+            state.bulb1Burned = false;
+            state.bulb2Burned = false;
+            let rp = 7.5;
+            let rt = state.resistance + rp;
+            state.current = state.voltage / rt;
         } else {
             state.bulb1Burned = false;
             state.bulb2Burned = false;
-            state.current = (state.voltage / state.resistance) + (state.voltage / state.resistance2);
+            state.current = 0.0;
         }
     }
 
@@ -531,8 +625,9 @@ function formatCurrent(val) {
 
 // --- ATUALIZAÇÃO DO VISUALIZADOR DE FÓRMULAS ---
 function updateFormulaUI() {
-    const isBurned = state.bulbBurned || (state.mode === 'parallel' && state.loadType === 'bulb' && state.bulb1Burned && state.bulb2Burned);
-    const isPartialBurned = state.mode === 'parallel' && state.loadType === 'bulb' && (state.bulb1Burned || state.bulb2Burned) && !(state.bulb1Burned && state.bulb2Burned);
+    const isBurned = state.bulbBurned || 
+                     (state.mode === 'parallel' && state.loadType === 'indiv_bulb' && state.bulb1Burned && state.bulb2Burned) ||
+                     (state.mode === 'parallel' && state.loadType === 'common_bulb' && state.bulb1Burned && state.bulb2Burned);
 
     if (isBurned) {
         formulaErrorMsg.classList.remove("hidden");
@@ -542,7 +637,7 @@ function updateFormulaUI() {
         if (state.mode === 'series') {
             formulaCalculationDetails.textContent = "Resistência Total: R (Lâmpada Queimada) = ∞";
         } else {
-            formulaCalculationDetails.textContent = "Resistência Total: R1 // R2 (Lâmpadas Queimadas) = ∞";
+            formulaCalculationDetails.textContent = "Resistência Total: Req (Lâmpadas Queimadas) = ∞";
         }
         return;
     }
@@ -598,44 +693,116 @@ function updateFormulaUI() {
         }
     } else { // paralelo
         formulaTitle.textContent = "📊 LEI DE OHM EM PARALELO";
-        formulaDenomLbl.textContent = state.loadType === 'bulb' ? "R1+R_L // R2+R_L" : "Req = R1 // R2";
-
-        let denom1 = state.loadType === 'bulb' ? "R_1 + R_L" : "R_1";
-        let denom2 = state.loadType === 'bulb' ? "R_2 + R_L" : "R_2";
-
+        
         const logR2 = Math.log10(state.resistance2);
         const scaleR2 = 0.85 + (logR2 / 5.0) * 0.3;
-
-        // Renderiza formula matemática em paralelo
-        formulaMathDisplay.innerHTML = `
-            <div class="math-left"><span id="math-var-i" class="math-var var-i" style="transform: scale(${scaleI})">I_t</span></div>
-            <div class="math-equal">=</div>
-            <div class="math-fraction">
-                <span class="math-var var-v" style="transform: scale(${scaleV})">V</span>
-                <div class="fraction-line"></div>
-                <span class="math-var var-r" style="transform: scale(${scaleR})">${denom1}</span>
-            </div>
-            <div class="math-equal" style="margin:0 0.4rem;">+</div>
-            <div class="math-fraction">
-                <span class="math-var var-v" style="transform: scale(${scaleV})">V</span>
-                <div class="fraction-line"></div>
-                <span class="math-var var-low" style="color:var(--color-wire-low); transform: scale(${scaleR2})">${denom2}</span>
-            </div>
-        `;
-
-        // Detalhes da conta
-        let r1_total = state.resistance + (state.loadType === 'bulb' ? 10.0 : 0);
-        let r2_total = state.resistance2 + (state.loadType === 'bulb' ? 10.0 : 0);
         
-        let i1 = state.bulb1Burned ? 0.0 : state.voltage / r1_total;
-        let i2 = state.bulb2Burned ? 0.0 : state.voltage / r2_total;
-        let req = (r1_total * r2_total) / (r1_total + r2_total);
-
-        let details = `Req = ${req.toFixed(2)}Ω | I1 = ${formatCurrent(i1)} | I2 = ${formatCurrent(i2)}`;
-        if (state.bulb1Burned) details = `Req1=∞ (Q) | ` + details;
-        if (state.bulb2Burned) details = details + ` | Req2=∞ (Q)`;
-        
-        formulaCalculationDetails.innerHTML = details;
+        if (state.loadType === 'resistor') {
+            formulaDenomLbl.textContent = "Req = R1 // R2";
+            formulaMathDisplay.innerHTML = `
+                <div class="math-left"><span id="math-var-i" class="math-var var-i" style="transform: scale(${scaleI})">I_t</span></div>
+                <div class="math-equal">=</div>
+                <div class="math-fraction">
+                    <span class="math-var var-v" style="transform: scale(${scaleV})">V</span>
+                    <div class="fraction-line"></div>
+                    <span class="math-var var-r" style="transform: scale(${scaleR})">R_1</span>
+                </div>
+                <div class="math-equal" style="margin:0 0.4rem;">+</div>
+                <div class="math-fraction">
+                    <span class="math-var var-v" style="transform: scale(${scaleV})">V</span>
+                    <div class="fraction-line"></div>
+                    <span class="math-var var-low" style="color:var(--color-wire-low); transform: scale(${scaleR2})">R_2</span>
+                </div>
+            `;
+            let req = (state.resistance * state.resistance2) / (state.resistance + state.resistance2);
+            let i1 = state.voltage / state.resistance;
+            let i2 = state.voltage / state.resistance2;
+            formulaCalculationDetails.innerHTML = `Req = ${req.toFixed(2)}Ω | I1 = ${formatCurrent(i1)} | I2 = ${formatCurrent(i2)}`;
+            
+        } else if (state.loadType === 'indiv_bulb' || state.loadType === 'indiv_motor') {
+            let loadR = state.loadType === 'indiv_bulb' ? 10.0 : 15.0;
+            let loadName = state.loadType === 'indiv_bulb' ? "R_L" : "R_M";
+            formulaDenomLbl.textContent = `Req = (R1+${loadName}) // (R2+${loadName})`;
+            
+            formulaMathDisplay.innerHTML = `
+                <div class="math-left"><span id="math-var-i" class="math-var var-i" style="transform: scale(${scaleI})">I_t</span></div>
+                <div class="math-equal">=</div>
+                <div class="math-fraction">
+                    <span class="math-var var-v" style="transform: scale(${scaleV})">V</span>
+                    <div class="fraction-line"></div>
+                    <span class="math-var var-r" style="transform: scale(${scaleR})">R_1 + ${loadName}</span>
+                </div>
+                <div class="math-equal" style="margin:0 0.4rem;">+</div>
+                <div class="math-fraction">
+                    <span class="math-var var-v" style="transform: scale(${scaleV})">V</span>
+                    <div class="fraction-line"></div>
+                    <span class="math-var var-low" style="color:var(--color-wire-low); transform: scale(${scaleR2})">R_2 + ${loadName}</span>
+                </div>
+            `;
+            
+            let r1_total = state.resistance + loadR;
+            let r2_total = state.resistance2 + loadR;
+            let i1 = (state.loadType === 'indiv_bulb' && state.bulb1Burned) ? 0.0 : state.voltage / r1_total;
+            let i2 = (state.loadType === 'indiv_bulb' && state.bulb2Burned) ? 0.0 : state.voltage / r2_total;
+            
+            let req_denom1 = (state.loadType === 'indiv_bulb' && state.bulb1Burned) ? Infinity : r1_total;
+            let req_denom2 = (state.loadType === 'indiv_bulb' && state.bulb2Burned) ? Infinity : r2_total;
+            let req = (req_denom1 === Infinity && req_denom2 === Infinity) ? Infinity : 
+                      (req_denom1 === Infinity ? req_denom2 : 
+                      (req_denom2 === Infinity ? req_denom1 : (req_denom1 * req_denom2) / (req_denom1 + req_denom2)));
+                      
+            let details = `Req = ${isFinite(req) ? req.toFixed(2) + "Ω" : "∞"} | I1 = ${formatCurrent(i1)} | I2 = ${formatCurrent(i2)}`;
+            if (state.loadType === 'indiv_bulb' && state.bulb1Burned) details = `Req1=∞ (Q) | ` + details;
+            if (state.loadType === 'indiv_bulb' && state.bulb2Burned) details = details + ` | Req2=∞ (Q)`;
+            formulaCalculationDetails.innerHTML = details;
+            
+        } else if (state.loadType === 'common_bulb' || state.loadType === 'common_motor') {
+            let loadR = state.loadType === 'common_bulb' ? 10.0 : 15.0;
+            let loadName = state.loadType === 'common_bulb' ? "R_L" : "R_M";
+            
+            formulaTitle.textContent = "📊 LEI DE OHM EM SÉRIE-PARALELO";
+            formulaDenomLbl.textContent = `Req = Rc + (${loadName} // ${loadName})`;
+            
+            formulaMathDisplay.innerHTML = `
+                <div class="math-left"><span id="math-var-i" class="math-var var-i" style="transform: scale(${scaleI})">I_t</span></div>
+                <div class="math-equal">=</div>
+                <div class="math-fraction">
+                    <span class="math-var var-v" style="transform: scale(${scaleV})">V</span>
+                    <div class="fraction-line"></div>
+                    <span class="math-var var-r" style="transform: scale(${scaleR})">R_c + R_p</span>
+                </div>
+            `;
+            
+            let rp = loadR / 2; // if both working
+            if (state.loadType === 'common_bulb') {
+                if (state.bulb1Burned && state.bulb2Burned) rp = Infinity;
+                else if (state.bulb1Burned || state.bulb2Burned) rp = loadR;
+            }
+            
+            let req = state.resistance + rp;
+            
+            let i1 = 0.0, i2 = 0.0;
+            if (state.loadType === 'common_bulb') {
+                if (!state.bulb1Burned && !state.bulb2Burned) {
+                    i1 = state.current / 2;
+                    i2 = state.current / 2;
+                } else if (!state.bulb1Burned) {
+                    i1 = state.current;
+                } else if (!state.bulb2Burned) {
+                    i2 = state.current;
+                }
+            } else {
+                i1 = state.current / 2;
+                i2 = state.current / 2;
+            }
+            
+            let details = `Req = ${isFinite(req) ? req.toFixed(2) + "Ω" : "∞"} | I1 = ${formatCurrent(i1)} | I2 = ${formatCurrent(i2)}`;
+            if (state.loadType === 'common_bulb') {
+                if (state.bulb1Burned) details = `B1 Queimada | ` + details;
+                if (state.bulb2Burned) details = details + ` | B2 Queimada`;
+            }
+            formulaCalculationDetails.innerHTML = details;
+        }
     }
 }
 
@@ -643,10 +810,12 @@ function updateFormulaUI() {
 tabBtnSeries.addEventListener("click", () => {
     if (state.mode === 'series') return;
     state.mode = 'series';
+    state.loadType = 'resistor'; // default
     tabBtnSeries.classList.add("active");
     tabBtnParallel.classList.remove("active");
     audio.playTab();
     
+    rebuildLoadSelector();
     rebuildResistanceControls();
     calculateOhm();
 });
@@ -654,10 +823,12 @@ tabBtnSeries.addEventListener("click", () => {
 tabBtnParallel.addEventListener("click", () => {
     if (state.mode === 'parallel') return;
     state.mode = 'parallel';
+    state.loadType = 'resistor'; // default
     tabBtnParallel.classList.add("active");
     tabBtnSeries.classList.remove("active");
     audio.playTab();
 
+    rebuildLoadSelector();
     rebuildResistanceControls();
     calculateOhm();
 });
@@ -675,6 +846,7 @@ loadSelectorGroup.addEventListener("click", (e) => {
     state.loadType = btn.dataset.load;
     audio.playClick();
 
+    rebuildResistanceControls();
     calculateOhm();
 });
 
@@ -713,8 +885,17 @@ function animateElectrons() {
     } else { // paralelo
         // Branch 1 current
         let i1 = 0.0;
-        if (!state.bulb1Burned) {
-            i1 = state.voltage / (state.resistance + (state.loadType === 'bulb' ? 10.0 : 0.0));
+        if (state.loadType === 'resistor') {
+            i1 = state.voltage / state.resistance;
+        } else if (state.loadType === 'indiv_bulb') {
+            if (!state.bulb1Burned) i1 = state.voltage / (state.resistance + 10.0);
+        } else if (state.loadType === 'indiv_motor') {
+            i1 = state.voltage / (state.resistance + 15.0);
+        } else if (state.loadType === 'common_bulb') {
+            if (!state.bulb1Burned && !state.bulb2Burned) i1 = state.current / 2;
+            else if (!state.bulb1Burned) i1 = state.current;
+        } else if (state.loadType === 'common_motor') {
+            i1 = state.current / 2;
         }
         let speedB1 = i1 * BASE_SPEED_MULTIPLIER;
         speedB1 = (i1 > 0.0001) ? Math.max(MIN_SPEED, Math.min(MAX_SPEED, speedB1)) : 0.0;
@@ -722,8 +903,17 @@ function animateElectrons() {
 
         // Branch 2 current
         let i2 = 0.0;
-        if (!state.bulb2Burned) {
-            i2 = state.voltage / (state.resistance2 + (state.loadType === 'bulb' ? 10.0 : 0.0));
+        if (state.loadType === 'resistor') {
+            i2 = state.voltage / state.resistance2;
+        } else if (state.loadType === 'indiv_bulb') {
+            if (!state.bulb2Burned) i2 = state.voltage / (state.resistance2 + 10.0);
+        } else if (state.loadType === 'indiv_motor') {
+            i2 = state.voltage / (state.resistance2 + 15.0);
+        } else if (state.loadType === 'common_bulb') {
+            if (!state.bulb1Burned && !state.bulb2Burned) i2 = state.current / 2;
+            else if (!state.bulb2Burned) i2 = state.current;
+        } else if (state.loadType === 'common_motor') {
+            i2 = state.current / 2;
         }
         let speedB2 = i2 * BASE_SPEED_MULTIPLIER;
         speedB2 = (i2 > 0.0001) ? Math.max(MIN_SPEED, Math.min(MAX_SPEED, speedB2)) : 0.0;
@@ -736,11 +926,34 @@ function animateElectrons() {
         state.electronsParallelMain = state.electronsParallelMain.map(d => (d + speedMain) % 1140);
     }
 
-    // Rotação do motor
+    // Rotação do motor (Série)
     if (state.loadType === 'motor' && state.current > 0.0001 && state.mode === 'series') {
         let rotSpeed = state.current * 7.0;
         rotSpeed = Math.max(0.5, Math.min(35.0, rotSpeed));
         state.motorRotation = (state.motorRotation + rotSpeed) % 360;
+    } else if (state.mode === 'parallel') {
+        // Rotação dos motores (Paralelo)
+        if (state.loadType === 'indiv_motor' || state.loadType === 'common_motor') {
+            let i1 = 0.0, i2 = 0.0;
+            if (state.loadType === 'indiv_motor') {
+                i1 = state.voltage / (state.resistance + 15.0);
+                i2 = state.voltage / (state.resistance2 + 15.0);
+            } else {
+                i1 = state.current / 2;
+                i2 = state.current / 2;
+            }
+            
+            if (i1 > 0.0001) {
+                let rotSpeed1 = i1 * 7.0;
+                rotSpeed1 = Math.max(0.5, Math.min(35.0, rotSpeed1));
+                state.motorRotation = (state.motorRotation + rotSpeed1) % 360;
+            }
+            if (i2 > 0.0001) {
+                let rotSpeed2 = i2 * 7.0;
+                rotSpeed2 = Math.max(0.5, Math.min(35.0, rotSpeed2));
+                state.motor2Rotation = (state.motor2Rotation + rotSpeed2) % 360;
+            }
+        }
     }
 }
 
@@ -882,6 +1095,12 @@ function drawWires() {
         let pathHigh = new Path2D();
         pathHigh.moveTo(CX, CY + CH / 2 - 30);
         pathHigh.lineTo(CX, CY);
+        
+        if (state.loadType === 'common_bulb' || state.loadType === 'common_motor') {
+            // Resistor comum no topo: X=275. Comprimento 80px (X = 235 a 315)
+            pathHigh.lineTo(275 - 40, CY);
+            pathHigh.moveTo(275 + 40, CY);
+        }
         pathHigh.lineTo(490, CY);
 
         // Fiação comum de potencial baixo
@@ -907,19 +1126,19 @@ function drawWires() {
             pathLow.moveTo(610, CY + 190);
             pathLow.lineTo(610, CY + CH);
             pathLow.lineTo(490, CY + CH);
-        } else { // bulb mode in parallel
-            // Cada ramo tem um Resistor (Y=80 a 140) e uma Lâmpada (Y=200 a 260)
+        } else if (state.loadType === 'indiv_bulb' || state.loadType === 'indiv_motor') {
+            // Cada ramo tem um Resistor (Y=80 a 140) e uma Carga (Y=200 a 260)
             
             // Ramo 1:
             pathHigh.moveTo(490, CY);
             pathHigh.lineTo(540, CY);
             pathHigh.lineTo(540, CY + 30); // Fio até topo R1
             
-            // Fio intermediário R1-Lâmpada1 (consideramos potencial alto para consistência visual)
+            // Fio intermediário R1-Carga1 (consideramos potencial alto)
             pathHigh.moveTo(540, CY + 90);
             pathHigh.lineTo(540, CY + 150);
 
-            pathLow.moveTo(540, CY + 210); // Saída da Lâmpada 1
+            pathLow.moveTo(540, CY + 210); // Saída da Carga 1
             pathLow.lineTo(540, CY + CH);
             pathLow.lineTo(490, CY + CH);
 
@@ -928,11 +1147,30 @@ function drawWires() {
             pathHigh.lineTo(610, CY);
             pathHigh.lineTo(610, CY + 30); // Fio até topo R2
             
-            // Fio intermediário R2-Lâmpada2
+            // Fio intermediário R2-Carga2
             pathHigh.moveTo(610, CY + 90);
             pathHigh.lineTo(610, CY + 150);
 
-            pathLow.moveTo(610, CY + 210); // Saída da Lâmpada 2
+            pathLow.moveTo(610, CY + 210); // Saída da Carga 2
+            pathLow.lineTo(610, CY + CH);
+            pathLow.lineTo(490, CY + CH);
+        } else { // common_bulb ou common_motor
+            // Ramo 1: Apenas carga no meio (Y = CY + CH/2 = 190).
+            // Carga 1 tem centro 190. Altura aproximada do componente 56px (Y = 162 a 218).
+            pathHigh.moveTo(490, CY);
+            pathHigh.lineTo(540, CY);
+            pathHigh.lineTo(540, 190 - 28); // Fio até topo da Carga 1
+            
+            pathLow.moveTo(540, 190 + 28); // Fio a partir de baixo da Carga 1
+            pathLow.lineTo(540, CY + CH);
+            pathLow.lineTo(490, CY + CH);
+            
+            // Ramo 2: Apenas carga no meio (Y = 190)
+            pathHigh.moveTo(490, CY);
+            pathHigh.lineTo(610, CY);
+            pathHigh.lineTo(610, 190 - 28); // Fio até topo da Carga 2
+            
+            pathLow.moveTo(610, 190 + 28); // Fio a partir de baixo da Carga 2
             pathLow.lineTo(610, CY + CH);
             pathLow.lineTo(490, CY + CH);
         }
@@ -1326,7 +1564,7 @@ function loop() {
             // Dois resistores em paralelo
             drawSchematicResistor(540, CY + CH / 2, false, state.resistance);
             drawSchematicResistor(610, CY + CH / 2, false, state.resistance2);
-        } else { // lâmpadas + resistores
+        } else if (state.loadType === 'indiv_bulb') {
             // Branch 1: R1 (topo, Y=90, scale=0.7) + Lâmpada 1 (Y=180, scale=0.75)
             let i1 = state.bulb1Burned ? 0.0 : state.voltage / (state.resistance + 10.0);
             drawSchematicResistor(540, CY + 60, false, state.resistance, 0.7);
@@ -1336,6 +1574,34 @@ function loop() {
             let i2 = state.bulb2Burned ? 0.0 : state.voltage / (state.resistance2 + 10.0);
             drawSchematicResistor(610, CY + 60, false, state.resistance2, 0.7);
             drawSchematicBulb(610, CY + 180, i2, state.bulb2Burned, 0.75);
+        } else if (state.loadType === 'indiv_motor') {
+            // Branch 1: R1 + Motor 1
+            drawSchematicResistor(540, CY + 60, false, state.resistance, 0.7);
+            drawSchematicMotor(540, CY + 180, state.motorRotation, 0.75);
+
+            // Branch 2: R2 + Motor 2
+            drawSchematicResistor(610, CY + 60, false, state.resistance2, 0.7);
+            drawSchematicMotor(610, CY + 180, state.motor2Rotation, 0.75);
+        } else if (state.loadType === 'common_bulb') {
+            // Common resistor on top wire (X=275, Y=CY)
+            drawSchematicResistor(275, CY, true, state.resistance);
+
+            // Branch 1: Bulb 1 at Y=190
+            let i1 = state.bulb1Burned ? 0.0 : (state.bulb2Burned ? state.current : state.current / 2);
+            drawSchematicBulb(540, CY + CH / 2, i1, state.bulb1Burned, 1.0);
+
+            // Branch 2: Bulb 2 at Y=190
+            let i2 = state.bulb2Burned ? 0.0 : (state.bulb1Burned ? state.current : state.current / 2);
+            drawSchematicBulb(610, CY + CH / 2, i2, state.bulb2Burned, 1.0);
+        } else if (state.loadType === 'common_motor') {
+            // Common resistor on top wire
+            drawSchematicResistor(275, CY, true, state.resistance);
+
+            // Branch 1: Motor 1 at Y=190
+            drawSchematicMotor(540, CY + CH / 2, state.motorRotation, 1.0);
+
+            // Branch 2: Motor 2 at Y=190
+            drawSchematicMotor(610, CY + CH / 2, state.motor2Rotation, 1.0);
         }
     }
 
@@ -1355,9 +1621,20 @@ function loop() {
             drawVoltmeterProbe(CX + CW - 60, CY + CH, `0.0 V`, "#00bfff", "Ponto C (Saída)");
         }
     } else {
-        // Paralelo: Queda de tensão é a mesma nas duas pernas
-        drawVoltmeterProbe(490 - 40, CY, `${state.voltage.toFixed(1)} V`, "#ff9d00", "Ponto A (Entrada)");
-        drawVoltmeterProbe(490 - 40, CY + CH, `0.0 V`, "#00bfff", "Ponto B (Saída)");
+        if (state.loadType === 'common_bulb' || state.loadType === 'common_motor') {
+            // Divisor de tensão para resistor comum em paralelo
+            drawVoltmeterProbe(CX + 60, CY, `${state.voltage.toFixed(1)} V`, "#ff9d00", "Ponto A (Entrada)");
+            
+            let vMid = state.voltage - (state.current * state.resistance);
+            if (vMid < 0.0001) vMid = 0.0;
+            drawVoltmeterProbe(490 - 30, CY, `${vMid.toFixed(1)} V`, "#9400D3", "Ponto B (Intermediário)");
+            
+            drawVoltmeterProbe(490 - 30, CY + CH, `0.0 V`, "#00bfff", "Ponto C (Saída)");
+        } else {
+            // Paralelo simples: Queda de tensão é a mesma nas duas pernas
+            drawVoltmeterProbe(490 - 40, CY, `${state.voltage.toFixed(1)} V`, "#ff9d00", "Ponto A (Entrada)");
+            drawVoltmeterProbe(490 - 40, CY + CH, `0.0 V`, "#00bfff", "Ponto B (Saída)");
+        }
     }
 
     // 8. Sinais de Polaridade
@@ -1372,6 +1649,7 @@ function loop() {
 // --- BOOT E INICIALIZAÇÃO ---
 document.addEventListener("DOMContentLoaded", () => {
     initElectrons();
+    rebuildLoadSelector();
     rebuildResistanceControls();
     calculateOhm();
     audio.playBoot();
