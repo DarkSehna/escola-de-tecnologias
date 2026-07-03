@@ -37,6 +37,14 @@ let port = null;
 let reader = null;
 let keepReading = true;
 let serialBuffer = "";
+let readPromise = null;
+
+// Métricas e Diagnósticos de Conexão Serial
+let bytesReceivedInSession = 0;
+let validPacketsReceivedInSession = 0;
+let garbledBytesCount = 0;
+let lastDataReceivedTime = 0;
+let baudRateCheckTimer = null;
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', () => {
@@ -166,10 +174,10 @@ function drawDial(value) {
 async function toggleSerialConnection() {
     if (isConnected) {
         // Desconectar
-        disconnectSerial();
+        await disconnectSerial();
     } else {
         // Conectar
-        connectSerial();
+        await connectSerial();
     }
 }
 
@@ -186,62 +194,111 @@ async function connectSerial() {
         btnConnect.classList.add('connected');
         led.className = 'led connected';
         statusText.textContent = 'CONECTADO';
-        logToTerminal(`[Serial] Conectado com sucesso a 9600 baud.`, 'success');
+        logToTerminal(`[Serial] Conectado com sucesso a ${baud} baud.`, 'success');
+        showToast(`Arduino conectado com sucesso (${baud} Baud)!`, 'success');
+
+        // Reinicia métricas de diagnóstico
+        bytesReceivedInSession = 0;
+        validPacketsReceivedInSession = 0;
+        garbledBytesCount = 0;
+        lastDataReceivedTime = Date.now();
+
+        // Inicia monitoramento de integridade de Baud Rate
+        startBaudRateDiagnostic();
 
         // Loop de leitura rodando em paralelo
-        readSerialLoop();
+        readPromise = readSerialLoop();
     } catch (err) {
         console.error(err);
-        logToTerminal(`[Erro] Falha ao abrir porta serial: ${err.message}`, 'danger');
-        disconnectSerial();
+        handleConnectionError(err);
+        await disconnectSerial();
     }
 }
 
 async function disconnectSerial() {
     keepReading = false;
-    
+    stopBaudRateDiagnostic();
+
+    // 1. Cancela o reader para desbloquear o loop de leitura
     if (reader) {
         try {
             await reader.cancel();
-        } catch (e) {}
+        } catch (e) {
+            console.error("Erro ao cancelar reader:", e);
+        }
     }
 
+    // 2. Aguarda a resolução real da thread paralela de leitura
+    if (readPromise) {
+        try {
+            await readPromise;
+        } catch (e) {
+            console.error("Erro no loop de leitura ao desconectar:", e);
+        }
+        readPromise = null;
+    }
+
+    // 3. Fecha a porta de forma segura
     if (port) {
         try {
             await port.close();
-        } catch (e) {}
+        } catch (e) {
+            console.error("Erro ao fechar a porta:", e);
+            logToTerminal(`[Erro] Falha ao fechar porta serial: ${e.message}`, 'danger');
+        }
         port = null;
     }
 
-    isConnected = false;
-    btnConnect.textContent = 'CONECTAR ARDUINO';
-    btnConnect.classList.remove('connected');
-    led.className = 'led disconnected';
-    statusText.textContent = 'DESCONECTADO';
-    logToTerminal(`[Serial] Conexão encerrada.`, 'system');
+    // 4. Reseta estado da UI
+    if (isConnected) {
+        isConnected = false;
+        btnConnect.textContent = 'CONECTAR ARDUINO';
+        btnConnect.classList.remove('connected');
+        led.className = 'led disconnected';
+        statusText.textContent = 'DESCONECTADO';
+        logToTerminal(`[Serial] Conexão encerrada.`, 'system');
+        showToast("Arduino desconectado.", "info");
+    }
 }
 
 async function readSerialLoop() {
+    const decoder = new TextDecoder();
     while (port && port.readable && keepReading) {
         try {
-            const textDecoder = new TextDecoderStream();
-            const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
-            reader = textDecoder.readable.getReader();
-
-            while (true) {
+            reader = port.readable.getReader();
+            while (keepReading) {
                 const { value, done } = await reader.read();
                 if (done) {
                     break;
                 }
                 if (value) {
-                    parseIncomingBuffer(value);
+                    bytesReceivedInSession += value.length;
+                    lastDataReceivedTime = Date.now();
+
+                    // Verifica se há lixo ou baud rate incompatível
+                    const text = decoder.decode(value, { stream: true });
+                    detectGarbledData(text, value);
+
+                    parseIncomingBuffer(text);
                 }
             }
         } catch (err) {
-            console.error(err);
-            logToTerminal(`[Erro] Conexão perdida com o dispositivo.`, 'danger');
-            disconnectSerial();
+            // Só dispara aviso de queda se keepReading continuar true
+            if (keepReading) {
+                console.error(err);
+                logToTerminal(`[Erro] Conexão interrompida inesperadamente: ${err.message}`, 'danger');
+                showToast("Conexão perdida com o dispositivo.", "danger");
+                expandConsolePanel();
+                setTimeout(() => disconnectSerial(), 10);
+            }
             break;
+        } finally {
+            if (reader) {
+                try {
+                    reader.releaseLock();
+                } catch (e) {}
+                reader = null;
+            }
         }
     }
 }
@@ -269,14 +326,18 @@ function processMessage(msg, isSimulated = false) {
         return;
     }
 
+    // Sanitização: Limpa caracteres de controle ou ruídos na linha
+    const cleanMsg = msg.replace(/[^\x20-\x7E]/g, '').trim();
+    if (!cleanMsg) return;
+
     const logStyle = isSimulated ? 'simulated' : 'incoming';
     const logPrefix = isSimulated ? '[Simulador]' : '[Serial]';
 
-    logToTerminal(`${logPrefix} ${msg}`, logStyle);
+    let isValid = false;
 
     // 1. Mensagem de Visor (Dial): "Visor: 4"
-    if (msg.startsWith('Visor:')) {
-        const valStr = msg.split(':')[1].trim();
+    if (cleanMsg.startsWith('Visor:')) {
+        const valStr = cleanMsg.split(':')[1].trim();
         const val = parseInt(valStr);
         if (!isNaN(val) && val >= 0 && val <= 9) {
             dialValue = val;
@@ -284,44 +345,58 @@ function processMessage(msg, isSimulated = false) {
             // Sincroniza slider virtual
             scaleSim.value = dialValue;
             simDialVal.textContent = dialValue;
+            isValid = true;
         }
     }
 
-    // 2. Travar Catracas: "Catraca 1 TRAVADA: X"
-    else if (msg.includes('Catraca 1 TRAVADA')) {
+    // 2. Travar Catracas: "Catraca X TRAVADA..."
+    else if (cleanMsg.includes('Catraca 1 TRAVADA')) {
         let val = dialValue;
-        if (msg.includes(':')) {
-            val = parseInt(msg.split(':')[1].trim());
+        if (cleanMsg.includes(':')) {
+            val = parseInt(cleanMsg.split(':')[1].trim());
         }
         lockSlot(0, val);
+        isValid = true;
     }
-    else if (msg.includes('Catraca 2 TRAVADA')) {
+    else if (cleanMsg.includes('Catraca 2 TRAVADA')) {
         let val = dialValue;
-        if (msg.includes(':')) {
-            val = parseInt(msg.split(':')[1].trim());
+        if (cleanMsg.includes(':')) {
+            val = parseInt(cleanMsg.split(':')[1].trim());
         }
         lockSlot(1, val);
+        isValid = true;
     }
-    else if (msg.includes('Catraca 3 TRAVADA')) {
+    else if (cleanMsg.includes('Catraca 3 TRAVADA')) {
         let val = dialValue;
-        if (msg.includes(':')) {
-            val = parseInt(msg.split(':')[1].trim());
+        if (cleanMsg.includes(':')) {
+            val = parseInt(cleanMsg.split(':')[1].trim());
         }
         lockSlot(2, val);
+        isValid = true;
     }
 
     // 3. Status Final: "ACESSO LIBERADO" ou "ACESSO NEGADO"
-    else if (msg.includes('ACESSO LIBERADO')) {
+    else if (cleanMsg.includes('ACESSO LIBERADO')) {
         setFinalStatus('success');
+        isValid = true;
     }
-    else if (msg.includes('ACESSO NEGADO')) {
+    else if (cleanMsg.includes('ACESSO NEGADO')) {
         setFinalStatus('danger');
+        isValid = true;
     }
 
     // 4. Reset do Cofre
-    else if (msg.includes('Cofre resetado') || msg.includes('Reset') || msg.includes('RESET')) {
+    else if (cleanMsg.includes('Cofre resetado') || cleanMsg.includes('Reset') || cleanMsg.includes('RESET')) {
         clearSlotsUI();
+        isValid = true;
     }
+
+    // Atualiza estatísticas de pacotes válidos na sessão física
+    if (!isSimulated && isValid) {
+        validPacketsReceivedInSession++;
+    }
+
+    logToTerminal(`${logPrefix} ${cleanMsg}`, logStyle);
 }
 
 // Grava o valor em um dos slots
@@ -432,6 +507,8 @@ window.simulateAccess = (type) => {
 
 function toggleSimulationPanel() {
     simulationBody.classList.toggle('collapsed');
+    const isCollapsed = simulationBody.classList.contains('collapsed');
+    simulationToggleIcon.textContent = isCollapsed ? '▼' : '▲';
 }
 
 // ==========================================
@@ -466,6 +543,128 @@ function playFailBuzz() {
     // Toca beeps graves e tristes
     playBeep(220, 0.25);
     setTimeout(() => playBeep(180, 0.35), 250);
+}
+
+// ==========================================
+// FUNÇÕES AUXILIARES DE DIAGNÓSTICO E TOASTS
+// ==========================================
+
+function handleConnectionError(err) {
+    let friendlyMessage = `Erro de conexão: ${err.message}`;
+    let details = "";
+
+    if (err.name === 'NotFoundError') {
+        friendlyMessage = "Conexão cancelada: Nenhuma porta selecionada.";
+        details = "Clique em 'Conectar Arduino' e selecione a porta COM correta na lista.";
+    } else if (err.name === 'NetworkError') {
+        friendlyMessage = "Porta ocupada! Conexão rejeitada.";
+        details = "Certifique-se de que o Monitor Serial do Arduino IDE está fechado e que nenhuma outra aba está conectada.";
+    } else if (err.name === 'SecurityError') {
+        friendlyMessage = "Permissão negada pelo navegador.";
+        details = "A conexão serial via web exige protocolo HTTPS ou execução em localhost.";
+    } else if (err.name === 'InvalidStateError') {
+        friendlyMessage = "A porta já se encontra aberta.";
+        details = "Tente retirar o cabo USB do Arduino e conectá-lo de novo para limpar a porta.";
+    }
+
+    logToTerminal(`[Erro] ${friendlyMessage}`, 'danger');
+    if (details) {
+        logToTerminal(`[Diagnóstico] ${details}`, 'system');
+    }
+    
+    showToast(friendlyMessage, 'danger');
+    expandConsolePanel();
+}
+
+function expandConsolePanel() {
+    if (simulationBody.classList.contains('collapsed')) {
+        simulationBody.classList.remove('collapsed');
+        simulationToggleIcon.textContent = '▲';
+    }
+}
+
+function detectGarbledData(text, bytes) {
+    // 1. Verifica se há caracteres unicode estranhos ou sinalizadores de decoding inválido
+    if (text.includes('\uFFFD') || text.includes('')) {
+        garbledBytesCount += 8;
+    }
+
+    // 2. Conta bytes fora da tabela ASCII comum para detecção direta
+    for (let i = 0; i < bytes.length; i++) {
+        const b = bytes[i];
+        if ((b < 32 && b !== 9 && b !== 10 && b !== 13) || b > 126) {
+            garbledBytesCount++;
+        }
+    }
+}
+
+function startBaudRateDiagnostic() {
+    stopBaudRateDiagnostic();
+    baudRateCheckTimer = setInterval(() => {
+        if (!isConnected) return;
+
+        const now = Date.now();
+        // Caso detecte muitos bytes corrompidos em proporção ao recebido
+        if (bytesReceivedInSession > 20 && garbledBytesCount > (bytesReceivedInSession * 0.15)) {
+            showToast("Baud Rate Incompatível? Lixo de memória detectado.", "warning");
+            logToTerminal("[Diagnóstico] Alerta: Dados recebidos parecem corrompidos. Verifique se o Baud Rate selecionado coincide com o Serial.begin() no seu Arduino.", "danger");
+            expandConsolePanel();
+            
+            // Reseta contadores para evitar spam
+            garbledBytesCount = 0;
+            bytesReceivedInSession = 0;
+        }
+
+        // Se passarem 4 segundos recebendo bits mas nenhum parse passou, avisa
+        if (bytesReceivedInSession > 15 && validPacketsReceivedInSession === 0 && (now - lastDataReceivedTime) < 3000) {
+            showToast("Recebendo lixo. O Arduino está configurado na velocidade certa?", "warning");
+            logToTerminal("[Diagnóstico] Recebendo dados mas sem mensagens válidas. Mude a velocidade ou revise o código.", "danger");
+            expandConsolePanel();
+            bytesReceivedInSession = 0;
+        }
+    }, 1500);
+}
+
+function stopBaudRateDiagnostic() {
+    if (baudRateCheckTimer) {
+        clearInterval(baudRateCheckTimer);
+        baudRateCheckTimer = null;
+    }
+}
+
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+
+    let icon = 'ℹ️';
+    if (type === 'success') icon = '✅';
+    if (type === 'danger' || type === 'error') icon = '🚨';
+    if (type === 'warning') icon = '⚠️';
+
+    toast.innerHTML = `
+        <span class="toast-icon">${icon}</span>
+        <span class="toast-message">${message}</span>
+        <button class="toast-close">&times;</button>
+    `;
+
+    container.appendChild(toast);
+
+    // Ouvinte para fechar manualmente
+    toast.querySelector('.toast-close').addEventListener('click', () => {
+        toast.classList.add('toast-outgoing');
+        setTimeout(() => toast.remove(), 300);
+    });
+
+    // Auto destruição após 5 segundos
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.classList.add('toast-outgoing');
+            setTimeout(() => toast.remove(), 300);
+        }
+    }, 5000);
 }
 
 // Adiciona linhas de log ao terminal da tela

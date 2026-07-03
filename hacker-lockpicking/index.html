@@ -16,6 +16,9 @@
     <div class="ambient-glow bg-left"></div>
     <div class="ambient-glow bg-right"></div>
 
+    <!-- Container de Notificações Toast -->
+    <div id="toast-container"></div>
+
     <div class="app-container">
         <!-- Voltar para o Dashboard -->
         <div class="back-nav">
@@ -170,32 +173,52 @@
 // ==================================================
 // HACKER LOCKPICKING - HARDWARE ARDUINO
 // ==================================================
-const int PIN_POT = A0;
+int pinoBotao = 2; // Botão ligado no pino 2 e GND (INPUT_PULLUP)
+int pinoPot = A0;  // Potenciômetro ligado no pino A0
+
+int estadoCofre = 1;
 
 void setup() {
   Serial.begin(9600);
-  pinMode(PIN_POT, INPUT);
+  pinMode(pinoBotao, INPUT_PULLUP);
+  
+  Serial.println("--- SISTEMA DE SEGURANCA ATIVADO ---");
 }
 
 void loop() {
-  // Leitura do potenciômetro (mapeado de 0 a 9)
-  int valPot = analogRead(PIN_POT);
-  int dialVal = map(valPot, 0, 1023, 0, 9);
-  
-  // Envia valor atual do dial para o decodificador
+  // 1. Envia o valor atual do dial para o navegador
+  int numeroDoCofre = map(analogRead(pinoPot), 0, 1023, 0, 9);
   Serial.print("Visor: ");
-  Serial.println(dialVal);
+  Serial.println(numeroDoCofre);
   
-  // Escuta comando de RESET do navegador
+  // 2. Se o botão for pressionado (LOW no modo PULLUP)
+  if (digitalRead(pinoBotao) == LOW) {
+    // Envia o sinal de trava para a catraca atual
+    Serial.print("Catraca ");
+    Serial.print(estadoCofre);
+    Serial.print(" TRAVADA: ");
+    Serial.println(numeroDoCofre);
+    
+    estadoCofre++;
+    
+    // Se passar da terceira catraca, reinicia localmente
+    if (estadoCofre > 3) {
+      estadoCofre = 1;
+    }
+    delay(400); // Debounce para evitar cliques múltiplos
+  }
+  
+  // 3. ESCUTA comandos de RESET vindos do navegador! (Crucial para sincronizar)
   if (Serial.available() > 0) {
     String input = Serial.readStringUntil('\n');
     input.trim();
     if (input == "RESET") {
-      // Reinicia o estado do hardware aqui
+      estadoCofre = 1;
+      Serial.println("RESET: Hardware resetado com sucesso.");
     }
   }
   
-  delay(100); // 10 FPS
+  delay(150); // Controla a velocidade de atualização
 }
                 </code></pre>
 
