@@ -148,10 +148,10 @@ body {
 
 .teacher-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 350px));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 320px));
     gap: 2rem;
     width: 100%;
-    max-width: 850px;
+    max-width: 1100px;
     justify-content: center;
     animation: fadeInUp 0.8s ease;
 }
@@ -641,3 +641,318 @@ footer.app-footer {
         flex-direction: column;
     }
 }
+
+/* ==========================================================================
+   9. TEMA DE TRILHA OBR (AMARELO) E ELEMENTOS DO PORTAL DO PROFESSOR
+   ========================================================================== */
+
+/* Customização para o card de Treinamento OBR */
+.color-yellow {
+    background: rgba(234, 179, 8, 0.1);
+    color: var(--color-yellow);
+    border: 1px solid rgba(234, 179, 8, 0.25);
+}
+.teacher-card:hover .color-yellow {
+    background: var(--color-yellow);
+    color: var(--color-bg-dark);
+    box-shadow: 0 0 20px var(--color-yellow-glow);
+}
+.teacher-card:hover:has(.color-yellow)::before {
+    background: var(--color-yellow);
+}
+.teacher-card:hover:has(.color-yellow) {
+    box-shadow: 0 20px 40px -15px rgba(234, 179, 8, 0.2);
+}
+
+/* Ocultação forçada de simuladores configurados pelo professor */
+.hidden-by-teacher {
+    display: none !important;
+}
+
+/* Link/Botão do Portal do Professor no rodapé */
+.btn-portal-prof {
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-left: 0.5rem;
+    transition: var(--transition-smooth);
+}
+.btn-portal-prof:hover {
+    color: var(--color-cyan);
+}
+
+/* Modal Overlay & General Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+
+.modal-overlay.open {
+    display: flex;
+}
+
+.modal-content {
+    background: #0f172a;
+    border: 1px solid var(--color-border-glass);
+    border-radius: 24px;
+    max-width: 650px;
+    width: 100%;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+    animation: modalSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.modal-header h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--color-cyan);
+}
+
+.close-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-text-normal);
+    font-size: 1.8rem;
+    cursor: pointer;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-btn:hover {
+    color: var(--color-text-white);
+}
+
+@keyframes modalSlideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Modal Administrativo do Professor */
+.teacher-modal {
+    max-width: 520px !important;
+}
+
+.teacher-screen {
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.teacher-screen.hidden {
+    display: none !important;
+}
+
+.modal-instructions {
+    color: var(--color-text-normal);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.pin-input-container {
+    display: flex;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+#teacher-pin {
+    background: var(--color-bg-dark);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--color-text-white);
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    font-size: 1.3rem;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.4em;
+    text-align: center;
+    flex-grow: 1;
+    outline: none;
+    transition: var(--transition-smooth);
+}
+
+#teacher-pin:focus {
+    border-color: var(--color-cyan);
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.25);
+}
+
+.login-error-msg {
+    color: #ff5c7d;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: -0.5rem;
+}
+
+.login-error-msg.hidden {
+    display: none !important;
+}
+
+/* Estilos de Abas e Formulários Internos do Admin */
+.admin-header-badge {
+    margin-bottom: 0.25rem;
+}
+
+.admin-name {
+    display: inline-block;
+    background: rgba(6, 182, 212, 0.1);
+    color: var(--color-cyan);
+    border: 1px solid rgba(6, 182, 212, 0.2);
+    padding: 0.35rem 0.85rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.admin-panel.hidden {
+    display: none !important;
+}
+
+.admin-panel h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    color: var(--color-text-white);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 0.5rem;
+}
+
+.visibility-toggles-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.1rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 480px) {
+    .visibility-toggles-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Interruptor Liga/Desliga Cyberpunk (Toggle Switch) */
+.toggle-control {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.toggle-control input {
+    display: none;
+}
+
+.toggle-slider {
+    position: relative;
+    width: 42px;
+    height: 20px;
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    transition: var(--transition-smooth);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    flex-shrink: 0;
+}
+
+.toggle-slider::before {
+    content: "";
+    position: absolute;
+    height: 12px;
+    width: 12px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--color-text-normal);
+    border-radius: 50%;
+    transition: var(--transition-smooth);
+}
+
+.toggle-control input:checked + .toggle-slider {
+    background-color: rgba(16, 185, 129, 0.15);
+    border-color: var(--color-green);
+}
+
+.toggle-control input:checked + .toggle-slider::before {
+    transform: translateX(22px);
+    background-color: var(--color-green);
+    box-shadow: 0 0 8px var(--color-green-glow);
+}
+
+.toggle-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text-normal);
+    transition: var(--transition-smooth);
+}
+
+.toggle-control:hover .toggle-label {
+    color: var(--color-text-white);
+}
+
+/* Caixa de Links de Planilhas Google */
+.admin-links-box {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--color-border-glass);
+    border-radius: 14px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.admin-links-box h4 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.admin-link {
+    font-size: 0.85rem;
+    color: var(--color-cyan);
+    text-decoration: none;
+    font-weight: 600;
+    transition: var(--transition-smooth);
+    display: inline-block;
+}
+
+.admin-link:hover {
+    color: var(--color-text-white);
+    transform: translateX(3px);
+}
+
+.admin-footer-actions {
+    margin-top: 1rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: flex-end;
+}
+

@@ -781,3 +781,245 @@ body {
         transform: translateY(0);
     }
 }
+
+/* 9. SELETOR DE REFERÊNCIA & GAVETA LATERAL (DRAWER) */
+.reference-selector-container {
+    padding: 0.85rem 1.5rem;
+    background: rgba(13, 17, 28, 0.4);
+    border-bottom: 1.5px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-shrink: 0;
+}
+
+.reference-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-neon-yellow);
+    text-shadow: 0 0 8px var(--color-neon-yellow-glow);
+    white-space: nowrap;
+}
+
+.reference-select {
+    max-width: 320px;
+    border-color: rgba(255, 204, 0, 0.2);
+}
+.reference-select:focus {
+    border-color: var(--color-neon-yellow);
+    box-shadow: 0 0 10px var(--color-neon-yellow-glow);
+}
+
+.reference-drawer {
+    position: fixed;
+    top: 0;
+    right: -420px; /* Escondido inicialmente */
+    width: 400px;
+    height: 100vh;
+    background: rgba(11, 15, 25, 0.96);
+    border-left: 1px solid var(--color-border-glass);
+    box-shadow: -10px 0 35px rgba(0, 0, 0, 0.6);
+    z-index: 2100;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(20px);
+}
+
+.reference-drawer.open {
+    right: 0;
+}
+
+.drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: #12141d;
+}
+
+.drawer-header h3 {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--color-neon-yellow);
+    text-shadow: 0 0 6px var(--color-neon-yellow-glow);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 300px;
+}
+
+.close-drawer-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-text-normal);
+    font-size: 1.8rem;
+    cursor: pointer;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+}
+
+.close-drawer-btn:hover {
+    color: #ffffff;
+}
+
+.drawer-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+}
+
+.ref-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid rgba(255, 255, 255, 0.02);
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+}
+
+.ref-section h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-neon-cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.ref-section p {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--color-text-normal);
+}
+
+.drawer-footer {
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    background: #12141d;
+}
+
+.merge-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--color-neon-yellow) 0%, #d97706 100%);
+    color: var(--color-text-dark);
+    border: none;
+    padding: 0.75rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    box-shadow: 0 0 10px var(--color-neon-yellow-glow);
+}
+
+.merge-btn:hover {
+    box-shadow: 0 0 15px var(--color-neon-yellow);
+    transform: translateY(-2px);
+}
+
+.autosave-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--color-neon-green);
+    text-shadow: 0 0 6px var(--color-neon-green-glow);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.autosave-label.visible {
+    opacity: 0.8;
+}
+
+/* 10. REGRAS DE IMPRESSÃO (CTRL + P / PDF EXPORT) */
+@media print {
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+    
+    /* Oculta tudo que não seja a folha de visualização do GDD */
+    .app-container,
+    .ambient-glow,
+    .reference-selector-container,
+    .reference-drawer,
+    .toast,
+    .toolbar-actions,
+    .editor-section,
+    .preview-header,
+    .app-status-bar {
+        display: none !important;
+    }
+    
+    .workspace-split {
+        display: block !important;
+    }
+    
+    .preview-section {
+        display: block !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+    
+    .preview-body-container {
+        background: transparent !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+    
+    .document-sheet {
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        color: #000000 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        font-family: Georgia, serif !important;
+    }
+    
+    .document-sheet h1 {
+        color: #000000 !important;
+        border-bottom: 2px solid #000000 !important;
+        text-shadow: none !important;
+        font-size: 22pt !important;
+    }
+    
+    .document-sheet h2 {
+        color: #111111 !important;
+        border-bottom: 1px dashed #666666 !important;
+        font-size: 16pt !important;
+        margin-top: 20pt !important;
+    }
+    
+    .document-sheet h3 {
+        color: #222222 !important;
+        font-size: 12pt !important;
+    }
+    
+    .document-sheet p, .document-sheet li {
+        color: #333333 !important;
+        font-size: 11pt !important;
+    }
+    
+    .document-sheet blockquote {
+        background: #f9fafb !important;
+        border-left: 4px solid #4b5563 !important;
+        color: #4b5563 !important;
+    }
+    
+    .document-sheet th, .document-sheet td {
+        border-color: #94a3b8 !important;
+        color: #000000 !important;
+    }
+}

@@ -159,6 +159,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Atualiza status e renderiza inicial
     handleFormUpdate();
+
+    // 6. Inicializa referências de jogos
+    initGddReferences();
+
+    // 7. Tenta restaurar rascunho salvo do localStorage
+    restoreAutosavedDraft();
 });
 
 // --- LÓGICA DE ABAS (TABS) ---
@@ -276,6 +282,9 @@ function handleFormUpdate() {
 
     // 4. Redesenhar Preview na folha
     renderLiveMarkdownPreview();
+
+    // 5. Acionar salvamento automático no localStorage
+    triggerAutosave();
 }
 
 function updateInputStatusBadge(inputId, badgeId, isObligatory) {
@@ -742,6 +751,9 @@ function resetDocumentConfirm() {
         inputVictory.value = "";
         inputDefeat.value = "";
 
+        // Limpa rascunho automático do localStorage
+        localStorage.removeItem("titanTech_gdd_draft");
+
         // Sincroniza visual e vai para primeira aba
         document.getElementById("tab-btn-overview").click();
         handleFormUpdate();
@@ -765,4 +777,259 @@ function showToast(message) {
     setTimeout(() => {
         toast.className = "toast";
     }, 3000);
+}
+
+// --- SISTEMA DE INSPIRAÇÃO / REFERÊNCIAS DE JOGOS ---
+let selectedReferenceGame = null;
+
+function initGddReferences() {
+    const selectRef = document.getElementById("select-reference-game");
+    const drawer = document.getElementById("reference-drawer");
+    const btnCloseDrawer = document.getElementById("btn-close-drawer");
+    const btnMerge = document.getElementById("btn-merge-reference");
+    const refTitle = document.getElementById("ref-game-title");
+    const refContent = document.getElementById("ref-drawer-content");
+
+    if (!selectRef || !drawer) return;
+
+    // 1. Carrega as referências a partir da base global referencias_jogos.js
+    if (typeof referencesDatabase !== "undefined" && Array.isArray(referencesDatabase)) {
+        referencesDatabase.forEach(game => {
+            const opt = document.createElement("option");
+            opt.value = game.id;
+            opt.textContent = `${game.titulo} (${game.genero})`;
+            selectRef.appendChild(opt);
+        });
+    } else {
+        console.error("Banco de dados 'referencesDatabase' não carregado.");
+    }
+
+    // 2. Escuta a mudança de seleção no dropdown
+    selectRef.addEventListener("change", (e) => {
+        const gameId = e.target.value;
+        if (!gameId) {
+            drawer.classList.remove("open");
+            selectedReferenceGame = null;
+            return;
+        }
+
+        selectedReferenceGame = referencesDatabase.find(g => g.id === gameId);
+        if (selectedReferenceGame) {
+            audio.playClick();
+            // Atualiza os dados da gaveta
+            refTitle.textContent = selectedReferenceGame.titulo;
+            
+            // Renderiza as seções
+            refContent.innerHTML = `
+                <div class="ref-section">
+                    <h4>Gênero</h4>
+                    <p>${selectedReferenceGame.genero}</p>
+                </div>
+                <div class="ref-section">
+                    <h4>Objetivo Principal</h4>
+                    <p>${selectedReferenceGame.objetivo}</p>
+                </div>
+                <div class="ref-section">
+                    <h4>Premissa / História</h4>
+                    <p>${selectedReferenceGame.lore}</p>
+                </div>
+                <div class="ref-section">
+                    <h4>Ambiente / Cenário</h4>
+                    <p>${selectedReferenceGame.ambiente}</p>
+                </div>
+                <div class="ref-section">
+                    <h4>Herói (Nome)</h4>
+                    <p>${selectedReferenceGame.heroi_identidade}</p>
+                </div>
+                <div class="ref-section">
+                    <h4>Herói (Aparência)</h4>
+                    <p>${selectedReferenceGame.heroi_aparencia}</p>
+                </div>
+                <div class="ref-section">
+                    <h4>Habilidades do Herói</h4>
+                    <p>${selectedReferenceGame.heroi_habilidades}</p>
+                </div>
+                <div class="ref-section">
+                    <h4>Mecânicas do Mundo</h4>
+                    <p>${selectedReferenceGame.mecanicas_mundo}</p>
+                </div>
+                <div class="ref-section">
+                    <h4>Bestiário (Inimigos)</h4>
+                    <p>${selectedReferenceGame.bestiario}</p>
+                </div>
+                <div class="ref-section">
+                    <h4>Chefes (Bosses)</h4>
+                    <p>${selectedReferenceGame.chefes}</p>
+                </div>
+                <div class="ref-section">
+                    <h4>Condição de Vitória</h4>
+                    <p>${selectedReferenceGame.condicao_vitoria}</p>
+                </div>
+                <div class="ref-section">
+                    <h4>Condição de Derrota</h4>
+                    <p>${selectedReferenceGame.condicao_derrota}</p>
+                </div>
+            `;
+
+            // Abre a gaveta lateral
+            drawer.classList.add("open");
+        }
+    });
+
+    // 3. Botão Fechar Gaveta
+    btnCloseDrawer.addEventListener("click", () => {
+        audio.playClick();
+        drawer.classList.remove("open");
+        selectRef.value = ""; // Reseta seleção do dropdown
+        selectedReferenceGame = null;
+    });
+
+    // 4. Botão de Mesclar Referência no Formulário
+    btnMerge.addEventListener("click", () => {
+        if (!selectedReferenceGame) return;
+
+        const confirmMerge = confirm(`Deseja preencher o GDD com o modelo do jogo "${selectedReferenceGame.titulo}"?\n\nIsso substituirá os dados atuais.`);
+        if (!confirmMerge) return;
+
+        audio.playSuccess();
+
+        // Insere as informações nos campos
+        inputGameName.value = selectedReferenceGame.titulo;
+        
+        // Trata o Gênero select
+        if (selectedReferenceGame.genero.includes("Metroidvania")) {
+            comboGenre.value = "Metroidvania";
+        } else if (selectedReferenceGame.genero.includes("Plataforma")) {
+            comboGenre.value = "Plataforma";
+        } else if (selectedReferenceGame.genero.includes("Top-Down")) {
+            comboGenre.value = "Top-Down (RPG / Aventura)";
+        } else if (selectedReferenceGame.genero.includes("Puzzle")) {
+            comboGenre.value = "Puzzle";
+        } else if (selectedReferenceGame.genero.includes("Shooter")) {
+            comboGenre.value = "Shooter / Shooter 2D";
+        } else {
+            comboGenre.value = "Outro";
+        }
+
+        inputObjective.value = selectedReferenceGame.objetivo;
+        inputStory.value = selectedReferenceGame.lore;
+        inputWorld.value = selectedReferenceGame.ambiente;
+        inputHeroName.value = selectedReferenceGame.heroi_identidade;
+        inputHeroDesc.value = selectedReferenceGame.heroi_aparencia;
+        inputHeroSkills.value = selectedReferenceGame.heroi_habilidades;
+        inputWorldDesc.value = selectedReferenceGame.mecanicas_mundo;
+        inputMinions.value = selectedReferenceGame.bestiario;
+        inputBosses.value = selectedReferenceGame.chefes;
+        inputVictory.value = selectedReferenceGame.condicao_vitoria;
+        inputDefeat.value = selectedReferenceGame.condicao_derrota;
+
+        // Limpa e recarrega os controles padrão correspondentes ao jogo
+        clearControls();
+        if (selectedReferenceGame.id === "pacman") {
+            addControlRow("Mover Cima", "Teclas WASD / Setas");
+            addControlRow("Mover Baixo", "Teclas WASD / Setas");
+            addControlRow("Mover Esquerda", "Teclas WASD / Setas");
+            addControlRow("Mover Direita", "Teclas WASD / Setas");
+        } else if (selectedReferenceGame.id === "pokemon") {
+            addControlRow("Mover Personagem", "Teclas WASD / Setas");
+            addControlRow("Confirmar / Interagir", "Tecla Z / Enter");
+            addControlRow("Cancelar / Menu", "Tecla X / Esc");
+        } else {
+            addControlRow("Mover Esquerda", "Seta Esquerda / A");
+            addControlRow("Mover Direita", "Seta Direita / D");
+            addControlRow("Pular", "Seta Cima / W / Espaço");
+            if (selectedReferenceGame.id === "sotn" || selectedReferenceGame.id === "hollow" || selectedReferenceGame.id === "guacamelee") {
+                addControlRow("Atacar", "Tecla J / Botão Esquerdo do Mouse");
+                addControlRow("Habilidade Especial", "Tecla K / Shift");
+            } else if (selectedReferenceGame.id === "celeste") {
+                addControlRow("Impulso (Dash)", "Tecla K / Shift");
+                addControlRow("Agarrar Paredes", "Tecla J / Ctrl");
+            }
+        }
+
+        // Reseta as checkboxes
+        checkboxes.forEach(cb => {
+            cb.checked = false;
+        });
+
+        // Tenta pré-selecionar as mecânicas com base na referência
+        checkboxes.forEach(cb => {
+            const val = cb.value.toLowerCase();
+            if (val === "armadilhas" && (selectedReferenceGame.id === "sotn" || selectedReferenceGame.id === "hollow" || selectedReferenceGame.id === "celeste" || selectedReferenceGame.id === "mario")) {
+                cb.checked = true;
+            }
+            if (val === "paredes falsas" && (selectedReferenceGame.id === "sotn" || selectedReferenceGame.id === "hollow" || selectedReferenceGame.id === "mario")) {
+                cb.checked = true;
+            }
+            if (val === "plataformas móveis" && (selectedReferenceGame.id === "sotn" || selectedReferenceGame.id === "mario" || selectedReferenceGame.id === "celeste")) {
+                cb.checked = true;
+            }
+            if (val === "limite de tempo" && (selectedReferenceGame.id === "mario" || selectedReferenceGame.id === "pacman" || selectedReferenceGame.id === "minecraft")) {
+                cb.checked = true;
+            }
+        });
+
+        // Fecha a gaveta lateral
+        drawer.classList.remove("open");
+        selectRef.value = "";
+        selectedReferenceGame = null;
+
+        // Atualiza a visualização do GDD e o Quest Tracker
+        handleFormUpdate();
+        showToast("Referência mesclada no GDD!");
+    });
+}
+
+// --- SALVAMENTO AUTOMÁTICO (LOCALSTORAGE AUTO-SAVE) ---
+let autosaveTimeout = null;
+
+function triggerAutosave() {
+    // 1. Coleta dados
+    const data = getFormJSONData();
+    
+    // 2. Só salva se houver algum conteúdo preenchido (não em branco)
+    const hasAnyContent = Object.values(data).some(val => {
+        if (typeof val === "string") return val.trim() !== "";
+        if (Array.isArray(val)) return val.length > 0;
+        return false;
+    });
+
+    if (!hasAnyContent) return;
+
+    // 3. Salva no localStorage
+    localStorage.setItem("titanTech_gdd_draft", JSON.stringify(data));
+
+    // 4. Mostra indicador visual "Auto-salvo" temporário
+    const lblAutosave = document.getElementById("lbl-autosave-status");
+    if (lblAutosave) {
+        lblAutosave.textContent = "[ Rascunho Auto-salvo ]";
+        lblAutosave.classList.add("visible");
+        
+        if (autosaveTimeout) clearTimeout(autosaveTimeout);
+        autosaveTimeout = setTimeout(() => {
+            lblAutosave.classList.remove("visible");
+        }, 1500);
+    }
+}
+
+function restoreAutosavedDraft() {
+    try {
+        const savedDraft = localStorage.getItem("titanTech_gdd_draft");
+        if (savedDraft) {
+            const data = JSON.parse(savedDraft);
+            
+            // Só restaura se o usuário tiver algo realmente salvo
+            if (data && (data.game_name || data.objective || data.story || data.victory_cond)) {
+                populateFormWithData(data);
+                showToast("Rascunho anterior recuperado!");
+                const lblStatus = document.getElementById("lbl-status-message");
+                if (lblStatus) {
+                    lblStatus.textContent = "[ STATUS ] Rascunho anterior recuperado do armazenamento local.";
+                    lblStatus.style.color = "var(--color-neon-cyan)";
+                }
+            }
+        }
+    } catch (e) {
+        console.warn("Falha ao restaurar rascunho automático:", e);
+    }
 }

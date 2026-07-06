@@ -56,6 +56,14 @@
             </div>
         </header>
 
+    <!-- Seletor de Jogo de Referência -->
+    <div class="reference-selector-container">
+        <label for="select-reference-game" class="reference-label">💡 Dica: Inspirar-se em um Jogo de Referência</label>
+        <select id="select-reference-game" class="cyber-select reference-select">
+            <option value="" selected>-- Selecione um Jogo para Inspirar --</option>
+        </select>
+    </div>
+
         <!-- GRID PRINCIPAL DE DUAS COLUNAS (FORMULÁRIO VS PREVIEW) -->
         <div class="workspace-split">
             
@@ -312,6 +320,7 @@
         <!-- BARRA DE STATUS INFERIOR -->
         <footer class="app-status-bar">
             <span id="lbl-status-message">[ STATUS ] Inicializando sistemas da HUD...</span>
+            <span id="lbl-autosave-status" class="autosave-label"></span>
             <label class="sound-enable-cb">
                 <input type="checkbox" id="checkbox-sound" checked>
                 <span>Habilitar Sons (Beeps)</span>
@@ -320,10 +329,26 @@
 
     </div>
 
+    <!-- Gaveta Lateral de Referências -->
+    <aside id="reference-drawer" class="reference-drawer">
+        <div class="drawer-header">
+            <h3>📖 Referência: <span id="ref-game-title">Nome do Jogo</span></h3>
+            <button id="btn-close-drawer" class="close-drawer-btn">&times;</button>
+        </div>
+        <div class="drawer-body" id="ref-drawer-content">
+            <!-- Injetado via JS -->
+        </div>
+        <div class="drawer-footer">
+            <button id="btn-merge-reference" class="merge-btn">✨ Mesclar como Exemplo</button>
+        </div>
+    </aside>
+
     <!-- Div para a Notificação Toast flutuante -->
     <div id="tt-toast" class="toast"></div>
 
     <!-- Script principal -->
-    <script src="script.js?v=1.0"></script>
+    <script src="referencias_jogos.js?v=1.1"></script>
+    <script src="script.js?v=1.1"></script>
+    <script src="../lock-listener.js"></script>
 </body>
 </html>

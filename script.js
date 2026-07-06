@@ -5,46 +5,57 @@
 
 // Estado do Portal
 const state = {
-    selectedTeacher: null,
+    selectedTrack: null,
     activeTab: 'games'
 };
 
 // Ao carregar o documento
 document.addEventListener('DOMContentLoaded', () => {
-    // Restaura o estado da sessão se o professor estiver salvo na sessionStorage
-    const savedTeacher = sessionStorage.getItem('titanTech_selectedTeacher');
+    // 1. Restaura o estado da sessão se a trilha estiver salva na sessionStorage
+    const savedTrack = sessionStorage.getItem('titanTech_selectedTrack');
     const savedTab = sessionStorage.getItem('titanTech_activeTab');
-    if (savedTeacher) {
+    
+    // 2. Aplica a visibilidade das ferramentas salva pelos professores
+    applySavedToolVisibility();
+
+    if (savedTrack) {
         if (savedTab) {
             state.activeTab = savedTab;
         }
-        selectTeacher(savedTeacher, false); // Seleciona professor sem animação suave
+        selectTrack(savedTrack, false); // Seleciona trilha sem animação suave
     }
 });
 
 /**
- * Seleciona o professor ativo e abre o dashboard correspondente
- * @param {string} teacherName - 'sandro' ou 'gabriel'
+ * Seleciona a trilha ativa e abre o dashboard correspondente
+ * @param {string} trackName - 'games', 'robotica' ou 'treinamento'
  * @param {boolean} smooth - se deve rolar a transição de forma animada
  */
-function selectTeacher(teacherName, smooth = true) {
-    state.selectedTeacher = teacherName;
-    sessionStorage.setItem('titanTech_selectedTeacher', teacherName);
+function selectTrack(trackName, smooth = true) {
+    state.selectedTrack = trackName;
+    sessionStorage.setItem('titanTech_selectedTrack', trackName);
 
     const screenSelect = document.getElementById('screen-select-teacher');
     const screenDashboard = document.getElementById('screen-dashboard');
-    const badgeName = document.getElementById('active-teacher-name');
-    const badge = document.getElementById('active-teacher-badge');
+    const badgeName = document.getElementById('active-track-name');
+    const badge = document.getElementById('active-track-badge');
 
-    // Atualiza o nome do professor no cabeçalho
-    const formattedName = teacherName === 'sandro' ? 'Prof. Sandro' : 'Prof. Gabriel';
+    // Mapeamento de nomes de trilhas
+    let formattedName = 'Trilha Games';
+    if (trackName === 'robotica') {
+        formattedName = 'Trilha Robótica';
+    } else if (trackName === 'treinamento') {
+        formattedName = 'Treinamento Robótica';
+    }
     badgeName.textContent = formattedName;
 
-    // Ajusta a cor e o estilo do badge conforme o professor
-    if (teacherName === 'sandro') {
+    // Ajusta a cor e o estilo do badge conforme a trilha selecionada
+    if (trackName === 'games') {
+        badge.className = 'teacher-badge color-gabriel';
+    } else if (trackName === 'robotica') {
         badge.className = 'teacher-badge color-sandro';
     } else {
-        badge.className = 'teacher-badge color-gabriel';
+        badge.className = 'teacher-badge color-yellow';
     }
 
     // Transição de telas
@@ -68,16 +79,16 @@ function selectTeacher(teacherName, smooth = true) {
         screenDashboard.classList.add('active');
     }
 
-    // Seleciona a aba ativa correspondente
-    switchTab(state.activeTab);
+    // Seleciona a aba correspondente à trilha
+    switchTab(trackName);
 }
 
 /**
- * Retorna para a tela de seleção de professor
+ * Retorna para a tela de seleção de trilha
  */
-function backToTeacherSelect() {
-    state.selectedTeacher = null;
-    sessionStorage.removeItem('titanTech_selectedTeacher');
+function backToTrackSelect() {
+    state.selectedTrack = null;
+    sessionStorage.removeItem('titanTech_selectedTrack');
 
     const screenSelect = document.getElementById('screen-select-teacher');
     const screenDashboard = document.getElementById('screen-dashboard');
@@ -118,3 +129,33 @@ function switchTab(tabName) {
     if (selectedBtn) selectedBtn.classList.add('active');
     if (selectedPanel) selectedPanel.classList.add('active');
 }
+
+// A visibilidade das ferramentas é controlada a partir do painel na pasta portal-professor/
+
+/**
+ * Lê a localStorage e oculta/mostra os cards dos simuladores
+ */
+function applySavedToolVisibility() {
+    let visibilityState = {};
+    try {
+        const saved = localStorage.getItem('titanTech_tool_visibility');
+        if (saved) visibilityState = JSON.parse(saved);
+    } catch (e) {}
+
+    const tools = document.querySelectorAll('[data-tool-id]');
+    tools.forEach(card => {
+        const toolId = card.getAttribute('data-tool-id');
+        if (visibilityState[toolId] === false) {
+            card.classList.add('hidden-by-teacher');
+        } else {
+            card.classList.remove('hidden-by-teacher');
+        }
+    });
+}
+
+// Escuta mudanças de visibilidade em tempo real vindas do Portal do Professor em outra aba
+window.addEventListener('storage', (e) => {
+    if (e.key === 'titanTech_tool_visibility') {
+        applySavedToolVisibility();
+    }
+});

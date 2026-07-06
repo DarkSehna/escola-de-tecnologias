@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Professor | Laboratório de Tecnologias</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Ambient light effects -->
+    <div class="ambient-glow bg-left"></div>
+    <div class="ambient-glow bg-right"></div>
+
+    <div class="portal-container">
+        <!-- Voltar para o Dashboard -->
+        <div class="back-nav">
+            <a href="../" class="back-link">← Voltar ao Portal do Aluno</a>
+        </div>
+
+        <header class="portal-header panel-glass">
+            <div class="brand">
+                <span class="logo">🔐</span>
+                <div>
+                    <h1>Portal do Professor</h1>
+                    <span class="subtitle">Laboratório de Tecnologias</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="portal-main">
+            <!-- TELA 1: LOGIN POR PIN -->
+            <section id="login-section" class="panel-glass auth-panel">
+                <h2>Acesso Restrito</h2>
+                <p class="instructions">Digite seu PIN de acesso para entrar nas suas configurações:</p>
+                <div class="pin-input-row">
+                    <input type="password" id="teacher-pin" maxlength="4" placeholder="••••" autocomplete="off" autofocus aria-label="PIN do Professor">
+                    <button id="btn-submit-pin" class="submit-btn">Entrar</button>
+                </div>
+                <p id="login-error-msg" class="error-message hidden">🚨 PIN incorreto. Tente novamente.</p>
+            </section>
+
+            <!-- TELA 2: CONFIGURAÇÕES E VISIBILIDADE -->
+            <section id="admin-section" class="admin-panel hidden">
+                <!-- Header do Admin -->
+                <div class="admin-top-bar panel-glass">
+                    <div class="admin-welcome">
+                        <span class="admin-badge" id="admin-badge-name">Professor</span>
+                        <p class="admin-desc">Gerencie a visibilidade dos simuladores do laboratório em tempo real.</p>
+                    </div>
+                    <button id="btn-logout" class="logout-btn">Sair do Painel</button>
+                </div>
+
+                <div class="admin-grid">
+                    <!-- PAINEL GABRIEL (GAMES) -->
+                    <div id="panel-gabriel" class="panel-glass admin-card hidden">
+                        <div class="card-header">
+                            <h3>Trilha de Games</h3>
+                            <span class="decor-tag">GAMES_CONF</span>
+                        </div>
+                        <p class="card-instructions">Ative ou desative os simuladores que os alunos podem visualizar:</p>
+                        
+                        <div class="toggles-list">
+                            <label class="toggle-control">
+                                <input type="checkbox" data-visibility-tool="gerador-gdd" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Gerador de GDD</span>
+                            </label>
+                            <label class="toggle-control">
+                                <input type="checkbox" data-visibility-tool="simulador-fsm" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Simulador FSM</span>
+                            </label>
+                            <label class="toggle-control">
+                                <input type="checkbox" data-visibility-tool="lab-fisica-2d" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Lab de Física 2D</span>
+                            </label>
+                            <label class="toggle-control">
+                                <input type="checkbox" data-visibility-tool="feedback-jogos" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Feedback de Jogos</span>
+                            </label>
+                        </div>
+
+                        <div class="links-box">
+                            <h4>Planilhas de Feedback</h4>
+                            <a href="../feedback-jogos/dashboard.html" target="_blank" class="admin-link">📊 Abrir Dashboard de Resultados (Visual)</a>
+                            <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vTCHyqE7P1R3j-RzH6S3kIeZ7qf0t7T4Xv0v0v0v0v0v0v0v0v0/pubhtml" target="_blank" class="admin-link secondary">Planilha Google Sheets (Dados Brutos)</a>
+                        </div>
+                    </div>
+
+                    <!-- PAINEL SANDRO (ROBÓTICA) -->
+                    <div id="panel-sandro" class="panel-glass admin-card hidden">
+                        <div class="card-header">
+                            <h3>Trilha de Robótica & Treinamento</h3>
+                            <span class="decor-tag">ROBOT_CONF</span>
+                        </div>
+                        <p class="card-instructions">Ative ou desative os simuladores que os alunos podem visualizar:</p>
+                        
+                        <div class="toggles-list">
+                            <label class="toggle-control">
+                                <input type="checkbox" data-visibility-tool="simulador-giro-robotico" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Giro de Robô 2D</span>
+                            </label>
+                            <label class="toggle-control">
+                                <input type="checkbox" data-visibility-tool="simulador-ohm" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Lei de Ohm</span>
+                            </label>
+                            <label class="toggle-control">
+                                <input type="checkbox" data-visibility-tool="hacker-lockpicking" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Hacker Lockpicking</span>
+                            </label>
+                            <label class="toggle-control">
+                                <input type="checkbox" data-visibility-tool="obr-placar-treino" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">OBR Placar Treino</span>
+                            </label>
+                        </div>
+
+                        <div class="links-box">
+                            <h4>Configurações OBR</h4>
+                            <a href="https://obr.robocup.org.br/" target="_blank" class="admin-link">📋 Regras e Pontuações Oficiais OBR</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

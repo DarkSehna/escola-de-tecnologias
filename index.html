@@ -18,41 +18,54 @@
     <div class="background-glow bg-glow-left"></div>
     <div class="background-glow bg-glow-right"></div>
 
-    <!-- TELA 1: SELEÇÃO DE PROFESSOR -->
+    <!-- TELA 1: SELEÇÃO DE TRILHA -->
     <main id="screen-select-teacher" class="screen-container active">
         <header class="select-header">
             <h1 class="logo-title">
-                <span class="brand">TitanTech</span>
-                <span class="sub-brand">Portal de Laboratórios</span>
+                <span class="brand">Laboratório de</span>
+                <span class="sub-brand">Tecnologias</span>
             </h1>
-            <p class="select-subtitle">Escolha seu professor para acessar as ferramentas e simuladores</p>
+            <p class="select-subtitle">Selecione sua Trilha de Aprendizado para acessar os simuladores</p>
         </header>
 
         <section class="teacher-grid">
-            <!-- Card Professor Sandro -->
-            <button class="teacher-card" onclick="selectTeacher('sandro')" aria-label="Acessar painel do Professor Sandro">
-                <div class="teacher-icon-wrapper color-sandro">
-                    <!-- Icone de Engrenagens / Robótica (Sandro) -->
-                    <svg viewBox="0 0 24 24" class="teacher-svg">
-                        <path fill="currentColor" d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
-                    </svg>
-                </div>
-                <h2>Prof. Sandro</h2>
-                <p>Especialista em Robótica Industrial, Circuitos Eletrônicos e Programação Embarcada.</p>
-                <span class="enter-btn">Entrar no Laboratório</span>
-            </button>
-
-            <!-- Card Professor Gabriel -->
-            <button class="teacher-card" onclick="selectTeacher('gabriel')" aria-label="Acessar painel do Professor Gabriel">
+            <!-- Card Trilha de Games -->
+            <button class="teacher-card" onclick="selectTrack('games')" aria-label="Acessar Trilha de Games">
                 <div class="teacher-icon-wrapper color-gabriel">
-                    <!-- Icone de Controle / Game Design (Gabriel) -->
+                    <!-- Icone de Controle / Game Design -->
                     <svg viewBox="0 0 24 24" class="teacher-svg">
                         <path fill="currentColor" d="M21,6H3C1.9,6,1,6.9,1,8v8c0,1.1,0.9,2,2,2h18c1.1,0,2-0.9,2-2V8C23,6.9,22.1,6,21,6z M9,13H7v2H6v-2H4v-1h2V10h1v2h2V13z M14.5,15c-0.83,0-1.5-0.67-1.5-1.5s0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5S15.33,15,14.5,15z M18.5,12c-0.83,0-1.5-0.67-1.5-1.5 s0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5S19.33,12,18.5,12z"/>
                     </svg>
                 </div>
-                <h2>Prof. Gabriel</h2>
-                <p>Especialista em Game Design, Física de Jogos, Algoritmos Avançados e Desenvolvimento Web.</p>
-                <span class="enter-btn">Entrar no Laboratório</span>
+                <h2>Trilha Games</h2>
+                <p>Crie histórias, mecânicas de física, lógica de estados (FSM) e projete os seus próprios jogos digitais.</p>
+                <span class="enter-btn">Entrar na Trilha</span>
+            </button>
+
+            <!-- Card Trilha de Robótica -->
+            <button class="teacher-card" onclick="selectTrack('robotica')" aria-label="Acessar Trilha de Robótica">
+                <div class="teacher-icon-wrapper color-sandro">
+                    <!-- Icone de Engrenagens / Robótica -->
+                    <svg viewBox="0 0 24 24" class="teacher-svg">
+                        <path fill="currentColor" d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                    </svg>
+                </div>
+                <h2>Trilha Robótica</h2>
+                <p>Estude a cinemática de motores, circuitos com potenciômetros e integre código com placas Arduino físicas.</p>
+                <span class="enter-btn">Entrar na Trilha</span>
+            </button>
+
+            <!-- Card Treinamento OBR -->
+            <button class="teacher-card" onclick="selectTrack('treinamento')" aria-label="Acessar Treinamento OBR">
+                <div class="teacher-icon-wrapper color-yellow">
+                    <!-- Icone de Trophy / Cronômetro -->
+                    <svg viewBox="0 0 24 24" class="teacher-svg">
+                        <path fill="currentColor" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M11,8H13V12H16V14H11V8Z"/>
+                    </svg>
+                </div>
+                <h2>Treinamento Robótica</h2>
+                <p>Prepare-se para a Olimpíada Brasileira de Robótica. Calibre as pontuações e penalidades do seu robô.</p>
+                <span class="enter-btn">Ir para o Treinamento</span>
             </button>
         </section>
     </main>
@@ -61,21 +74,21 @@
     <div id="screen-dashboard" class="screen-container hidden">
         <header class="app-header">
             <div class="header-logo">
-                <span class="logo-badge">TT</span>
+                <span class="logo-badge">LT</span>
                 <div>
-                    <h1 class="logo-main">TitanTech</h1>
-                    <span class="logo-sub">Laboratórios Interativos</span>
+                    <h1 class="logo-main">Laboratório de</h1>
+                    <span class="logo-sub">Tecnologias</span>
                 </div>
             </div>
 
-            <!-- Identificador do Professor Selecionado -->
+            <!-- Identificador da Trilha Selecionada -->
             <div class="teacher-badge-container">
-                <div class="teacher-badge" id="active-teacher-badge">
+                <div class="teacher-badge" id="active-track-badge">
                     <span class="badge-dot"></span>
-                    <span id="active-teacher-name">Professor</span>
+                    <span id="active-track-name">Trilha</span>
                 </div>
-                <button class="change-teacher-btn" onclick="backToTeacherSelect()" title="Mudar de Professor">
-                    Alterar
+                <button class="change-teacher-btn" onclick="backToTrackSelect()" title="Mudar de Trilha">
+                    Voltar ao Início
                 </button>
             </div>
         </header>
@@ -99,7 +112,7 @@
             <section id="panel-games" class="tab-panel active">
                 <div class="cards-grid">
                     <!-- Gerador de GDD -->
-                    <a href="gerador-gdd/" class="tool-card hover-glow-purple">
+                    <a href="gerador-gdd/" class="tool-card hover-glow-purple" data-tool-id="gerador-gdd">
                         <div class="card-icon-box bg-purple">
                             <svg viewBox="0 0 24 24" class="card-svg">
                                 <path fill="currentColor" d="M14,2H6C4.89,2 4,2.9 4,4V20C4,21.1 4.89,22 6,22H18C19.1,22 20,21.1 20,20V8L14,2M12,18.03L7,13L8.4,11.6L11,14.2V8H13V14.2L15.6,11.6L17,13L12,18.03Z"/>
@@ -117,7 +130,7 @@
                     </a>
 
                     <!-- Simulador FSM -->
-                    <a href="simulador-fsm/" class="tool-card hover-glow-blue">
+                    <a href="simulador-fsm/" class="tool-card hover-glow-blue" data-tool-id="simulador-fsm">
                         <div class="card-icon-box bg-blue">
                             <svg viewBox="0 0 24 24" class="card-svg">
                                 <path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
@@ -135,7 +148,7 @@
                     </a>
 
                     <!-- Lab de Física 2D -->
-                    <a href="lab-fisica-2d/" class="tool-card hover-glow-green">
+                    <a href="lab-fisica-2d/" class="tool-card hover-glow-green" data-tool-id="lab-fisica-2d">
                         <div class="card-icon-box bg-green">
                             <svg viewBox="0 0 24 24" class="card-svg">
                                 <path fill="currentColor" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/>
@@ -153,7 +166,7 @@
                     </a>
 
                     <!-- Feedback de Jogos -->
-                    <a href="feedback-jogos/" class="tool-card hover-glow-pink">
+                    <a href="feedback-jogos/" class="tool-card hover-glow-pink" data-tool-id="feedback-jogos">
                         <div class="card-icon-box bg-pink">
                             <svg viewBox="0 0 24 24" class="card-svg">
                                 <path fill="currentColor" d="M20,2H4C2.9,2 2,2.9 2,4V22L6,18H20C21.1,18 22,17.1 22,16V4C22,2.9 21.1,2 20,2M20,16H5.17L4,17.17V4H20V16M12,10H14V12H12V10M12,6H14V8H12V6M16,10H18V12H16V10M16,6H18V8H16V6M8,10H10V12H8V10M8,6H10V8H8V6"/>
@@ -176,7 +189,7 @@
             <section id="panel-robotica" class="tab-panel">
                 <div class="cards-grid">
                     <!-- Simulador Giro de Robô -->
-                    <a href="simulador-giro-robotico/" class="tool-card hover-glow-orange">
+                    <a href="simulador-giro-robotico/" class="tool-card hover-glow-orange" data-tool-id="simulador-giro-robotico">
                         <div class="card-icon-box bg-orange">
                             <svg viewBox="0 0 24 24" class="card-svg">
                                 <path fill="currentColor" d="M12 2A10 10 0 0 0 2 12A10 10 0 0 0 12 22A10 10 0 0 0 22 12A10 10 0 0 0 12 2M12 4A8 8 0 0 1 20 12A8 8 0 0 1 12 20A8 8 0 0 1 4 12A8 8 0 0 1 12 4M9 8L15 12L9 16V8Z"/>
@@ -194,7 +207,7 @@
                     </a>
 
                     <!-- Simulador Lei de Ohm -->
-                    <a href="simulador-ohm/" class="tool-card hover-glow-cyan">
+                    <a href="simulador-ohm/" class="tool-card hover-glow-cyan" data-tool-id="simulador-ohm">
                         <div class="card-icon-box bg-cyan">
                             <svg viewBox="0 0 24 24" class="card-svg">
                                 <path fill="currentColor" d="M13,2.05C18.05,2.55 22,6.82 22,12C22,13.47 21.68,14.87 21.11,16.14L19.43,14.46C19.8,13.7 20,12.87 20,12C20,8.27 17.3,5.18 13.67,4.24L13.12,5.92C15.82,6.72 17.82,9.12 18,12C18.17,14.62 16.73,17.06 14.36,18.18L13.67,16.14L13,18.05V22H11V18.05L10.33,16.14L9.64,18.18C7.27,17.06 5.83,14.62 6,12C6.18,9.12 8.18,6.72 10.88,5.92L10.33,4.24C6.7,5.18 4,8.27 4,12C4,17.18 7.95,21.45 13,21.95V22H11V18.05L13,2.05Z"/>
@@ -212,7 +225,7 @@
                     </a>
 
                     <!-- Hacker Lockpicking -->
-                    <a href="hacker-lockpicking/" class="tool-card hover-glow-red">
+                    <a href="hacker-lockpicking/" class="tool-card hover-glow-red" data-tool-id="hacker-lockpicking">
                         <div class="card-icon-box bg-red">
                             <svg viewBox="0 0 24 24" class="card-svg">
                                 <path fill="currentColor" d="M12,17C10.89,17 10,16.1 10,15C10,13.9 10.89,13 12,13C13.11,13 14,13.9 14,15C14,16.1 13.11,17 12,17M18,20V10H6V20H18M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10A2,2 0 0,1 6,8H9V6A3,3 0 0,1 12,3A3,3 0 0,1 15,6V8H18M12,5A1,1 0 0,0 11,6V8H13V6A1,1 0 0,0 12,5Z"/>
@@ -235,7 +248,7 @@
             <section id="panel-treinamento" class="tab-panel">
                 <div class="cards-grid">
                     <!-- OBR Placar Treino -->
-                    <a href="obr-placar-treino/" class="tool-card hover-glow-yellow">
+                    <a href="obr-placar-treino/" class="tool-card hover-glow-yellow" data-tool-id="obr-placar-treino">
                         <div class="card-icon-box bg-yellow">
                             <svg viewBox="0 0 24 24" class="card-svg">
                                 <path fill="currentColor" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M11,8H13V12H16V14H11V8Z"/>
@@ -256,7 +269,8 @@
         </main>
 
         <footer class="app-footer">
-            <p>&copy; 2026 TitanTech - Escola de Tecnologias. Hospedado no GitHub Pages de forma estática.</p>
+            <p>Mentores: Prof. Sandro & Prof. Gabriel</p>
+            <p>&copy; 2026 Escola de Tecnologias. <a href="portal-professor/" class="btn-portal-prof">Painel do Professor</a></p>
         </footer>
     </div>
 
