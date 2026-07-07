@@ -1,0 +1,731 @@
+/* ==========================================================================
+   STYLE SHEET - PRANCHETA DE TÁTICAS FLL (FLL STRATEGY BOARD)
+   Estilo Cyberpunk, Controles de Desenho e Canvas Dinâmico
+   ========================================================================== */
+
+/* 1. RESET E DESIGN SYSTEM TOKENS */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Outfit', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+    /* Cores de Fundo */
+    --color-bg-dark: #070a13;
+    --color-bg-deep: #0b0f19;
+    --color-bg-panel: rgba(17, 24, 39, 0.65);
+    --color-border-glass: rgba(255, 255, 255, 0.07);
+
+    /* Cores Neon (Temática Robótica/Treinamento - Amarelo/Laranja) */
+    --color-neon-yellow: #ffcc00;
+    --color-neon-yellow-glow: rgba(255, 204, 0, 0.25);
+    
+    --color-neon-cyan: #00f0ff;
+    --color-neon-cyan-glow: rgba(0, 240, 255, 0.25);
+
+    --color-neon-pink: #ec4899;
+    --color-neon-pink-glow: rgba(236, 72, 153, 0.25);
+    
+    --color-neon-green: #00ff66;
+    --color-neon-green-glow: rgba(0, 255, 102, 0.25);
+    
+    --color-neon-red: #ff3333;
+    --color-neon-red-glow: rgba(255, 51, 51, 0.25);
+
+    --color-text-white: #ffffff;
+    --color-text-normal: #9ca3af;
+    --color-text-dark: #090a0f;
+    --color-gray-muted: #5f6c8d;
+    --color-border: #1f2230;
+
+    --glass-blur: blur(14px);
+    --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+    background-color: var(--color-bg-dark);
+    color: var(--color-text-white);
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+    padding: 1.25rem;
+}
+
+/* Ambient glow effects */
+.ambient-glow {
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    filter: blur(150px);
+    opacity: 0.06;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.bg-left {
+    background: radial-gradient(circle, var(--color-neon-yellow) 0%, transparent 70%);
+    top: -200px;
+    left: -200px;
+}
+
+.bg-right {
+    background: radial-gradient(circle, var(--color-neon-pink) 0%, transparent 70%);
+    bottom: -200px;
+    right: -200px;
+}
+
+/* 2. LAYOUT MASTER */
+.app-container {
+    max-width: 1550px;
+    margin: 0 auto;
+    width: 100%;
+    height: calc(100vh - 2.5rem);
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+}
+
+.panel-glass {
+    background: var(--color-bg-panel);
+    border: 1px solid var(--color-border-glass);
+    border-radius: 20px;
+    backdrop-filter: var(--glass-blur);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* 3. CABEÇALHO E FERRAMENTAS DO QUADRO */
+.app-header {
+    padding: 1.15rem 1.5rem;
+    gap: 1rem;
+    flex-shrink: 0;
+}
+
+.header-main-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.app-branding {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.back-nav {
+    margin-bottom: 0.15rem;
+}
+
+.back-link {
+    color: var(--color-text-normal);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: var(--transition-smooth);
+    display: inline-block;
+}
+
+.back-link:hover {
+    color: var(--color-neon-yellow);
+    transform: translateX(-4px);
+    text-shadow: 0 0 8px var(--color-neon-yellow-glow);
+}
+
+.title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.logo-icon {
+    font-size: 1.85rem;
+}
+
+.title-row h1 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.subtitle {
+    font-size: 0.8rem;
+    color: var(--color-gray-muted);
+    font-weight: 500;
+}
+
+/* Ações de Arquivos */
+.toolbar-actions {
+    display: flex;
+    gap: 0.65rem;
+}
+
+.tool-btn {
+    border-radius: 8px;
+    padding: 0.6rem 1.15rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    border: 1.5px solid transparent;
+}
+
+.primary-btn {
+    background: var(--color-neon-yellow);
+    color: var(--color-text-dark);
+    border-color: var(--color-neon-yellow);
+    box-shadow: 0 0 10px var(--color-neon-yellow-glow);
+}
+
+.primary-btn:hover {
+    background: var(--color-neon-yellow);
+    box-shadow: 0 0 15px var(--color-neon-yellow);
+}
+
+.secondary-btn {
+    background: #12141d;
+    color: var(--color-text-white);
+    border-color: var(--color-border);
+}
+
+.secondary-btn:hover {
+    border-color: var(--color-neon-yellow);
+    background: rgba(255, 204, 0, 0.05);
+}
+
+/* Barra de Ferramentas de Desenho */
+.tactic-tools-row {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    background: rgba(13, 17, 28, 0.4);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 0.65rem 1rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.control-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-text-normal);
+}
+
+/* Modos de Ferramenta */
+.mode-buttons {
+    display: flex;
+    gap: 0.45rem;
+}
+
+.mode-btn {
+    background: #12141d;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-normal);
+    padding: 0.45rem 0.85rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.mode-btn:hover {
+    border-color: var(--color-neon-yellow);
+    color: #ffffff;
+}
+
+.mode-btn.active {
+    background: rgba(255, 204, 0, 0.08);
+    border-color: var(--color-neon-yellow);
+    color: var(--color-neon-yellow);
+    box-shadow: 0 0 8px var(--color-neon-yellow-glow);
+}
+
+.divider-v {
+    width: 1.5px;
+    height: 24px;
+    background: var(--color-border);
+}
+
+/* Seletor de Cores */
+.color-picker-grid {
+    display: flex;
+    gap: 0.45rem;
+}
+
+.color-btn {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.color-btn:hover {
+    transform: scale(1.15);
+}
+
+.color-btn.active {
+    border-color: #ffffff;
+    box-shadow: 0 0 10px currentColor;
+    transform: scale(1.1);
+}
+
+/* Slider de Espessura */
+.width-picker {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.cyber-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100px;
+    height: 6px;
+    border-radius: 3px;
+    background: #0d111c;
+    border: 1px solid var(--color-border);
+    outline: none;
+    cursor: pointer;
+}
+
+.cyber-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--color-neon-yellow);
+    box-shadow: 0 0 6px var(--color-neon-yellow);
+    transition: var(--transition-smooth);
+}
+
+.cyber-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.width-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-neon-yellow);
+    background: rgba(255, 204, 0, 0.1);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 204, 0, 0.2);
+    width: 42px;
+    text-align: center;
+}
+
+/* Ação de Perigo (Limpar) */
+.action-danger-btn {
+    background: transparent;
+    border: 1.5px solid var(--color-neon-red);
+    color: var(--color-neon-red);
+    padding: 0.45rem 0.85rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 0 6px var(--color-neon-red-glow);
+    transition: var(--transition-smooth);
+}
+
+.action-danger-btn:hover {
+    background: var(--color-neon-red);
+    color: #ffffff;
+    box-shadow: 0 0 10px var(--color-neon-red);
+}
+
+/* 4. WORKSPACE SPLIT */
+.workspace-split {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 1.15rem;
+    flex: 1;
+    min-height: 0;
+}
+
+/* 5. SIDEBAR PALETA */
+.sidebar-palette {
+    padding: 1.25rem;
+    gap: 1.15rem;
+    height: 100%;
+}
+
+.section-title-wrapper {
+    border-bottom: 1.5px solid var(--color-border);
+    padding-bottom: 0.35rem;
+    margin-bottom: 0.5rem;
+    flex-shrink: 0;
+}
+
+.section-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-neon-yellow);
+    text-shadow: 0 0 5px var(--color-neon-yellow-glow);
+    letter-spacing: 0.05em;
+}
+
+.sidebar-instructions {
+    font-size: 0.75rem;
+    color: var(--color-text-normal);
+    line-height: 1.35;
+    flex-shrink: 0;
+}
+
+.palette-grid {
+    flex: 1;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    padding-right: 0.25rem;
+}
+
+.palette-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    background: rgba(13, 17, 28, 0.4);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 0.55rem 0.25rem;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+    transition: var(--transition-smooth);
+}
+
+.palette-item:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.palette-item.active {
+    border-color: var(--color-neon-yellow);
+    background: rgba(255, 204, 0, 0.05);
+    box-shadow: 0 0 8px var(--color-neon-yellow-glow);
+}
+
+.tile-preview {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    user-select: none;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tile-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-text-normal);
+    line-height: 1.2;
+}
+
+.palette-item.active .tile-label {
+    color: #ffffff;
+}
+
+/* Marcadores de Cores Especificas */
+.tile-start { background: rgba(255, 255, 255, 0.05); border-color: #ffffff; }
+.tile-sensor-color { background: rgba(0, 240, 255, 0.05); border-color: var(--color-neon-cyan); }
+.tile-sensor-us { background: rgba(236, 72, 153, 0.05); border-color: var(--color-neon-pink); }
+.tile-sensor-gyro { background: rgba(0, 255, 102, 0.05); border-color: var(--color-neon-green); }
+.tile-mission { background: rgba(255, 204, 0, 0.05); border-color: var(--color-neon-yellow); }
+.tile-obstacle { background: rgba(255, 51, 51, 0.05); border-color: var(--color-neon-red); }
+.tile-note { background: rgba(255, 255, 255, 0.05); border-color: #a855f7; }
+
+.help-box {
+    margin-top: auto;
+    background: rgba(255, 204, 0, 0.03);
+    border: 1px solid rgba(255, 204, 0, 0.08);
+    border-radius: 10px;
+    padding: 0.75rem;
+    flex-shrink: 0;
+}
+
+.help-box h4 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-neon-yellow);
+    margin-bottom: 0.2rem;
+}
+
+.help-box p {
+    font-size: 0.7rem;
+    color: var(--color-text-normal);
+    line-height: 1.4;
+}
+
+/* 6. ÁREA DE VIEWPORT DO CANVAS */
+.canvas-viewport {
+    height: 100%;
+}
+
+.viewport-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 1.25rem;
+    background: #12141d;
+    border-bottom: 1.5px solid var(--color-border);
+    flex-shrink: 0;
+}
+
+.viewport-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-text-normal);
+}
+
+.status-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+}
+
+.status-badge.red-pulse {
+    color: var(--color-neon-red);
+    background: rgba(255, 51, 51, 0.1);
+    border: 1px solid rgba(255, 51, 51, 0.2);
+    animation: pulseRed 2s infinite;
+}
+
+.status-badge.green-online {
+    color: var(--color-neon-green);
+    background: rgba(0, 255, 102, 0.1);
+    border: 1px solid rgba(0, 255, 102, 0.2);
+}
+
+@keyframes pulseRed {
+    0% { opacity: 0.7; }
+    50% { opacity: 1; box-shadow: 0 0 5px rgba(255, 51, 51, 0.3); }
+    100% { opacity: 0.7; }
+}
+
+.viewport-scroll-container {
+    flex: 1;
+    overflow: auto;
+    padding: 1.5rem;
+    background: #05060b;
+    display: flex;
+}
+
+#canvas-container-box {
+    position: relative;
+    margin: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    background: #090b11;
+    border: 1.5px solid var(--color-border);
+    overflow: hidden;
+}
+
+#tactic-canvas {
+    display: block;
+    user-select: none;
+    outline: none;
+}
+
+/* Placeholder */
+.placeholder-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(11, 15, 25, 0.85);
+    z-index: 10;
+    padding: 2rem;
+    text-align: center;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.placeholder-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.placeholder-icon {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
+}
+
+.placeholder-overlay h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+    color: #ffffff;
+}
+
+.placeholder-overlay p {
+    font-size: 0.85rem;
+    color: var(--color-text-normal);
+    max-width: 320px;
+    line-height: 1.5;
+}
+
+/* 7. MODAL DE ADICIONAR NOTA */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(7, 10, 19, 0.8);
+    backdrop-filter: var(--glass-blur);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    transition: opacity 0.25s ease;
+}
+
+.modal-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.modal-content {
+    width: 90%;
+    max-width: 440px;
+    padding: 2rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+}
+
+.modal-content h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--color-neon-yellow);
+}
+
+#txt-note-content {
+    width: 100%;
+    background: #0d111c;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 0.9rem;
+    padding: 0.75rem;
+    outline: none;
+    resize: none;
+    margin-bottom: 1.5rem;
+    transition: var(--transition-smooth);
+}
+
+#txt-note-content:focus {
+    border-color: var(--color-neon-yellow);
+    box-shadow: 0 0 8px var(--color-neon-yellow-glow);
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.modal-btn {
+    border-radius: 8px;
+    padding: 0.55rem 1.25rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+/* 8. BARRA DE STATUS INFERIOR */
+.app-status-bar {
+    padding: 0.45rem 1.5rem;
+    background: rgba(11, 15, 25, 0.8);
+    border: 1.5px solid var(--color-border-glass);
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+#lbl-status-message {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--color-text-normal);
+}
+
+.sound-enable-cb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.75rem;
+    color: var(--color-gray-muted);
+}
+
+.sound-enable-cb input {
+    width: 12px;
+    height: 12px;
+    accent-color: var(--color-neon-yellow);
+}
+
+/* 9. TOAST */
+.toast {
+    position: fixed;
+    top: 2rem;
+    left: 50%;
+    transform: translate(-50%, -20px);
+    background: rgba(11, 15, 25, 0.95);
+    border: 1px solid var(--color-neon-yellow);
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    z-index: 1100;
+    pointer-events: none;
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28), opacity 0.3s;
+    box-shadow: 0 0 15px var(--color-neon-yellow-glow);
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}

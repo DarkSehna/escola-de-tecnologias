@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Prancheta de Táticas FLL - Escola de Tecnologias">
+    <title>Prancheta de Táticas FLL | Escola de Tecnologias</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Ambient Glow Effects -->
+    <div class="ambient-glow bg-left"></div>
+    <div class="ambient-glow bg-right"></div>
+
+    <div class="app-container">
+        
+        <!-- CABEÇALHO -->
+        <header class="app-header panel-glass">
+            <div class="header-main-row">
+                <div class="app-branding">
+                    <div class="back-nav">
+                        <a href="../" class="back-link">← Voltar ao Painel Central</a>
+                    </div>
+                    <div class="title-row">
+                        <span class="logo-icon">📋</span>
+                        <div>
+                            <h1>PRANCHETA DE TÁTICAS FLL</h1>
+                            <span class="subtitle">Importe a imagem da pista da temporada, desenhe trajetórias e planeje as missões do seu robô!</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ações de Importar/Exportar -->
+                <div class="toolbar-actions">
+                    <input type="file" id="map-uploader" accept="image/*" style="display: none;">
+                    <button id="btn-import-map" class="tool-btn secondary-btn">📤 Carregar Pista</button>
+                    <button id="btn-export-board" class="tool-btn primary-btn">📥 Exportar Prancheta</button>
+                </div>
+            </div>
+
+            <!-- BARRA DE FERRAMENTAS DO QUADRO -->
+            <div class="tactic-tools-row">
+                <!-- Seletor de Modo -->
+                <div class="control-group">
+                    <span class="control-label">🛠️ Desenho:</span>
+                    <div class="mode-buttons">
+                        <button class="mode-btn active" data-mode="free" title="Desenho Livre">✏️ Caneta</button>
+                        <button class="mode-btn" data-mode="line" title="Desenhar Linha Reta">📏 Linha Reta</button>
+                        <button class="mode-btn" data-mode="eraser" title="Apagar Desenhos">❌ Borracha</button>
+                        <button class="mode-btn" data-mode="move" title="Mover Marcadores e Notas">🖐️ Mover</button>
+                    </div>
+                </div>
+                <div class="divider-v"></div>
+
+                <!-- Cor da Caneta -->
+                <div class="control-group">
+                    <span class="control-label">🎨 Cor:</span>
+                    <div class="color-picker-grid">
+                        <button class="color-btn active" data-color="#ec4899" style="background-color: #ec4899;"></button> <!-- Rosa -->
+                        <button class="color-btn" data-color="#00f0ff" style="background-color: #00f0ff;"></button> <!-- Cyan -->
+                        <button class="color-btn" data-color="#00ff66" style="background-color: #00ff66;"></button> <!-- Verde -->
+                        <button class="color-btn" data-color="#ffcc00" style="background-color: #ffcc00;"></button> <!-- Amarelo -->
+                        <button class="color-btn" data-color="#ff3333" style="background-color: #ff3333;"></button> <!-- Vermelho -->
+                        <button class="color-btn" data-color="#ffffff" style="background-color: #ffffff;"></button> <!-- Branco -->
+                    </div>
+                </div>
+                <div class="divider-v"></div>
+
+                <!-- Espessura da Linha -->
+                <div class="control-group">
+                    <span class="control-label">📐 Espessura:</span>
+                    <div class="width-picker">
+                        <input type="range" id="line-width-slider" min="2" max="15" value="4" class="cyber-slider">
+                        <span id="lbl-line-width" class="width-badge">4px</span>
+                    </div>
+                </div>
+                <div class="divider-v"></div>
+
+                <!-- Ações Rápidas -->
+                <div class="control-group">
+                    <button id="btn-clear-drawings" class="action-danger-btn">🚨 Limpar Desenhos</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- WORKSPACE SPLIT -->
+        <div class="workspace-split">
+            
+            <!-- SIDEBAR: MARCADORES ARRASTÁVEIS -->
+            <aside class="sidebar-palette panel-glass">
+                <div class="section-title-wrapper">
+                    <span class="section-badge">[ ELEMENTOS E PINS ]</span>
+                </div>
+                
+                <p class="sidebar-instructions">Selecione um marcador abaixo e clique na pista para inseri-lo:</p>
+
+                <div class="palette-grid">
+                    <!-- Ponto de Partida -->
+                    <button class="palette-item" data-tool="start" title="Definir ponto de partida do robô">
+                        <div class="tile-preview tile-start">🏁</div>
+                        <span class="tile-label">Partida</span>
+                    </button>
+                    
+                    <!-- Sensor de Cor -->
+                    <button class="palette-item" data-tool="color" title="Marcar ponto de leitura do sensor de cor">
+                        <div class="tile-preview tile-sensor-color">🌈</div>
+                        <span class="tile-label">Cor</span>
+                    </button>
+
+                    <!-- Sensor Ultrassônico -->
+                    <button class="palette-item" data-tool="ultrasonic" title="Marcar ponto de medição ultrassônica">
+                        <div class="tile-preview tile-sensor-us">🔊</div>
+                        <span class="tile-label">Ultrassom</span>
+                    </button>
+
+                    <!-- Giroscópio -->
+                    <button class="palette-item" data-tool="gyro" title="Marcar curvas ou verificação de ângulo">
+                        <div class="tile-preview tile-sensor-gyro">🔄</div>
+                        <span class="tile-label">Giro</span>
+                    </button>
+
+                    <!-- Modelo de Missão FLL -->
+                    <button class="palette-item" data-tool="mission" title="Identificar posição de uma missão da mesa">
+                        <div class="tile-preview tile-mission">🎯</div>
+                        <span class="tile-label">Missão</span>
+                    </button>
+
+                    <!-- Obstáculo -->
+                    <button class="palette-item" data-tool="obstacle" title="Marcar obstáculo físico na pista">
+                        <div class="tile-preview tile-obstacle">🚧</div>
+                        <span class="tile-label">Obstáculo</span>
+                    </button>
+
+                    <!-- Caixa de Nota Flutuante -->
+                    <button class="palette-item" data-tool="note" title="Adicionar caixa de texto para anotações">
+                        <div class="tile-preview tile-note">📝</div>
+                        <span class="tile-label">Anotação</span>
+                    </button>
+                </div>
+
+                <div class="help-box">
+                    <h4>💡 Dica FLL:</h4>
+                    <p>Você pode mover marcadores e anotações a qualquer momento selecionando a ferramenta 🖐️ Mover.</p>
+                </div>
+            </aside>
+
+            <!-- CONTAINER CENTRAL DO CANVAS -->
+            <main class="canvas-viewport panel-glass">
+                <div class="viewport-header">
+                    <span class="viewport-title">TACTICAL_MAP_VIEWPORT [ONLINE]</span>
+                    <span id="canvas-status-badge" class="status-badge red-pulse">⚠️ Sem Pista Carregada</span>
+                </div>
+                
+                <div class="viewport-scroll-container">
+                    <div id="canvas-container-box">
+                        <!-- Canvas principal interativo -->
+                        <canvas id="tactic-canvas"></canvas>
+                        
+                        <!-- Mensagem informativa inicial centralizada -->
+                        <div id="canvas-placeholder" class="placeholder-overlay">
+                            <span class="placeholder-icon">🗺️</span>
+                            <h3>Nenhuma pista carregada</h3>
+                            <p>Clique em "Carregar Pista" no topo para importar a imagem da mesa do campeonato e começar a planejar suas rotas.</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+        </div>
+
+        <!-- FOOTER STATUS -->
+        <footer class="app-status-bar">
+            <span id="lbl-status-message">[ STATUS ] Aguardando upload da imagem da pista...</span>
+            <label class="sound-enable-cb">
+                <input type="checkbox" id="checkbox-sound" checked>
+                <span>Habilitar Sons (Beeps)</span>
+            </label>
+        </footer>
+
+    </div>
+
+    <!-- Div para a Notificação Toast flutuante -->
+    <div id="tt-toast" class="toast"></div>
+
+    <!-- Modal de Input para anotações -->
+    <div id="note-modal" class="modal-overlay hidden">
+        <div class="modal-content panel-glass">
+            <h3>📝 Adicionar Anotação</h3>
+            <textarea id="txt-note-content" placeholder="Digite sua anotação estratégica aqui..." rows="4"></textarea>
+            <div class="modal-actions">
+                <button id="btn-cancel-note" class="modal-btn secondary-btn">Cancelar</button>
+                <button id="btn-save-note" class="modal-btn primary-btn">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="script.js?v=1.0"></script>
+    <script src="../lock-listener.js"></script>
+</body>
+</html>
