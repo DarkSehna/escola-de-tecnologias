@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Gerador de Mapas 2D (Level Builder) - Escola de Tecnologias">
+    <title>Gerador de Mapas 2D | Escola de Tecnologias</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Efeito de Brilho de Fundo -->
+    <div class="ambient-glow bg-left"></div>
+    <div class="ambient-glow bg-right"></div>
+
+    <div class="app-container">
+        
+        <!-- CABEÇALHO -->
+        <header class="app-header panel-glass">
+            <div class="header-main-row">
+                <div class="app-branding">
+                    <div class="back-nav">
+                        <a href="../" class="back-link">← Voltar ao Painel Central</a>
+                    </div>
+                    <div class="title-row">
+                        <span class="logo-icon">🗺️</span>
+                        <div>
+                            <h1>GERADOR DE MAPAS 2D (LEVEL BUILDER)</h1>
+                            <span class="subtitle">Desenhe os níveis dos seus jogos de plataforma e exporte para os seus GDDs!</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ações Globais de Arquivos -->
+                <div class="toolbar-actions">
+                    <input type="file" id="json-uploader" accept=".json" style="display: none;">
+                    <button id="btn-load-map" class="tool-btn secondary-btn">📁 Carregar Projeto</button>
+                    <button id="btn-save-map" class="tool-btn primary-btn">💾 Salvar JSON</button>
+                    <button id="btn-export-png" class="tool-btn accent-btn">🖼️ Exportar PNG</button>
+                </div>
+            </div>
+
+            <!-- BARRA DE CONTROLE DE GRADE (TAMANHO) -->
+            <div class="grid-controls-row">
+                <div class="control-group">
+                    <span class="control-label">⚡ Presets Rápidos:</span>
+                    <div class="preset-buttons">
+                        <button class="preset-btn" data-cols="16" data-rows="12">16 x 12 (Pequeno)</button>
+                        <button class="preset-btn active" data-cols="32" data-rows="12">32 x 12 (Padrão)</button>
+                        <button class="preset-btn" data-cols="64" data-rows="16">64 x 16 (Longo)</button>
+                    </div>
+                </div>
+                <div class="divider-v"></div>
+                <div class="control-group">
+                    <span class="control-label">🔧 Tamanho Personalizado:</span>
+                    <div class="custom-inputs">
+                        <div class="input-field">
+                            <label for="input-cols">Colunas:</label>
+                            <input type="number" id="input-cols" min="8" max="120" value="32" class="cyber-number-input">
+                        </div>
+                        <div class="input-field">
+                            <label for="input-rows">Linhas:</label>
+                            <input type="number" id="input-rows" min="6" max="60" value="12" class="cyber-number-input">
+                        </div>
+                        <button id="btn-resize-custom" class="resize-apply-btn">Redimensionar</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ESPAÇO DE TRABALHO -->
+        <div class="workspace-split">
+            
+            <!-- PAINEL LATERAL: PALETA DE FERRAMENTAS -->
+            <aside class="sidebar-palette panel-glass">
+                <div class="section-title-wrapper">
+                    <span class="section-badge">[ PALETA DE TILES (32x32) ]</span>
+                </div>
+                
+                <div class="palette-grid">
+                    <!-- Bloco Parede / Chão -->
+                    <button class="palette-item active" data-tool="wall" title="Pintar paredes ou chão sólidos">
+                        <div class="tile-preview tile-wall"></div>
+                        <span class="tile-label">Parede / Chão</span>
+                    </button>
+                    
+                    <!-- Ponto de Spawn do Player -->
+                    <button class="palette-item" data-tool="player" title="Definir ponto de partida do jogador">
+                        <div class="tile-preview tile-player">👾</div>
+                        <span class="tile-label">Jogador</span>
+                    </button>
+
+                    <!-- Ponto de Spawn do Inimigo -->
+                    <button class="palette-item" data-tool="enemy" title="Adicionar inimigo no cenário">
+                        <div class="tile-preview tile-enemy">💀</div>
+                        <span class="tile-label">Inimigo</span>
+                    </button>
+
+                    <!-- Plataforma Móvel -->
+                    <button class="palette-item" data-tool="platform" title="Inserir plataforma flutuante móvel">
+                        <div class="tile-preview tile-platform">⇄</div>
+                        <span class="tile-label">Plataforma</span>
+                    </button>
+
+                    <!-- Trampolim -->
+                    <button class="palette-item" data-tool="spring" title="Adicionar trampolim de super pulo">
+                        <div class="tile-preview tile-spring">🌀</div>
+                        <span class="tile-label">Trampolim</span>
+                    </button>
+
+                    <!-- Saída / Objetivo -->
+                    <button class="palette-item" data-tool="goal" title="Marcar ponto de vitória (fim da fase)">
+                        <div class="tile-preview tile-goal">⭐</div>
+                        <span class="tile-label">Saída / Fim</span>
+                    </button>
+
+                    <!-- Espinhos -->
+                    <button class="palette-item" data-tool="spikes" title="Adicionar espinhos mortais (obstáculo)">
+                        <div class="tile-preview tile-spikes">🔺</div>
+                        <span class="tile-label">Espinhos</span>
+                    </button>
+
+                    <!-- Borracha -->
+                    <button class="palette-item" data-tool="empty" title="Apagar bloco do cenário">
+                        <div class="tile-preview tile-empty">❌</div>
+                        <span class="tile-label">Borracha</span>
+                    </button>
+                </div>
+
+                <div class="sidebar-actions">
+                    <button id="btn-clear-grid" class="clear-btn">🚨 Limpar Mapa</button>
+                </div>
+
+                <div class="help-box">
+                    <h4>💡 Dica de Desenho:</h4>
+                    <p>Segure e arraste o mouse sobre o grid para pintar rapidamente com a ferramenta ativa!</p>
+                </div>
+            </aside>
+
+            <!-- ÁREA CENTRAL: GRID DE PINTURA (BUILDER) -->
+            <main class="grid-viewport panel-glass">
+                <div class="viewport-header">
+                    <span class="viewport-title">MAP_VIEWPORT [ONLINE]</span>
+                    <span id="grid-dimensions-indicator" class="dimensions-badge">32 x 12 (1024 x 384 px)</span>
+                </div>
+                <div class="viewport-scroll-container">
+                    <div id="paint-grid" class="paint-grid-style">
+                        <!-- Injetado via Javascript -->
+                    </div>
+                </div>
+            </main>
+
+        </div>
+
+        <!-- BARRA DE STATUS INFERIOR -->
+        <footer class="app-status-bar">
+            <span id="lbl-status-message">[ STATUS ] Inicializando motores do level builder...</span>
+            <label class="sound-enable-cb">
+                <input type="checkbox" id="checkbox-sound" checked>
+                <span>Habilitar Sons (Beeps)</span>
+            </label>
+        </footer>
+
+    </div>
+
+    <!-- Div para a Notificação Toast flutuante -->
+    <div id="tt-toast" class="toast"></div>
+
+    <!-- Script principal -->
+    <script src="script.js?v=1.0"></script>
+    <script src="../lock-listener.js"></script>
+</body>
+</html>
