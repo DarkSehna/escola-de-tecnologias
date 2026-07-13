@@ -585,7 +585,7 @@ function expandConsolePanel() {
 
 function detectGarbledData(text, bytes) {
     // 1. Verifica se há caracteres unicode estranhos ou sinalizadores de decoding inválido
-    if (text.includes('\uFFFD') || text.includes('')) {
+    if (text.includes('\uFFFD') || text.includes('\0')) {
         garbledBytesCount += 8;
     }
 
@@ -615,8 +615,8 @@ function startBaudRateDiagnostic() {
             bytesReceivedInSession = 0;
         }
 
-        // Se passarem 4 segundos recebendo bits mas nenhum parse passou, avisa
-        if (bytesReceivedInSession > 15 && validPacketsReceivedInSession === 0 && (now - lastDataReceivedTime) < 3000) {
+        // Se passarem 4 segundos recebendo bits mas nenhum parse passou, e parte desses bytes eram lixo/não-ASCII, avisa
+        if (bytesReceivedInSession > 15 && validPacketsReceivedInSession === 0 && garbledBytesCount > 0 && (now - lastDataReceivedTime) < 3000) {
             showToast("Recebendo lixo. O Arduino está configurado na velocidade certa?", "warning");
             logToTerminal("[Diagnóstico] Recebendo dados mas sem mensagens válidas. Mude a velocidade ou revise o código.", "danger");
             expandConsolePanel();
