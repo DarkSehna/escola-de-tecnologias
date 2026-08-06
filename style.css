@@ -496,6 +496,21 @@ body {
 .bg-red    { background: rgba(239, 68, 68, 0.12);   color: var(--color-red);    border: 1px solid rgba(239, 68, 68, 0.2); }
 .bg-yellow { background: rgba(234, 179, 8, 0.12);   color: var(--color-yellow); border: 1px solid rgba(234, 179, 8, 0.2); }
 .bg-pink   { background: rgba(236, 72, 153, 0.12);   color: var(--color-pink);   border: 1px solid rgba(236, 72, 153, 0.2); }
+.bg-ai     { background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(168, 85, 247, 0.2)); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.35); }
+
+/* Estilos de Destaque Domiciliar para Card de IA */
+.card-ai-featured {
+    border: 1px solid rgba(168, 85, 247, 0.35);
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.12);
+}
+
+.tag-ai {
+    color: #c084fc;
+    background: rgba(168, 85, 247, 0.15);
+    padding: 0.15rem 0.5rem;
+    border-radius: 6px;
+    border: 1px solid rgba(168, 85, 247, 0.25);
+}
 
 .card-info {
     flex-grow: 1;
@@ -580,6 +595,9 @@ body {
 
 .hover-glow-pink:hover { box-shadow: 0 10px 25px -5px var(--color-pink-glow); border-color: rgba(236, 72, 153, 0.4); }
 .hover-glow-pink:hover .card-icon-box { background: var(--color-pink); color: var(--color-bg-dark); }
+
+.hover-glow-ai:hover { box-shadow: 0 10px 30px -5px rgba(168, 85, 247, 0.4), 0 0 20px rgba(6, 182, 212, 0.25); border-color: rgba(168, 85, 247, 0.6); }
+.hover-glow-ai:hover .card-icon-box { background: linear-gradient(135deg, var(--color-cyan), var(--color-purple)); color: var(--color-bg-dark); box-shadow: 0 0 15px var(--color-purple-glow); }
 
 /* FOOTER GERAL */
 footer.app-footer {
