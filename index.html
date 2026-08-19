@@ -16,7 +16,12 @@
 
     <!-- CONTAINER DE PARTICULAS / EFEITO DE FUNDO -->
     <div class="background-glow bg-glow-left"></div>
-    <div class="background-glow bg-glow-right"></div>
+    <div class="app-container">
+        
+        <!-- Barra de Navegação Superior Global -->
+        <div class="global-top-bar" style="display: flex; justify-content: flex-end; align-items: center; padding: 0.75rem 1rem 0 1rem; width: 100%;">
+            <button class="theme-toggle-btn" aria-label="Alternar Tema">🌙 <span class="theme-btn-text">Modo Escuro</span></button>
+        </div>
 
     <!-- TELA 1: SELEÇÃO DE TRILHA -->
     <main id="screen-select-teacher" class="screen-container active">
@@ -328,7 +333,8 @@
         </footer>
     </div>
 
-    <!-- Script JavaScript global -->
+    <!-- Scripts JavaScript globais -->
+    <script src="theme-toggle.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

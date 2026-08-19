@@ -22,7 +22,37 @@ const WHEEL_PRESETS = {
     "Esteira (Aplica atrito)": 56.0
 };
 
-// Paleta de Cores do Canvas
+// Paleta de Cores do Canvas (Dinâmica para Dark/Light Mode)
+function getCanvasColors() {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    if (isLight) {
+        return {
+            bg: "#f8fafc",
+            gridMajor: "#cbd5e1",
+            gridMinor: "#e2e8f0",
+            axis: "rgba(71, 85, 105, 0.65)",
+            robotBody: "#334155",
+            robotWheel: "#d97706",
+            robotTread: "#64748b",
+            neonGreen: "#16a34a",
+            neonCyan: "#0284c7",
+            neonOrange: "#ea580c"
+        };
+    }
+    return {
+        bg: "#0c0f16",
+        gridMajor: "#1a2233",
+        gridMinor: "#121824",
+        axis: "rgba(34, 42, 61, 0.55)",
+        robotBody: "#2d3548",
+        robotWheel: "#ffdd00",
+        robotTread: "#424b5e",
+        neonGreen: "#39ff14",
+        neonCyan: "#00f0ff",
+        neonOrange: "#ff8800"
+    };
+}
+
 const COLOR_BG = "#0c0f16";
 const COLOR_GRID_MAJOR = "#1a2233";
 const COLOR_GRID_MINOR = "#121824";
@@ -509,8 +539,9 @@ function resetRobotPosition() {
 
 // --- DESENHO GRÁFICO (HTML5 CANVAS RENDERER) ---
 function drawAll() {
+    const colors = getCanvasColors();
     // 1. Limpa tela geral
-    ctx.fillStyle = COLOR_BG;
+    ctx.fillStyle = colors.bg;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
@@ -519,21 +550,22 @@ function drawAll() {
     ctx.scale(zoomScale, zoomScale);
 
     // 2. Desenhar Grade CAD Blueprint
-    drawGrid();
+    drawGrid(colors);
 
     // 3. Desenhar Eixos Cartesianos da Origem
-    drawOriginAxes();
+    drawOriginAxes(colors);
 
     // 4. Desenhar Rastro dos Caminhos
-    drawTraces();
+    drawTraces(colors);
 
     // 5. Desenhar o Robô Procedural
-    drawRobot();
+    drawRobot(colors);
 
     ctx.restore();
 }
 
-function drawGrid() {
+function drawGrid(colors) {
+    const themeColors = colors || getCanvasColors();
     const minorSpacing = 10.0 * SCALE_MM_TO_PX;
     const majorSpacing = 50.0 * SCALE_MM_TO_PX;
 
@@ -550,7 +582,7 @@ function drawGrid() {
     const endY = Math.ceil(bottomScene / minorSpacing) * minorSpacing;
 
     // A. Desenhar grade secundária (linhas finas a cada 10mm)
-    ctx.strokeStyle = COLOR_GRID_MINOR;
+    ctx.strokeStyle = themeColors.gridMinor;
     ctx.lineWidth = 0.5 / zoomScale; // Mantém a linha nítida independente do zoom
     ctx.beginPath();
 
@@ -568,7 +600,7 @@ function drawGrid() {
     ctx.stroke();
 
     // B. Desenhar grade principal (linhas mais grossas a cada 50mm)
-    ctx.strokeStyle = COLOR_GRID_MAJOR;
+    ctx.strokeStyle = themeColors.gridMajor;
     ctx.lineWidth = 1.0 / zoomScale;
     ctx.beginPath();
 
@@ -587,13 +619,14 @@ function drawGrid() {
     ctx.stroke();
 }
 
-function drawOriginAxes() {
+function drawOriginAxes(colors) {
+    const themeColors = colors || getCanvasColors();
     const leftScene = -activePanX / zoomScale;
     const rightScene = (canvas.width - activePanX) / zoomScale;
     const topScene = -activePanY / zoomScale;
     const bottomScene = (canvas.height - activePanY) / zoomScale;
 
-    ctx.strokeStyle = COLOR_AXIS;
+    ctx.strokeStyle = themeColors.axis;
     ctx.lineWidth = 1.5 / zoomScale;
     ctx.setLineDash([4, 4]);
     ctx.beginPath();
@@ -851,3 +884,8 @@ function showToast(message) {
         toast.className = "toast";
     }, 3000);
 }
+
+// Escuta mudanças de tema para redesenhar o canvas instantaneamente no modo claro/escuro
+window.addEventListener('titanThemeChanged', () => {
+    drawAll();
+});

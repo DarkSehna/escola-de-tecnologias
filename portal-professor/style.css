@@ -465,3 +465,36 @@ body {
         text-align: center;
     }
 }
+
+/* MODO CLARO [data-theme="light"] */
+[data-theme="light"] {
+    --color-bg-dark: #f8fafc;
+    --color-bg-deep: #e2e8f0;
+    --color-bg-card: rgba(255, 255, 255, 0.95);
+    --color-border-glass: rgba(0, 0, 0, 0.12);
+    --color-text-white: #0f172a;
+    --color-text-normal: #334155;
+    --color-text-muted: #64748b;
+}
+
+[data-theme="light"] .panel-glass,
+[data-theme="light"] .portal-header,
+[data-theme="light"] .auth-panel,
+[data-theme="light"] .admin-top-bar,
+[data-theme="light"] .admin-card {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    color: #0f172a;
+}
+
+[data-theme="light"] #teacher-pin {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+
+[data-theme="light"] .links-box {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}

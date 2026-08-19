@@ -17,9 +17,10 @@
     <div class="ambient-glow bg-right"></div>
 
     <div class="portal-container">
-        <!-- Voltar para o Dashboard -->
-        <div class="back-nav">
+        <!-- Voltar para o Dashboard e Botão de Tema -->
+        <div class="back-nav" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
             <a href="../" class="back-link">← Voltar ao Portal do Aluno</a>
+            <button class="theme-toggle-btn" aria-label="Alternar Tema">🌙 <span class="theme-btn-text">Modo Escuro</span></button>
         </div>
 
         <header class="portal-header panel-glass">
@@ -150,6 +151,7 @@
         </main>
     </div>
 
+    <script src="../theme-toggle.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

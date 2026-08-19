@@ -135,6 +135,21 @@ document.addEventListener("DOMContentLoaded", () => {
     // 6. Monitoramento de arraste do mouse para desenho rápido
     window.addEventListener("mouseup", () => { isDrawing = false; });
 
+    // 7. Controle de Visibilidade da Grade
+    const selectGridVis = document.getElementById("select-grid-visibility");
+    if (selectGridVis) {
+        const savedGridMode = localStorage.getItem("titanTech_map_grid_mode") || "high";
+        selectGridVis.value = savedGridMode;
+        paintGrid.setAttribute("data-grid-mode", savedGridMode);
+
+        selectGridVis.addEventListener("change", (e) => {
+            const mode = e.target.value;
+            paintGrid.setAttribute("data-grid-mode", mode);
+            localStorage.setItem("titanTech_map_grid_mode", mode);
+            audio.playClick();
+        });
+    }
+
     // Som de boot
     audio.playBoot();
     updateStatus("[ STATUS ] Editor inicializado. Grid 32x12 pronto para desenho.", "var(--color-neon-cyan)");
@@ -196,6 +211,10 @@ function renderGridUI() {
             cell.dataset.col = c;
             cell.dataset.row = r;
             
+            // Adiciona marcas para linhas guia 4x4
+            if ((c + 1) % 4 === 0) cell.classList.add("grid-cell-major-col");
+            if ((r + 1) % 4 === 0) cell.classList.add("grid-cell-major-row");
+
             // Define o tipo inicial
             const tileType = gridMatrix[r][c];
             cell.dataset.tile = tileType;

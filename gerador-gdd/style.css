@@ -1023,3 +1023,42 @@ body {
         color: #000000 !important;
     }
 }
+
+/* MODO CLARO [data-theme="light"] NO GERADOR DE GDD */
+[data-theme="light"] {
+    --color-bg-dark: #f8fafc;
+    --color-bg-deep: #e2e8f0;
+    --color-bg-panel: rgba(255, 255, 255, 0.95);
+    --color-border-glass: rgba(0, 0, 0, 0.12);
+    --color-text-white: #0f172a;
+    --color-text-normal: #334155;
+    --color-text-dark: #f8fafc;
+    --color-gray-muted: #64748b;
+    --color-border: #cbd5e1;
+}
+
+[data-theme="light"] .panel-glass,
+[data-theme="light"] .app-header,
+[data-theme="light"] .gdd-editor-area,
+[data-theme="light"] .gdd-preview-area,
+[data-theme="light"] .app-status-bar,
+[data-theme="light"] .form-section-card {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+
+[data-theme="light"] .document-sheet {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #0f172a;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .cyber-input,
+[data-theme="light"] .cyber-textarea,
+[data-theme="light"] .cyber-select {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #0f172a;
+}

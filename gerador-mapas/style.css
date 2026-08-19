@@ -514,7 +514,7 @@ body {
 .paint-grid-style {
     display: grid;
     background: #090b11;
-    border: 1.5px solid var(--color-border);
+    border: 2px solid var(--color-neon-cyan, #00f0ff);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
     user-select: none;
     outline: none;
@@ -525,15 +525,127 @@ body {
 .grid-cell {
     width: 32px;
     height: 32px;
-    border-right: 1px solid rgba(255, 255, 255, 0.03);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    border-right: 1px solid rgba(255, 255, 255, 0.25);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.25);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.1rem;
     cursor: crosshair;
-    transition: background-color 0.08s ease;
+    transition: background-color 0.08s ease, border-color 0.15s ease;
     user-select: none;
+    position: relative;
+}
+
+.grid-cell:hover {
+    outline: 2px solid var(--color-neon-cyan, #00f0ff);
+    z-index: 10;
+    background-color: rgba(0, 240, 255, 0.15);
+}
+
+/* MODOS DE VISIBILIDADE DA GRADE (CONTRASTE E LINHAS GUIA) */
+
+/* Modo 1: High Contrast (Nítida - Padrão) */
+.paint-grid-style[data-grid-mode="high"] .grid-cell {
+    border-right: 1px solid rgba(255, 255, 255, 0.35);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+/* Modo 2: Neon Cyan (Glow Cyberpunk) */
+.paint-grid-style[data-grid-mode="neon"] .grid-cell {
+    border-right: 1px solid rgba(0, 240, 255, 0.45);
+    border-bottom: 1px solid rgba(0, 240, 255, 0.45);
+}
+
+/* Modo 3: Grid 4x4 (Linhas Guia de Blocos 4 em 4) */
+.paint-grid-style[data-grid-mode="grid4x4"] .grid-cell {
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+.paint-grid-style[data-grid-mode="grid4x4"] .grid-cell.grid-cell-major-col {
+    border-right: 2px solid var(--color-neon-cyan, #00f0ff);
+}
+.paint-grid-style[data-grid-mode="grid4x4"] .grid-cell.grid-cell-major-row {
+    border-bottom: 2px solid var(--color-neon-cyan, #00f0ff);
+}
+
+/* Modo 4: Subtle (Suave) */
+.paint-grid-style[data-grid-mode="subtle"] .grid-cell {
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* MODO CLARO [data-theme="light"] NO GERADOR DE MAPAS */
+[data-theme="light"] {
+    --color-bg-dark: #f8fafc;
+    --color-bg-deep: #e2e8f0;
+    --color-bg-panel: rgba(255, 255, 255, 0.95);
+    --color-border-glass: rgba(0, 0, 0, 0.12);
+    --color-text-white: #0f172a;
+    --color-text-normal: #334155;
+    --color-text-dark: #f8fafc;
+    --color-gray-muted: #64748b;
+    --color-border: #cbd5e1;
+}
+
+[data-theme="light"] .viewport-scroll-container {
+    background: #cbd5e1;
+}
+
+[data-theme="light"] .paint-grid-style {
+    background: #ffffff;
+    border-color: #2563eb;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+}
+
+[data-theme="light"] .paint-grid-style[data-grid-mode="high"] .grid-cell {
+    border-right: 1px solid rgba(15, 23, 42, 0.35);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.35);
+}
+
+[data-theme="light"] .paint-grid-style[data-grid-mode="neon"] .grid-cell {
+    border-right: 1px solid rgba(6, 182, 212, 0.6);
+    border-bottom: 1px solid rgba(6, 182, 212, 0.6);
+}
+
+[data-theme="light"] .paint-grid-style[data-grid-mode="grid4x4"] .grid-cell {
+    border-right: 1px solid rgba(15, 23, 42, 0.2);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.2);
+}
+[data-theme="light"] .paint-grid-style[data-grid-mode="grid4x4"] .grid-cell.grid-cell-major-col {
+    border-right: 2px solid #2563eb;
+}
+[data-theme="light"] .paint-grid-style[data-grid-mode="grid4x4"] .grid-cell.grid-cell-major-row {
+    border-bottom: 2px solid #2563eb;
+}
+
+[data-theme="light"] .paint-grid-style[data-grid-mode="subtle"] .grid-cell {
+    border-right: 1px solid rgba(15, 23, 42, 0.12);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.12);
+}
+
+[data-theme="light"] .tile-card,
+[data-theme="light"] .sidebar-panel,
+[data-theme="light"] .grid-viewport,
+[data-theme="light"] .app-header,
+[data-theme="light"] .app-status-bar {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+
+[data-theme="light"] .cyber-select,
+[data-theme="light"] .cyber-number-input,
+[data-theme="light"] .preset-btn {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+
+[data-theme="light"] .preset-btn.active {
+    background: #3b82f6;
+    color: #ffffff;
+    border-color: #2563eb;
 }
 
 /* 7. ESTILOS DE TILES ESPECÍFICOS (PINTADOS) */

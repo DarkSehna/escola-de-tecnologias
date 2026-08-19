@@ -824,4 +824,76 @@ body {
     pointer-events: auto;
 }
 
+/* MODO CLARO [data-theme="light"] NO OBR PLACAR */
+[data-theme="light"] {
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --card-bg: #ffffff;
+    --card-bg-active: #f1f5f9;
+    --border-color: #cbd5e1;
+    --text-main: #0f172a;
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #475569;
+    --text-dark: #0f172a;
+}
+
+[data-theme="light"] .app-header,
+[data-theme="light"] .timer-container,
+[data-theme="light"] .action-card,
+[data-theme="light"] .score-card,
+[data-theme="light"] .rescue-card,
+[data-theme="light"] .modal-content,
+[data-theme="light"] .modal-container,
+[data-theme="light"] .history-card,
+[data-theme="light"] .setup-card {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06) !important;
+}
+
+[data-theme="light"] .brand,
+[data-theme="light"] .card-title,
+[data-theme="light"] .setup-step-title,
+[data-theme="light"] .modal-header h3,
+[data-theme="light"] .timer-btn.reset {
+    color: #0f172a !important;
+}
+
+[data-theme="light"] .timer-container {
+    background: #f1f5f9 !important;
+}
+
+[data-theme="light"] .segmented-control {
+    background: #e2e8f0 !important;
+    border-color: #cbd5e1 !important;
+}
+
+[data-theme="light"] .segmented-control label {
+    color: #475569 !important;
+}
+
+[data-theme="light"] .segmented-control input[type="radio"]:checked + label {
+    color: #0f172a !important;
+}
+
+[data-theme="light"] .tab-btn {
+    color: #64748b !important;
+}
+
+[data-theme="light"] .tab-btn.active {
+    color: #0f172a !important;
+}
+
+[data-theme="light"] .icon-btn {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+
+[data-theme="light"] .icon-btn:hover {
+    background: #e2e8f0 !important;
+}
+
 

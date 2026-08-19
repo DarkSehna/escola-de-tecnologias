@@ -37,6 +37,7 @@
 
                 <!-- Ações Globais de Arquivos -->
                 <div class="toolbar-actions">
+                    <button class="theme-toggle-btn" aria-label="Alternar Tema">🌙 <span class="theme-btn-text">Modo Escuro</span></button>
                     <input type="file" id="json-uploader" accept=".json" style="display: none;">
                     <button id="btn-load-map" class="tool-btn secondary-btn">📁 Carregar Projeto</button>
                     <button id="btn-save-map" class="tool-btn primary-btn">💾 Salvar JSON</button>
@@ -143,12 +144,23 @@
 
             <!-- ÁREA CENTRAL: GRID DE PINTURA (BUILDER) -->
             <main class="grid-viewport panel-glass">
-                <div class="viewport-header">
-                    <span class="viewport-title">MAP_VIEWPORT [ONLINE]</span>
-                    <span id="grid-dimensions-indicator" class="dimensions-badge">32 x 12 (1024 x 384 px)</span>
+                <div class="viewport-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span class="viewport-title">MAP_VIEWPORT [ONLINE]</span>
+                        <span id="grid-dimensions-indicator" class="dimensions-badge">32 x 12 (1024 x 384 px)</span>
+                    </div>
+                    <div class="grid-vis-controls" style="display: flex; align-items: center; gap: 0.5rem;">
+                        <label for="select-grid-visibility" style="font-size: 0.8rem; font-weight: 700; color: var(--color-text-normal);">📐 Visibilidade da Grade:</label>
+                        <select id="select-grid-visibility" class="cyber-select" title="Seleção de Contraste e Linhas Guia da Grade">
+                            <option value="high" selected>📐 Nítida (Alta Visibilidade)</option>
+                            <option value="neon">⚡ Neon Vibrant (Cyan)</option>
+                            <option value="grid4x4">🔲 Guia 4x4 (Blocos)</option>
+                            <option value="subtle">👁️ Suave</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="viewport-scroll-container">
-                    <div id="paint-grid" class="paint-grid-style">
+                    <div id="paint-grid" class="paint-grid-style" data-grid-mode="high">
                         <!-- Injetado via Javascript -->
                     </div>
                 </div>
@@ -170,7 +182,8 @@
     <!-- Div para a Notificação Toast flutuante -->
     <div id="tt-toast" class="toast"></div>
 
-    <!-- Script principal -->
+    <!-- Scripts principais -->
+    <script src="../theme-toggle.js"></script>
     <script src="script.js?v=1.0"></script>
     <script src="../lock-listener.js"></script>
 </body>

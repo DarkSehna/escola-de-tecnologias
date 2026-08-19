@@ -20,9 +20,10 @@
         
         <!-- BARRA LATERAL (CONTROLADORA) -->
         <aside class="sidebar panel-glass">
-            <!-- Voltar para o Dashboard -->
-            <div class="back-nav">
+            <!-- Voltar para o Dashboard e Botão de Tema -->
+            <div class="back-nav" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                 <a href="../" class="back-link">← Voltar ao Painel Central</a>
+                <button class="theme-toggle-btn" aria-label="Alternar Tema">🌙 <span class="theme-btn-text">Modo Escuro</span></button>
             </div>
 
             <header class="sidebar-header">
@@ -175,6 +176,7 @@
     <div id="tt-toast" class="toast"></div>
 
     <!-- Script principal -->
+    <script src="../theme-toggle.js"></script>
     <script src="script.js?v=1.0"></script>
     <script src="../lock-listener.js"></script>
 </body>

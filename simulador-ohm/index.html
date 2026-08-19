@@ -33,7 +33,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="header-badges">
+                <div class="header-badges" style="display: flex; align-items: center; gap: 0.75rem;">
+                    <button class="theme-toggle-btn" aria-label="Alternar Tema">🌙 <span class="theme-btn-text">Modo Escuro</span></button>
                     <span class="badge badge-volt">V = R · I</span>
                     <span class="badge badge-amp">I = V / R</span>
                 </div>
@@ -207,6 +208,7 @@
     </div>
 
     <!-- Script principal -->
+    <script src="../theme-toggle.js"></script>
     <script src="script.js?v=1.0"></script>
     <script src="../lock-listener.js"></script>
 </body>

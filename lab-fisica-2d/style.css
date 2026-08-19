@@ -586,3 +586,32 @@ body {
         grid-column: span 1;
     }
 }
+
+/* MODO CLARO [data-theme="light"] NO LAB FISICA 2D */
+[data-theme="light"] {
+    --color-bg-dark: #f8fafc;
+    --color-bg-deep: #e2e8f0;
+    --color-bg-panel: rgba(255, 255, 255, 0.95);
+    --color-border-glass: rgba(0, 0, 0, 0.12);
+    --color-text-white: #0f172a;
+    --color-text-normal: #334155;
+    --color-gray-muted: #64748b;
+}
+
+[data-theme="light"] .panel-glass,
+[data-theme="light"] .app-header,
+[data-theme="light"] .canvas-container,
+[data-theme="light"] .control-panel,
+[data-theme="light"] .code-panel {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #0f172a;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .engine-select,
+[data-theme="light"] .cyber-slider {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #0f172a;
+}

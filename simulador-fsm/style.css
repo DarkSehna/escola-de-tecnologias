@@ -863,3 +863,113 @@ body {
 .transition-path.active {
     stroke-dasharray: 6, 4;
 }
+
+/* MODO CLARO [data-theme="light"] NO SIMULADOR FSM */
+[data-theme="light"] {
+    --color-bg-dark: #f8fafc;
+    --color-bg-deep: #e2e8f0;
+    --color-bg-panel: #ffffff;
+    --color-border-glass: #cbd5e1;
+    --color-text-white: #0f172a;
+    --color-text-normal: #334155;
+    --color-gray-muted: #475569;
+}
+
+[data-theme="light"] .panel-glass,
+[data-theme="light"] .sidebar,
+[data-theme="light"] .viewport-header,
+[data-theme="light"] .workspace-container,
+[data-theme="light"] .fsm-footer-console,
+[data-theme="light"] .node-config-modal,
+[data-theme="light"] .trans-config-card,
+[data-theme="light"] .instructions-panel,
+[data-theme="light"] .trans-trigger-hud,
+[data-theme="light"] .state-item {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06) !important;
+}
+
+/* CANVAS E VIEWPORT FSM NO MODO CLARO */
+[data-theme="light"] .fsm-workspace-viewport,
+[data-theme="light"] .fsm-canvas-transform,
+[data-theme="light"] .fsm-viewport {
+    background: #f8fafc !important;
+}
+
+/* NÓS DO ESTADO NO CANVAS (STATE NODES) */
+[data-theme="light"] .state-node {
+    background: #ffffff !important;
+    border-color: #94a3b8 !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.1) !important;
+}
+
+[data-theme="light"] .state-node-title {
+    color: #0f172a !important;
+}
+
+/* RÓTULOS DE TRANSIÇÃO NO CANVAS (PILULA FLUTUANTE) */
+[data-theme="light"] .transition-label {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1) !important;
+}
+
+[data-theme="light"] .transition-label:hover {
+    border-color: #3b82f6 !important;
+    color: #1e40af !important;
+}
+
+/* CAMINHOS E SETAS SVG DAS TRANSIÇÕES */
+[data-theme="light"] .transition-path {
+    stroke: #475569 !important;
+}
+
+[data-theme="light"] #arrowhead-poly {
+    fill: #475569 !important;
+}
+
+/* HUD DE ESTADO ATIVO */
+[data-theme="light"] .active-state-canvas-hud {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+
+[data-theme="light"] #active-state-val {
+    color: #2563eb !important;
+}
+
+/* SELEÇÃO (SELECT / OPTION) E INPUTS */
+[data-theme="light"] input[type="text"],
+[data-theme="light"] select,
+[data-theme="light"] textarea,
+[data-theme="light"] .cyber-select {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+
+[data-theme="light"] select option,
+[data-theme="light"] .cyber-select option {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+}
+
+select option,
+.cyber-select option {
+    background-color: #0d111c;
+    color: #f8fafc;
+}
+
+/* BLUINHO DE CÓDIGO EXPORTADO */
+[data-theme="light"] .code-container {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+}
+
+[data-theme="light"] .code-container pre code {
+    color: #0f172a !important;
+}
