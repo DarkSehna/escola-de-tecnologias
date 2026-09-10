@@ -204,9 +204,18 @@ const appState = {
     conversationHistory: []
 };
 
-// CONTROLE DE DISPONIBILIDADE DO ASSISTENTE DE IA
-// Defina IS_AI_LOCKED como false quando desejar reativar o assistente para os alunos.
-const IS_AI_LOCKED = true;
+// MAPA DE DISPONIBILIDADE DOS SUB-SELETORES / PERSONAS DA IA
+// GameMaker e Construct estão 100% ativos; Scratch, Robótica e Treinamento estão temporariamente bloqueados.
+const ENABLED_SUBSELECTORS = {
+    "gamemaker": true,
+    "construct": true,
+    "scratch": false,
+    "lego": false,
+    "arduino": false,
+    "python": false,
+    "montagem": false,
+    "obr": false
+};
 
 // 3. INICIALIZAÇÃO AO CARREGAR A PÁGINA
 document.addEventListener('DOMContentLoaded', async () => {
@@ -241,59 +250,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Ajustar altura do textarea de forma dinâmica
     setupTextareaAutoResize();
-
-    // Aplica o bloqueio temporário se ativado
-    applyLockStateIfEnabled();
 });
-
-// APLICA O BLOQUEIO DE IA TEMPORÁRIO SE IS_AI_LOCKED FOR TRUE
-function applyLockStateIfEnabled() {
-    if (!IS_AI_LOCKED) return;
-
-    // Atualiza indicador no cabeçalho
-    const statusText = document.getElementById('status-text');
-    const statusDot = document.getElementById('status-dot');
-    if (statusText) statusText.textContent = '🔒 Indisponível no Momento (Em Manutenção)';
-    if (statusDot) {
-        statusDot.style.backgroundColor = '#ff3b30';
-        statusDot.style.boxShadow = '0 0 8px rgba(255, 59, 48, 0.6)';
-    }
-
-    // Desabilita input e botão de envio
-    const textarea = document.getElementById('chat-textarea');
-    const btnSend = document.getElementById('btn-send');
-    if (textarea) {
-        textarea.disabled = true;
-        textarea.placeholder = '🔒 O Assistente de IA está temporariamente indisponível para atualização de agentes.';
-        textarea.style.opacity = '0.6';
-        textarea.style.cursor = 'not-allowed';
-    }
-    if (btnSend) {
-        btnSend.disabled = true;
-        btnSend.style.opacity = '0.5';
-        btnSend.style.cursor = 'not-allowed';
-    }
-
-    // Renderiza card de aviso de manutenção
-    const chatHistory = document.getElementById('chat-history');
-    if (chatHistory) {
-        chatHistory.innerHTML = `
-            <div class="welcome-card" style="border: 1px solid rgba(255, 59, 48, 0.4); background: rgba(255, 59, 48, 0.05); text-align: center; padding: 2.5rem 1.5rem; margin-top: 1rem;">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">🔒</div>
-                <h2 style="color: #ff3b30; font-size: 1.4rem; margin-bottom: 0.6rem; font-weight: 700;">Assistente de IA em Manutenção & Atualização</h2>
-                <p style="color: var(--color-text-normal); max-width: 600px; margin: 0 auto 1.5rem auto; line-height: 1.6; font-size: 0.95rem;">
-                    O Assistente Virtual está passando por atualizações para calibração dos novos agentes pedagógicos (Game Design, Robótica e Programação). 
-                    Todas as demais ferramentas e laboratórios do Portal continuam 100% operacionais!
-                </p>
-                <div>
-                    <a href="../index.html" style="display: inline-block; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600; background: linear-gradient(135deg, #7928ca, #ff0080); color: white; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        ← Voltar ao Portal de Laboratórios
-                    </a>
-                </div>
-            </div>
-        `;
-    }
-}
 
 // 4. CARREGADOR DE MEMORIA.JSON EXTERNO
 async function loadExternalMemoriaJson() {
@@ -370,10 +327,13 @@ function renderSubselectors() {
         btn.id = `subselector-${item.id}`;
         btn.onclick = () => selectSubselector(item.id);
 
+        const isEnabled = ENABLED_SUBSELECTORS[item.id] === true;
+        const lockBadge = isEnabled ? '' : ' <span style="font-size: 0.72rem; opacity: 0.8;" title="Em Manutenção / Em Breve">🔒</span>';
+
         btn.innerHTML = `
             <span>
                 <span class="btn-icon">${item.icon}</span>
-                ${item.name}
+                ${item.name}${lockBadge}
             </span>
             <span class="check-indicator"></span>
         `;
@@ -382,10 +342,54 @@ function renderSubselectors() {
     });
 }
 
-// 8. SELECIONA UM SUB-SELETOR E ATUALIZA A VARIÁVEL DE MEMÓRIA (PASSO 4 DA ESPECIFICAÇÃO)
+// 8. SELECIONA UM SUB-SELETOR E ATUALIZA A VARIÁVEL DE MEMÓRIA
 function selectSubselector(subId) {
     appState.subSeletor = subId;
     appState.conversationHistory = []; // Limpa o histórico de conversa ao trocar de tecnologia
+
+    const isEnabled = ENABLED_SUBSELECTORS[subId] === true;
+
+    // Atualiza status do cabeçalho e estado do chat (habilitado/desabilitado)
+    const statusText = document.getElementById('status-text');
+    const statusDot = document.getElementById('status-dot');
+    const textarea = document.getElementById('chat-textarea');
+    const btnSend = document.getElementById('btn-send');
+
+    if (isEnabled) {
+        if (statusText) statusText.textContent = 'Pronto para Gemini 1.5 Flash';
+        if (statusDot) {
+            statusDot.style.backgroundColor = 'var(--color-green)';
+            statusDot.style.boxShadow = '0 0 8px rgba(16, 185, 129, 0.6)';
+        }
+        if (textarea) {
+            textarea.disabled = false;
+            textarea.placeholder = 'Digite sua dúvida ou mensagem aqui...';
+            textarea.style.opacity = '1';
+            textarea.style.cursor = 'text';
+        }
+        if (btnSend) {
+            btnSend.disabled = false;
+            btnSend.style.opacity = '1';
+            btnSend.style.cursor = 'pointer';
+        }
+    } else {
+        if (statusText) statusText.textContent = '🔒 Indisponível no Momento (Em Breve)';
+        if (statusDot) {
+            statusDot.style.backgroundColor = '#ff3b30';
+            statusDot.style.boxShadow = '0 0 8px rgba(255, 59, 48, 0.6)';
+        }
+        if (textarea) {
+            textarea.disabled = true;
+            textarea.placeholder = '🔒 O agente desta tecnologia está em manutenção. Tente GameMaker ou Construct!';
+            textarea.style.opacity = '0.6';
+            textarea.style.cursor = 'not-allowed';
+        }
+        if (btnSend) {
+            btnSend.disabled = true;
+            btnSend.style.opacity = '0.5';
+            btnSend.style.cursor = 'not-allowed';
+        }
+    }
 
     // Obter o caminho físico do JSON mapeado
     const areaMem = appState.memoriaConfig[appState.area] || {};
@@ -397,21 +401,7 @@ function selectSubselector(subId) {
     appState.currentPersona = personaInfo;
 
     // === CONSOLE.LOGS DE DEBUG ===
-    console.log(`[Assistente IA] Sub-seletor ativo: "${subId}" | Caminho da memória JSON:`, appState.currentMemoryPath);
-    console.log(`[Assistente IA] Persona Gemini Ativa (${personaInfo.profileName}):\n${personaInfo.systemInstruction}`);
-
-    // Testar leitura do arquivo de teste na pasta física de memória
-    try {
-        const testFileUrl = `${memoryPath}exemplo_memoria.txt`;
-        fetch(testFileUrl)
-            .then(res => res.ok ? res.text() : null)
-            .then(content => {
-                if (content) {
-                    console.log(`[Assistente IA - Verificação de Memória Físico] Arquivo lido em "${testFileUrl}":\n↳ "${content.trim()}"`);
-                }
-            })
-            .catch(() => {});
-    } catch (e) {}
+    console.log(`[Assistente IA] Sub-seletor ativo: "${subId}" (Habilitado: ${isEnabled}) | Caminho da memória JSON:`, appState.currentMemoryPath);
 
     // Destacar botão ativo no DOM
     document.querySelectorAll('.subselector-btn').forEach(btn => {
@@ -445,28 +435,54 @@ function selectSubselector(subId) {
 function updateWelcomeCard(subObj) {
     if (!subObj) return;
 
-    const welcomeTitle = document.getElementById('welcome-title');
-    const welcomeSubtitle = document.getElementById('welcome-subtitle');
-    const welcomeIcon = document.getElementById('welcome-icon');
-    const suggestionsGrid = document.getElementById('suggestions-grid');
+    const chatHistory = document.getElementById('chat-history');
+    if (!chatHistory) return;
+
+    const isEnabled = ENABLED_SUBSELECTORS[subObj.id] === true;
+
+    if (!isEnabled) {
+        chatHistory.innerHTML = `
+            <div class="welcome-card" style="border: 1px solid rgba(255, 59, 48, 0.4); background: rgba(255, 59, 48, 0.05); text-align: center; padding: 2.5rem 1.5rem; margin-top: 1rem;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🔒</div>
+                <h2 style="color: #ff3b30; font-size: 1.4rem; margin-bottom: 0.6rem; font-weight: 700;">Agente de ${subObj.name} em Atualização</h2>
+                <p style="color: var(--color-text-normal); max-width: 600px; margin: 0 auto 1.5rem auto; line-height: 1.6; font-size: 0.95rem;">
+                    O Assistente pedagógico especialista em <strong>${subObj.name}</strong> está passando por calibração de manuais. 
+                    <br><br>
+                    💡 <strong>As personas de GameMaker e Construct 3 já estão 100% ativas!</strong> Clique em GameMaker ou Construct no menu lateral para tirar suas dúvidas com a IA.
+                </p>
+            </div>
+        `;
+        return;
+    }
 
     const areaTitle = AREAS_CONFIG[appState.area].title;
 
-    welcomeIcon.textContent = subObj.icon;
-    welcomeTitle.textContent = `Assistente de ${subObj.name} (${areaTitle})`;
-    welcomeSubtitle.textContent = `Estou conectado aos manuais e exemplos da pasta ${appState.currentMemoryPath}. Como posso ajudar no seu aprendizado de ${subObj.name}?`;
+    chatHistory.innerHTML = `
+        <div class="welcome-card" id="welcome-card">
+            <div class="welcome-title-row">
+                <div class="welcome-icon" id="welcome-icon">${subObj.icon}</div>
+                <div class="welcome-text">
+                    <h2 id="welcome-title">Assistente de ${subObj.name} (${areaTitle})</h2>
+                    <p id="welcome-subtitle">Estou conectado aos manuais e exemplos da pasta ${appState.currentMemoryPath}. Como posso ajudar no seu aprendizado de ${subObj.name}?</p>
+                </div>
+            </div>
 
-    // Sugestões de perguntas dinâmicas
-    suggestionsGrid.innerHTML = `
-        <button class="suggestion-chip" onclick="fillPrompt('${subObj.prompt}')">
-            💡 "${subObj.prompt}"
-        </button>
-        <button class="suggestion-chip" onclick="fillPrompt('Como depurar um erro comum em ${subObj.name}?')">
-            🛠️ "Como depurar erros comuns em ${subObj.name}?"
-        </button>
-        <button class="suggestion-chip" onclick="fillPrompt('Me dê um exemplo prático para iniciantes em ${subObj.name}.')">
-            🚀 "Exemplo prático inicial em ${subObj.name}"
-        </button>
+            <div style="font-size: 0.8rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px;">
+                Sugestões de Perguntas Rápidas:
+            </div>
+
+            <div class="suggestions-grid" id="suggestions-grid">
+                <button class="suggestion-chip" onclick="fillPrompt('${subObj.prompt}')">
+                    💡 "${subObj.prompt}"
+                </button>
+                <button class="suggestion-chip" onclick="fillPrompt('Como depurar um erro comum em ${subObj.name}?')">
+                    🛠️ "Como depurar erros comuns em ${subObj.name}?"
+                </button>
+                <button class="suggestion-chip" onclick="fillPrompt('Me dê um exemplo prático para iniciantes em ${subObj.name}.')">
+                    🚀 "Exemplo prático inicial em ${subObj.name}"
+                </button>
+            </div>
+        </div>
     `;
 }
 
@@ -767,7 +783,7 @@ async function callGeminiApi(userPrompt) {
 
 // 12. ENVIO DE MENSAGENS NO CHAT (COM SUPORTE A GEMINI REAL OU SIMULAÇÃO)
 async function sendMessage() {
-    if (IS_AI_LOCKED) return;
+    if (!ENABLED_SUBSELECTORS[appState.subSeletor]) return;
 
     const textarea = document.getElementById('chat-textarea');
     const text = textarea.value.trim();
