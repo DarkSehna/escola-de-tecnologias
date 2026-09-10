@@ -81,22 +81,31 @@ const audio = new SynthAudio();
 // --- MAPEAMENTO DOS ELEMENTOS DO FORMULÁRIO ---
 const inputGameName = document.getElementById("input-game-name");
 const comboGenre = document.getElementById("combo-genre");
+const wrapperGenreOther = document.getElementById("wrapper-genre-other");
+const inputGenreOther = document.getElementById("input-genre-other");
+
+const inputCoreLoop = document.getElementById("input-core-loop");
 const inputObjective = document.getElementById("input-objective");
 const inputStory = document.getElementById("input-story");
-const inputWorld = document.getElementById("input-world");
+const inputStageCount = document.getElementById("input-stage-count");
+const inputLevelMap = document.getElementById("input-level-map");
 
 const inputHeroName = document.getElementById("input-hero-name");
 const inputHeroDesc = document.getElementById("input-hero-desc");
-const inputHeroSkills = document.getElementById("input-hero-skills");
-const controlsList = document.getElementById("controls-list");
-const btnAddControl = document.getElementById("btn-add-control");
+const inputBasicMovement = document.getElementById("input-basic-movement");
+const inputActionsAttacks = document.getElementById("input-actions-attacks");
 
 const checkboxes = document.querySelectorAll(".cyber-cb");
+const cbOtherMechanics = document.getElementById("cb-other-mechanics");
+const wrapperOtherMechanics = document.getElementById("wrapper-other-mechanics");
+const inputOtherMechanics = document.getElementById("input-other-mechanics");
+
 const inputWorldDesc = document.getElementById("input-world-desc");
 const inputMinions = document.getElementById("input-minions");
 const inputBosses = document.getElementById("input-bosses");
 const inputVictory = document.getElementById("input-victory");
 const inputDefeat = document.getElementById("input-defeat");
+const inputExtraSystems = document.getElementById("input-extra-systems");
 
 // Botões da Toolbar
 const btnNewGdd = document.getElementById("btn-new-gdd");
@@ -120,170 +129,289 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 2. Ouvintes de Eventos para inputs do formulário
     const allTextInputs = [
-        inputGameName, inputObjective, inputStory, inputWorld,
-        inputHeroName, inputHeroDesc, inputHeroSkills,
-        inputWorldDesc, inputMinions, inputBosses, inputVictory, inputDefeat
+        inputGameName, inputGenreOther, inputCoreLoop, inputObjective, inputStory,
+        inputStageCount, inputLevelMap, inputHeroName, inputHeroDesc,
+        inputBasicMovement, inputActionsAttacks, inputOtherMechanics,
+        inputWorldDesc, inputMinions, inputBosses, inputVictory, inputDefeat, inputExtraSystems
     ];
 
     allTextInputs.forEach(input => {
-        input.addEventListener("input", handleFormUpdate);
+        if (input) {
+            input.addEventListener("input", handleFormUpdate);
+        }
     });
 
-    comboGenre.addEventListener("change", handleFormUpdate);
+    if (comboGenre) {
+        comboGenre.addEventListener("change", () => {
+            updateConditionalFields();
+            handleFormUpdate();
+        });
+    }
+
     checkboxes.forEach(cb => {
-        cb.addEventListener("change", handleFormUpdate);
+        cb.addEventListener("change", () => {
+            updateConditionalFields();
+            handleFormUpdate();
+        });
     });
 
-    // 3. Ouvinte de Mapeamento de Controles dinâmicos
-    btnAddControl.addEventListener("click", () => {
-        audio.playClick();
-        addControlRow("", "");
-        handleFormUpdate();
-    });
+    // 3. Ações de Arquivo
+    if (btnNewGdd) btnNewGdd.addEventListener("click", resetDocumentConfirm);
+    if (btnLoadGdd) {
+        btnLoadGdd.addEventListener("click", () => {
+            audio.playClick();
+            if (fileUploader) fileUploader.click();
+        });
+    }
+    if (fileUploader) fileUploader.addEventListener("change", loadGddFile);
+    if (btnSaveGdd) btnSaveGdd.addEventListener("click", saveGddFile);
+    if (btnCopyMarkdown) btnCopyMarkdown.addEventListener("click", copyMarkdownToClipboard);
 
-    // 4. Ações de Arquivo
-    btnNewGdd.addEventListener("click", resetDocumentConfirm);
-    btnLoadGdd.addEventListener("click", () => {
-        audio.playClick();
-        fileUploader.click();
-    });
-    fileUploader.addEventListener("change", loadGddFile);
-    btnSaveGdd.addEventListener("click", saveGddFile);
-    btnCopyMarkdown.addEventListener("click", copyMarkdownToClipboard);
-
-    // 5. Sons
+    // 4. Sons
     audio.playBoot();
 
-    // Carrega controles padrão
-    loadDefaultControls();
-
-    // Atualiza status e renderiza inicial
-    handleFormUpdate();
-
-    // 6. Inicializa referências de jogos
+    // 5. Inicializa referências de jogos
     initGddReferences();
 
-    // 7. Tenta restaurar rascunho salvo do localStorage
+    // 6. Atualiza visibilidade de campos condicionais
+    updateConditionalFields();
+
+    // 7. Atualiza status e renderiza inicial
+    handleFormUpdate();
+
+    // 8. Tenta restaurar rascunho salvo do localStorage
     restoreAutosavedDraft();
 });
 
-// --- LÓGICA DE ABAS (TABS) ---
+// --- CONTROLE DE CAMPOS CONDICIONAIS ---
+function updateConditionalFields() {
+    if (wrapperGenreOther && comboGenre) {
+        wrapperGenreOther.style.display = (comboGenre.value === "Outro") ? "flex" : "none";
+    }
+    if (wrapperOtherMechanics && cbOtherMechanics) {
+        wrapperOtherMechanics.style.display = cbOtherMechanics.checked ? "flex" : "none";
+    }
+}
+
+// --- LÓGICA DE ABAS (TABS) E TRILHA GAMIFICADA ---
 function setupTabSwitching() {
     const tabTriggers = document.querySelectorAll(".tab-trigger");
     const tabPanels = document.querySelectorAll(".tab-panel");
 
     tabTriggers.forEach(trigger => {
         trigger.addEventListener("click", () => {
-            const tabId = trigger.id.replace("tab-btn-", "panel-");
-            
-            // Remove active classes
-            tabTriggers.forEach(btn => btn.classList.remove("active"));
-            tabPanels.forEach(panel => panel.classList.remove("active"));
-
-            // Add active classes
-            trigger.classList.add("active");
-            const activePanel = document.getElementById(tabId);
-            if (activePanel) activePanel.classList.add("active");
-
-            audio.playTab();
+            const tabKey = trigger.id.replace("tab-btn-", "");
+            switchTab(tabKey);
         });
     });
 }
 
-// --- MAPEAMENTO DE CONTROLES (DINÂMICO) ---
-function addControlRow(actionText = "", keyText = "") {
-    const row = document.createElement("div");
-    row.className = "control-row";
+function switchTab(tabKey) {
+    const tabTriggers = document.querySelectorAll(".tab-trigger");
+    const tabPanels = document.querySelectorAll(".tab-panel");
 
-    const actInput = document.createElement("input");
-    actInput.type = "text";
-    actInput.className = "cyber-input";
-    actInput.placeholder = "Ação (Ex: Pular)";
-    actInput.value = actionText;
-    actInput.autocomplete = "off";
-    actInput.addEventListener("input", handleFormUpdate);
+    const targetTrigger = document.getElementById(`tab-btn-${tabKey}`);
+    const targetPanel = document.getElementById(`panel-${tabKey}`);
 
-    const keyInput = document.createElement("input");
-    keyInput.type = "text";
-    keyInput.className = "cyber-input";
-    keyInput.placeholder = "Tecla (Ex: Espaço)";
-    keyInput.value = keyText;
-    keyInput.autocomplete = "off";
-    keyInput.addEventListener("input", handleFormUpdate);
+    if (targetTrigger && targetPanel) {
+        tabTriggers.forEach(btn => btn.classList.remove("active"));
+        tabPanels.forEach(panel => panel.classList.remove("active"));
 
-    const delBtn = document.createElement("button");
-    delBtn.className = "row-del-btn";
-    delBtn.textContent = "✕";
-    delBtn.title = "Excluir este comando";
-    delBtn.addEventListener("click", () => {
-        audio.playRemove();
-        row.remove();
-        handleFormUpdate();
-    });
+        targetTrigger.classList.add("active");
+        targetPanel.classList.add("active");
 
-    row.appendChild(actInput);
-    row.appendChild(keyInput);
-    row.appendChild(delBtn);
-
-    controlsList.appendChild(row);
+        audio.playTab();
+        updateRailNodes();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 }
 
-function clearControls() {
-    controlsList.innerHTML = "";
+function updateRailNodes() {
+    const p1 = document.getElementById("panel-overview");
+    const p2 = document.getElementById("panel-character");
+    const p3 = document.getElementById("panel-mechanics");
+
+    const r1 = document.getElementById("checkpoint-step-1");
+    const r2 = document.getElementById("checkpoint-step-2");
+    const r3 = document.getElementById("checkpoint-step-3");
+
+    const s1 = document.getElementById("node-status-1");
+    const s2 = document.getElementById("node-status-2");
+    const s3 = document.getElementById("node-status-3");
+
+    const titleOk = inputGameName && inputGameName.value.trim() !== "";
+    const victoryOk = inputVictory && inputVictory.value.trim() !== "";
+    const defeatOk = inputDefeat && inputDefeat.value.trim() !== "";
+    const heroOk = (inputHeroName && inputHeroName.value.trim() !== "") || 
+                   (inputBasicMovement && inputBasicMovement.value.trim() !== "") || 
+                   (inputActionsAttacks && inputActionsAttacks.value.trim() !== "");
+
+    // Step 1 status
+    if (titleOk) {
+        if (r1) r1.classList.add("completed");
+        if (s1) s1.textContent = "[ ✓ OK ]";
+    } else {
+        if (r1) r1.classList.remove("completed");
+        if (s1) s1.textContent = "[ PENDENTE ]";
+    }
+
+    // Step 2 status
+    if (heroOk) {
+        if (r2) r2.classList.add("completed");
+        if (s2) s2.textContent = "[ ✓ OK ]";
+    } else {
+        if (r2) r2.classList.remove("completed");
+        if (s2) s2.textContent = "[ PENDENTE ]";
+    }
+
+    // Step 3 status
+    if (victoryOk && defeatOk) {
+        if (r3) r3.classList.add("completed");
+        if (s3) s3.textContent = "[ ✓ OK ]";
+    } else {
+        if (r3) r3.classList.remove("completed");
+        if (s3) s3.textContent = "[ PENDENTE ]";
+    }
+
+    // Active tab in rail
+    [r1, r2, r3].forEach(r => r && r.classList.remove("active"));
+    if (p1 && p1.classList.contains("active") && r1) r1.classList.add("active");
+    if (p2 && p2.classList.contains("active") && r2) r2.classList.add("active");
+    if (p3 && p3.classList.contains("active") && r3) r3.classList.add("active");
+
+    // Tab Badges
+    const b1 = document.getElementById("badge-tab-overview");
+    const b2 = document.getElementById("badge-tab-character");
+    const b3 = document.getElementById("badge-tab-mechanics");
+
+    if (b1) {
+        b1.textContent = titleOk ? "✓" : "!";
+        b1.className = titleOk ? "tab-badge success" : "tab-badge warning";
+    }
+    if (b2) {
+        b2.textContent = heroOk ? "✓" : "-";
+        b2.className = heroOk ? "tab-badge success" : "tab-badge warning";
+    }
+    if (b3) {
+        b3.textContent = (victoryOk && defeatOk) ? "✓" : "!";
+        b3.className = (victoryOk && defeatOk) ? "tab-badge success" : "tab-badge warning";
+    }
 }
 
-function loadDefaultControls() {
-    clearControls();
-    addControlRow("Mover Esquerda", "Seta Esquerda / A");
-    addControlRow("Mover Direita", "Seta Direita / D");
-    addControlRow("Pular", "Seta Cima / W / Espaço");
+// --- CONTROLE DA GAVETA LATERAL FLUTUANTE (OFF-CANVAS GDD DRAWER) ---
+function openPreviewDrawer() {
+    const drawer = document.getElementById("gdd-preview-drawer");
+    const overlay = document.getElementById("gdd-preview-overlay");
+    if (drawer) drawer.classList.add("open");
+    if (overlay) overlay.classList.add("open");
+    renderLiveMarkdownPreview();
+    audio.playClick();
+}
+
+function closePreviewDrawer() {
+    const drawer = document.getElementById("gdd-preview-drawer");
+    const overlay = document.getElementById("gdd-preview-overlay");
+    if (drawer) drawer.classList.remove("open");
+    if (overlay) overlay.classList.remove("open");
+}
+
+function togglePreviewDrawer() {
+    const drawer = document.getElementById("gdd-preview-drawer");
+    if (drawer && drawer.classList.contains("open")) {
+        closePreviewDrawer();
+    } else {
+        openPreviewDrawer();
+    }
+}
+
+function saveCurrentGddProject() {
+    const titleFilled = inputGameName && inputGameName.value.trim() !== "";
+    const victoryFilled = inputVictory && inputVictory.value.trim() !== "";
+    const defeatFilled = inputDefeat && inputDefeat.value.trim() !== "";
+
+    if (!titleFilled || !victoryFilled || !defeatFilled) {
+        showToast("⚠️ Preencha os campos obrigatórios (Título, Vitória e Derrota) antes de salvar!");
+        audio.playWarning();
+        return;
+    }
+    saveGddFile();
 }
 
 // --- CONTROLE DE PROGRESSO E VALIDAÇÃO ---
 function handleFormUpdate() {
     // 1. Atualizar Tags de Status dos inputs individuais
     updateInputStatusBadge("input-game-name", "status-game-name", true);
+    updateInputStatusBadge("input-genre-other", "status-genre-other", false);
+    updateInputStatusBadge("input-core-loop", "status-core-loop", false);
     updateInputStatusBadge("input-objective", "status-objective", false);
     updateInputStatusBadge("input-story", "status-story", false);
-    updateInputStatusBadge("input-world", "status-world", false);
+    updateInputStatusBadge("input-stage-count", "status-stage-count", false);
+    updateInputStatusBadge("input-level-map", "status-level-map", false);
 
     updateInputStatusBadge("input-hero-name", "status-hero-name", false);
     updateInputStatusBadge("input-hero-desc", "status-hero-desc", false);
-    updateInputStatusBadge("input-hero-skills", "status-hero-skills", false);
+    updateInputStatusBadge("input-basic-movement", "status-basic-movement", false);
+    updateInputStatusBadge("input-actions-attacks", "status-actions-attacks", false);
 
+    updateInputStatusBadge("input-other-mechanics", "status-other-mechanics", false);
     updateInputStatusBadge("input-world-desc", "status-world-desc", false);
     updateInputStatusBadge("input-minions", "status-minions", false);
     updateInputStatusBadge("input-bosses", "status-bosses", false);
     
     updateInputStatusBadge("input-victory", "status-victory", true);
     updateInputStatusBadge("input-defeat", "status-defeat", true);
+    updateInputStatusBadge("input-extra-systems", "status-extra-systems", false);
 
     // 2. Calcular completude %
     const filledPercentage = getCompletionPercentage();
-    lblXpPercentage.textContent = `QUEST PROGRESS: ${filledPercentage}%`;
-    xpBarFill.style.width = `${filledPercentage}%`;
+    if (lblXpPercentage) lblXpPercentage.textContent = `${filledPercentage}% CONCLUÍDO`;
+    if (xpBarFill) xpBarFill.style.height = `${filledPercentage}%`;
+
+    const fabBadge = document.getElementById("fab-xp-badge");
+    if (fabBadge) fabBadge.textContent = `${filledPercentage}%`;
 
     // 3. Validar se requisitos básicos estão preenchidos para salvar
-    const titleFilled = inputGameName.value.trim() !== "";
-    const victoryFilled = inputVictory.value.trim() !== "";
-    const defeatFilled = inputDefeat.value.trim() !== "";
+    const titleFilled = inputGameName && inputGameName.value.trim() !== "";
+    const victoryFilled = inputVictory && inputVictory.value.trim() !== "";
+    const defeatFilled = inputDefeat && inputDefeat.value.trim() !== "";
+
+    const btnDrawerSave = document.getElementById("btn-drawer-save");
 
     if (titleFilled && victoryFilled && defeatFilled) {
-        btnSaveGdd.classList.remove("disabled-style");
-        btnSaveGdd.textContent = "💾 Salvar GDD (Pronto!)";
-        lblStatusMessage.textContent = "[ STATUS ] Requisitos básicos preenchidos. Banco de dados pronto para gravação.";
-        lblStatusMessage.style.color = "var(--color-neon-green)";
+        if (btnSaveGdd) {
+            btnSaveGdd.classList.remove("disabled-style");
+            btnSaveGdd.textContent = "💾 Salvar GDD (Pronto!)";
+        }
+        if (btnDrawerSave) {
+            btnDrawerSave.classList.remove("disabled-style");
+            btnDrawerSave.textContent = "💾 Baixar Documento (.md)";
+        }
+        if (lblStatusMessage) {
+            lblStatusMessage.textContent = "[ STATUS ] Requisitos básicos preenchidos. Banco de dados pronto para gravação.";
+            lblStatusMessage.style.color = "var(--color-neon-green)";
+        }
     } else {
-        btnSaveGdd.classList.add("disabled-style");
-        btnSaveGdd.textContent = "💾 Salvar GDD (Incompleto)";
-        lblStatusMessage.textContent = "[ STATUS ] Preencha Título, Vitória e Derrota para desbloquear gravação.";
-        lblStatusMessage.style.color = "var(--color-gray-muted)";
+        if (btnSaveGdd) {
+            btnSaveGdd.classList.add("disabled-style");
+            btnSaveGdd.textContent = "💾 Salvar GDD (Incompleto)";
+        }
+        if (btnDrawerSave) {
+            btnDrawerSave.classList.add("disabled-style");
+            btnDrawerSave.textContent = "💾 Preencha Título, Vitória e Derrota";
+        }
+        if (lblStatusMessage) {
+            lblStatusMessage.textContent = "[ STATUS ] Preencha Título, Vitória e Derrota para desbloquear gravação.";
+            lblStatusMessage.style.color = "var(--color-gray-muted)";
+        }
     }
 
-    // 4. Redesenhar Preview na folha
+    // 4. Atualizar nós da trilha gamificada e badges das abas
+    updateRailNodes();
+
+    // 5. Redesenhar Preview na folha
     renderLiveMarkdownPreview();
 
-    // 5. Acionar salvamento automático no localStorage
+    // 6. Acionar salvamento automático no localStorage
     triggerAutosave();
 }
 
@@ -310,71 +438,70 @@ function updateInputStatusBadge(inputId, badgeId, isObligatory) {
 
 function getCompletionPercentage() {
     let filled = 0;
-    const totalFields = 14;
+    const totalFields = 16;
 
-    // 12 Campos de texto simples
     const textFields = [
-        inputGameName, inputObjective, inputStory, inputWorld,
-        inputHeroName, inputHeroDesc, inputHeroSkills,
-        inputWorldDesc, inputMinions, inputBosses, inputVictory, inputDefeat
+        inputGameName, inputCoreLoop, inputObjective, inputStory, inputStageCount, inputLevelMap,
+        inputHeroName, inputHeroDesc, inputBasicMovement, inputActionsAttacks,
+        inputWorldDesc, inputMinions, inputBosses, inputVictory, inputDefeat, inputExtraSystems
     ];
 
     textFields.forEach(field => {
         if (field && field.value.trim() !== "") filled++;
     });
 
-    // Listas dinâmicas
-    const hasControls = getControlsData().length > 0;
-    if (hasControls) filled++;
+    if (comboGenre && comboGenre.value === "Outro" && inputGenreOther && inputGenreOther.value.trim() !== "") {
+        filled++;
+    }
 
     const hasCheckboxes = getSelectedMechanics().length > 0;
     if (hasCheckboxes) filled++;
 
-    return Math.round((filled / totalFields) * 100);
-}
-
-function getControlsData() {
-    const rows = controlsList.querySelectorAll(".control-row");
-    const list = [];
-    rows.forEach(row => {
-        const inputs = row.querySelectorAll("input");
-        const action = inputs[0].value.trim();
-        const key = inputs[1].value.trim();
-        if (action || key) {
-            list.push({ action, key });
-        }
-    });
-    return list;
+    return Math.min(100, Math.round((filled / totalFields) * 100));
 }
 
 function getSelectedMechanics() {
     const list = [];
     checkboxes.forEach(cb => {
-        if (cb.checked) list.push(cb.value);
+        if (cb.checked) {
+            if (cb.value === "Outros" && inputOtherMechanics && inputOtherMechanics.value.trim() !== "") {
+                list.push(`Outros: ${inputOtherMechanics.value.trim()}`);
+            } else {
+                list.push(cb.value);
+            }
+        }
     });
     return list;
 }
 
 // --- GERAR E RENDERIZAR MARKDOWN (LIVE PREVIEW) ---
 function generateGddMarkdown() {
-    const gameName = inputGameName.value.trim() || "Jogo Sem Nome";
-    const genre = comboGenre.value;
-    const objective = inputObjective.value.trim();
-    const story = inputStory.value.trim();
-    const worldSetting = inputWorld.value.trim();
+    const gameName = inputGameName ? inputGameName.value.trim() || "Jogo Sem Nome" : "Jogo Sem Nome";
+    
+    let genreStr = comboGenre ? comboGenre.value : "Plataforma";
+    if (genreStr === "Outro" && inputGenreOther && inputGenreOther.value.trim() !== "") {
+        genreStr = `Outro (${inputGenreOther.value.trim()})`;
+    }
 
-    const heroName = inputHeroName.value.trim() || "Herói";
-    const heroDesc = inputHeroDesc.value.trim();
-    const heroSkills = inputHeroSkills.value.trim();
-    const controls = getControlsData();
+    const coreLoop = inputCoreLoop ? inputCoreLoop.value.trim() : "";
+    const objective = inputObjective ? inputObjective.value.trim() : "";
+    const story = inputStory ? inputStory.value.trim() : "";
+    const stageCount = inputStageCount ? inputStageCount.value.trim() : "";
+    const levelMap = inputLevelMap ? inputLevelMap.value.trim() : "";
+
+    const heroName = inputHeroName ? inputHeroName.value.trim() || "Herói" : "Herói";
+    const heroDesc = inputHeroDesc ? inputHeroDesc.value.trim() : "";
+    const basicMovement = inputBasicMovement ? inputBasicMovement.value.trim() : "";
+    const actionsAttacks = inputActionsAttacks ? inputActionsAttacks.value.trim() : "";
 
     const worldMechanicsSelected = getSelectedMechanics();
-    const worldMechanicsDesc = inputWorldDesc.value.trim();
-    const minionsDesc = inputMinions.value.trim();
-    const bossesDesc = inputBosses.value.trim();
+    const worldMechanicsDesc = inputWorldDesc ? inputWorldDesc.value.trim() : "";
+    const minionsDesc = inputMinions ? inputMinions.value.trim() : "";
+    const bossesDesc = inputBosses ? inputBosses.value.trim() : "";
 
-    const victoryCond = inputVictory.value.trim();
-    const defeatCond = inputDefeat.value.trim();
+    const victoryCond = inputVictory ? inputVictory.value.trim() : "";
+    const defeatCond = inputDefeat ? inputDefeat.value.trim() : "";
+    const extraSystems = inputExtraSystems ? inputExtraSystems.value.trim() : "";
 
     // Checklist mecânicas
     let mechanicsListStr = "";
@@ -382,17 +509,6 @@ function generateGddMarkdown() {
         mechanicsListStr = worldMechanicsSelected.map(mech => `- [x] ${mech}`).join("\n");
     } else {
         mechanicsListStr = "*Nenhuma mecânica específica selecionada.*";
-    }
-
-    // Tabela de controles
-    let controlsTable = "";
-    if (controls.length > 0) {
-        controlsTable = "| Ação do Jogador | Tecla / Comando |\n| :--- | :--- |\n";
-        controls.forEach(ctrl => {
-            controlsTable += `| ${ctrl.action} | \`${ctrl.key}\` |\n`;
-        });
-    } else {
-        controlsTable = "*Nenhum controle mapeado ainda.*";
     }
 
     // Dados estruturados JSON no topo
@@ -405,58 +521,64 @@ function generateGddMarkdown() {
 
 ---
 
-## 🌍 1. Visão Geral e Mundo do Jogo
+## 🌍 1. Visão Geral e Diretrizes do Sistema
 
-* **Gênero:** ${genre}
+* **Gênero:** ${genreStr}
+* **Ciclo Principal (Core Loop):**
+  ${coreLoop ? coreLoop : "*Sem ciclo principal definido.*"}
+
 * **Objetivo Geral do Jogo:**
   ${objective ? objective : "*Sem objetivo definido.*"}
 
-### 📖 História e Premissa
+### 📖 História e Premissa (Lore)
 ${story ? story : "*Sem história definida.*"}
 
-### 🗺️ O Mundo do Jogo (Cenário)
-${worldSetting ? worldSetting : "*Sem descrição do mundo.*"}
+### 🗺️ Estrutura de Fases & Mapa do Jogo
+* **Quantidade de Fases:** ${stageCount ? stageCount : "*Não especificada.*"}
+* **Descrição do Mapa/Temas:**
+  ${levelMap ? levelMap : "*Sem descrição de mapa.*"}
 
 ---
 
-## 👤 2. Protagonista e Controles
+## 👤 2. Avatar & Habilidades
 
 * **Nome do Protagonista:** ${heroName}
-* **Descrição/Personalidade:**
+* **Visual e História:**
   ${heroDesc ? heroDesc : "*Sem descrição do protagonista.*"}
 
-* **Mecânicas e Habilidades do Personagem:**
-  ${heroSkills ? heroSkills : "*Sem habilidades definidas.*"}
+### 🏃 Movimentação Básica
+${basicMovement ? basicMovement : "*Sem movimentação descrita.*"}
 
-### 🎮 Mapeamento de Controles
-${controlsTable}
+### ⚔️ Ações e Ataques
+${actionsAttacks ? actionsAttacks : "*Sem ações e ataques descritos.*"}
 
 ---
 
-## ⚙️ 3. Mecânicas do Mundo e Inimigos
+## ⚙️ 3. Regras, Ameaças & Sistemas
 
-### 🧱 Elementos Ativos no Mundo
+### 🧱 Elementos e Obstáculos Ativos
 ${mechanicsListStr}
 
-### 🛠️ Detalhes das Mecânicas do Mundo
-${worldMechanicsDesc ? worldMechanicsDesc : "*Sem descrição de funcionamento das mecânicas do mundo.*"}
+### 🛠️ Funcionamento Prático das Armadilhas e Obstáculos
+${worldMechanicsDesc ? worldMechanicsDesc : "*Sem descrição do funcionamento de armadilhas.*"}
 
 ### 👾 Inimigos Comuns (Minions)
 ${minionsDesc ? minionsDesc : "*Sem descrição de inimigos comuns.*"}
 
-### 👑 Chefes (Bosses) e Padrões de Ataque
-${bossesDesc ? bossesDesc : "*Sem chefes descritos.*"}
+### 👑 Chefões (Bosses) e Padrões de Ataque
+${bossesDesc ? bossesDesc : "*Sem chefões descritos.*"}
 
 ---
 
-## 🏆 4. Regras do Jogo (Fluxo)
+## 🏆 4. Regras do Jogo (Progresso)
 
-### 🥇 Condição de Vitória (Como Ganhar?)
-${victoryCond ? victoryCond : "*Sem condição de vitória definida.*"}
+### 🥇 Condição de Avanço (Próxima Fase)
+${victoryCond ? victoryCond : "*Sem condição de avanço definida.*"}
 
-### 💀 Condição de Derrota (O que causa Game Over?)
-${defeatCond ? defeatCond : "*Sem condição de derrota definida.*"}
+### 💀 Penalidade por Falha (Punição / Game Over)
+${defeatCond ? defeatCond : "*Sem penalidade por falha definida.*"}
 
+${extraSystems ? `\n--- \n\n## 🛠️ 5. Sistemas Extras e Variáveis\n${extraSystems}\n` : ""}
 ---
 *GDD gerado automaticamente pelo **Gerador de GDD**.*
 `;
@@ -464,21 +586,26 @@ ${defeatCond ? defeatCond : "*Sem condição de derrota definida.*"}
 
 function getFormJSONData() {
     return {
-        game_name: inputGameName.value.trim(),
-        genre: comboGenre.value,
-        objective: inputObjective.value.trim(),
-        story: inputStory.value.trim(),
-        world_setting: inputWorld.value.trim(),
-        hero_name: inputHeroName.value.trim(),
-        hero_desc: inputHeroDesc.value.trim(),
-        hero_skills: inputHeroSkills.value.trim(),
-        controls: getControlsData(),
+        game_name: inputGameName ? inputGameName.value.trim() : "",
+        genre: comboGenre ? comboGenre.value : "Plataforma",
+        genre_other: inputGenreOther ? inputGenreOther.value.trim() : "",
+        core_loop: inputCoreLoop ? inputCoreLoop.value.trim() : "",
+        objective: inputObjective ? inputObjective.value.trim() : "",
+        story: inputStory ? inputStory.value.trim() : "",
+        stage_count: inputStageCount ? inputStageCount.value.trim() : "",
+        level_map: inputLevelMap ? inputLevelMap.value.trim() : "",
+        hero_name: inputHeroName ? inputHeroName.value.trim() : "",
+        hero_desc: inputHeroDesc ? inputHeroDesc.value.trim() : "",
+        basic_movement: inputBasicMovement ? inputBasicMovement.value.trim() : "",
+        actions_attacks: inputActionsAttacks ? inputActionsAttacks.value.trim() : "",
         world_mechanics_selected: getSelectedMechanics(),
-        world_mechanics_desc: inputWorldDesc.value.trim(),
-        minions_desc: inputMinions.value.trim(),
-        bosses_desc: inputBosses.value.trim(),
-        victory_cond: inputVictory.value.trim(),
-        defeat_cond: inputDefeat.value.trim()
+        other_mechanics: inputOtherMechanics ? inputOtherMechanics.value.trim() : "",
+        world_mechanics_desc: inputWorldDesc ? inputWorldDesc.value.trim() : "",
+        minions_desc: inputMinions ? inputMinions.value.trim() : "",
+        bosses_desc: inputBosses ? inputBosses.value.trim() : "",
+        victory_cond: inputVictory ? inputVictory.value.trim() : "",
+        defeat_cond: inputDefeat ? inputDefeat.value.trim() : "",
+        extra_systems: inputExtraSystems ? inputExtraSystems.value.trim() : ""
     };
 }
 
@@ -685,42 +812,44 @@ function loadGddFile(e) {
 }
 
 function populateFormWithData(data) {
+    if (!data) return;
+
     // Overview tab
-    inputGameName.value = data.game_name || "";
-    comboGenre.value = data.genre || "Plataforma";
-    inputObjective.value = data.objective || "";
-    inputStory.value = data.story || "";
-    inputWorld.value = data.world_setting || "";
+    if (inputGameName) inputGameName.value = data.game_name || "";
+    if (comboGenre) comboGenre.value = data.genre || "Plataforma";
+    if (inputGenreOther) inputGenreOther.value = data.genre_other || "";
+    if (inputCoreLoop) inputCoreLoop.value = data.core_loop || "";
+    if (inputObjective) inputObjective.value = data.objective || "";
+    if (inputStory) inputStory.value = data.story || "";
+    if (inputStageCount) inputStageCount.value = data.stage_count || "";
+    if (inputLevelMap) inputLevelMap.value = data.level_map || data.world_setting || "";
 
     // Avatar tab
-    inputHeroName.value = data.hero_name || "";
-    inputHeroDesc.value = data.hero_desc || "";
-    inputHeroSkills.value = data.hero_skills || "";
-
-    // Recompila controles dinâmicos
-    clearControls();
-    const savedControls = data.controls || [];
-    if (savedControls.length > 0) {
-        savedControls.forEach(ctrl => {
-            addControlRow(ctrl.action, ctrl.key);
-        });
-    } else {
-        loadDefaultControls();
-    }
+    if (inputHeroName) inputHeroName.value = data.hero_name || "";
+    if (inputHeroDesc) inputHeroDesc.value = data.hero_desc || "";
+    if (inputBasicMovement) inputBasicMovement.value = data.basic_movement || data.hero_skills || "";
+    if (inputActionsAttacks) inputActionsAttacks.value = data.actions_attacks || "";
 
     // Mechanics tab Checkboxes
     const selectedMechs = data.world_mechanics_selected || [];
     checkboxes.forEach(cb => {
-        cb.checked = selectedMechs.includes(cb.value);
+        if (cb.value === "Outros") {
+            cb.checked = selectedMechs.some(m => typeof m === "string" && m.startsWith("Outros"));
+        } else {
+            cb.checked = selectedMechs.includes(cb.value);
+        }
     });
 
-    inputWorldDesc.value = data.world_mechanics_desc || "";
-    inputMinions.value = data.minions_desc || "";
-    inputBosses.value = data.bosses_desc || "";
-    inputVictory.value = data.victory_cond || "";
-    inputDefeat.value = data.defeat_cond || "";
+    if (inputOtherMechanics) inputOtherMechanics.value = data.other_mechanics || "";
+    if (inputWorldDesc) inputWorldDesc.value = data.world_mechanics_desc || "";
+    if (inputMinions) inputMinions.value = data.minions_desc || "";
+    if (inputBosses) inputBosses.value = data.bosses_desc || "";
+    if (inputVictory) inputVictory.value = data.victory_cond || "";
+    if (inputDefeat) inputDefeat.value = data.defeat_cond || "";
+    if (inputExtraSystems) inputExtraSystems.value = data.extra_systems || "";
 
-    // Sincroniza visual
+    // Sincroniza visibilidade condicional e estado visual
+    updateConditionalFields();
     handleFormUpdate();
 }
 
@@ -728,33 +857,40 @@ function resetDocumentConfirm() {
     audio.playClick();
     const confirmClear = confirm("Começar um Novo Documento?\n\nIsso irá limpar todos os campos preenchidos atuais e reiniciará a Quest!");
     if (confirmClear) {
-        // Limpa campos
-        inputGameName.value = "";
-        comboGenre.selectedIndex = 0;
-        inputObjective.value = "";
-        inputStory.value = "";
-        inputWorld.value = "";
+        // Limpa campos da Aba 1
+        if (inputGameName) inputGameName.value = "";
+        if (comboGenre) comboGenre.selectedIndex = 0;
+        if (inputGenreOther) inputGenreOther.value = "";
+        if (inputCoreLoop) inputCoreLoop.value = "";
+        if (inputObjective) inputObjective.value = "";
+        if (inputStory) inputStory.value = "";
+        if (inputStageCount) inputStageCount.value = "";
+        if (inputLevelMap) inputLevelMap.value = "";
 
-        inputHeroName.value = "";
-        inputHeroDesc.value = "";
-        inputHeroSkills.value = "";
+        // Limpa campos da Aba 2
+        if (inputHeroName) inputHeroName.value = "";
+        if (inputHeroDesc) inputHeroDesc.value = "";
+        if (inputBasicMovement) inputBasicMovement.value = "";
+        if (inputActionsAttacks) inputActionsAttacks.value = "";
 
-        loadDefaultControls();
-
+        // Limpa campos da Aba 3
         checkboxes.forEach(cb => {
             cb.checked = false;
         });
 
-        inputWorldDesc.value = "";
-        inputMinions.value = "";
-        inputBosses.value = "";
-        inputVictory.value = "";
-        inputDefeat.value = "";
+        if (inputOtherMechanics) inputOtherMechanics.value = "";
+        if (inputWorldDesc) inputWorldDesc.value = "";
+        if (inputMinions) inputMinions.value = "";
+        if (inputBosses) inputBosses.value = "";
+        if (inputVictory) inputVictory.value = "";
+        if (inputDefeat) inputDefeat.value = "";
+        if (inputExtraSystems) inputExtraSystems.value = "";
 
         // Limpa rascunho automático do localStorage
         localStorage.removeItem("titanTech_gdd_draft");
 
-        // Sincroniza visual e vai para primeira aba
+        // Sincroniza visual, campos condicionais e vai para primeira aba
+        updateConditionalFields();
         document.getElementById("tab-btn-overview").click();
         handleFormUpdate();
 
@@ -894,7 +1030,7 @@ function initGddReferences() {
         audio.playSuccess();
 
         // Insere as informações nos campos
-        inputGameName.value = selectedReferenceGame.titulo;
+        if (inputGameName) inputGameName.value = selectedReferenceGame.titulo || "";
         
         // Trata o Gênero select
         if (selectedReferenceGame.genero.includes("Metroidvania")) {
@@ -909,43 +1045,26 @@ function initGddReferences() {
             comboGenre.value = "Shooter / Shooter 2D";
         } else {
             comboGenre.value = "Outro";
+            if (inputGenreOther) inputGenreOther.value = selectedReferenceGame.genero;
         }
 
-        inputObjective.value = selectedReferenceGame.objetivo;
-        inputStory.value = selectedReferenceGame.lore;
-        inputWorld.value = selectedReferenceGame.ambiente;
-        inputHeroName.value = selectedReferenceGame.heroi_identidade;
-        inputHeroDesc.value = selectedReferenceGame.heroi_aparencia;
-        inputHeroSkills.value = selectedReferenceGame.heroi_habilidades;
-        inputWorldDesc.value = selectedReferenceGame.mecanicas_mundo;
-        inputMinions.value = selectedReferenceGame.bestiario;
-        inputBosses.value = selectedReferenceGame.chefes;
-        inputVictory.value = selectedReferenceGame.condicao_vitoria;
-        inputDefeat.value = selectedReferenceGame.condicao_derrota;
+        if (inputCoreLoop) inputCoreLoop.value = selectedReferenceGame.core_loop || selectedReferenceGame.objetivo || "";
+        if (inputObjective) inputObjective.value = selectedReferenceGame.objetivo || "";
+        if (inputStory) inputStory.value = selectedReferenceGame.lore || "";
+        if (inputStageCount) inputStageCount.value = selectedReferenceGame.fases || "3 Fases";
+        if (inputLevelMap) inputLevelMap.value = selectedReferenceGame.ambiente || "";
 
-        // Limpa e recarrega os controles padrão correspondentes ao jogo
-        clearControls();
-        if (selectedReferenceGame.id === "pacman") {
-            addControlRow("Mover Cima", "Teclas WASD / Setas");
-            addControlRow("Mover Baixo", "Teclas WASD / Setas");
-            addControlRow("Mover Esquerda", "Teclas WASD / Setas");
-            addControlRow("Mover Direita", "Teclas WASD / Setas");
-        } else if (selectedReferenceGame.id === "pokemon") {
-            addControlRow("Mover Personagem", "Teclas WASD / Setas");
-            addControlRow("Confirmar / Interagir", "Tecla Z / Enter");
-            addControlRow("Cancelar / Menu", "Tecla X / Esc");
-        } else {
-            addControlRow("Mover Esquerda", "Seta Esquerda / A");
-            addControlRow("Mover Direita", "Seta Direita / D");
-            addControlRow("Pular", "Seta Cima / W / Espaço");
-            if (selectedReferenceGame.id === "sotn" || selectedReferenceGame.id === "hollow" || selectedReferenceGame.id === "guacamelee") {
-                addControlRow("Atacar", "Tecla J / Botão Esquerdo do Mouse");
-                addControlRow("Habilidade Especial", "Tecla K / Shift");
-            } else if (selectedReferenceGame.id === "celeste") {
-                addControlRow("Impulso (Dash)", "Tecla K / Shift");
-                addControlRow("Agarrar Paredes", "Tecla J / Ctrl");
-            }
-        }
+        if (inputHeroName) inputHeroName.value = selectedReferenceGame.heroi_identidade || "";
+        if (inputHeroDesc) inputHeroDesc.value = selectedReferenceGame.heroi_aparencia || "";
+        if (inputBasicMovement) inputBasicMovement.value = selectedReferenceGame.movimentacao || selectedReferenceGame.heroi_habilidades || "";
+        if (inputActionsAttacks) inputActionsAttacks.value = selectedReferenceGame.acoes_ataques || selectedReferenceGame.heroi_habilidades || "";
+
+        if (inputWorldDesc) inputWorldDesc.value = selectedReferenceGame.mecanicas_mundo || "";
+        if (inputMinions) inputMinions.value = selectedReferenceGame.bestiario || "";
+        if (inputBosses) inputBosses.value = selectedReferenceGame.chefes || "";
+        if (inputVictory) inputVictory.value = selectedReferenceGame.condicao_vitoria || "";
+        if (inputDefeat) inputDefeat.value = selectedReferenceGame.condicao_derrota || "";
+        if (inputExtraSystems) inputExtraSystems.value = selectedReferenceGame.sistemas_extras || "";
 
         // Reseta as checkboxes
         checkboxes.forEach(cb => {

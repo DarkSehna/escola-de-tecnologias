@@ -34,6 +34,18 @@ const ENGINE_PRESETS = {
         accelAir: { min: 0.01, max: 2.0, default: 0.20, step: 0.05 },
         frictionAir: { min: 0.01, max: 1.0, default: 0.05, step: 0.01 },
         maxFallSpeed: { min: 2.0, max: 25.0, default: 12.0, step: 1.0 },
+        doubleJump: { default: false },
+        labels: {
+            gravity: "Gravidade",
+            jump: "Força do Pulo",
+            speed: "Velocidade Máxima",
+            accelGround: "Aceleração Chão",
+            frictionGround: "Atrito Chão",
+            accelAir: "Aceleração Ar",
+            frictionAir: "Atrito Ar",
+            maxFallSpeed: "Vel. Queda Máx",
+            doubleJump: "Pulo duplo"
+        },
         code_template: 
 `// --- Variáveis no obj_lifeForm (Pai) ---
 grv = {gravity};          // Gravidade
@@ -49,7 +61,7 @@ frictionAir = {frictionAir};   // Fricção no ar`
     },
     "Construct 3": {
         title: "Construct 3 (Platform)",
-        description: "Variáveis mapeadas para as propriedades nativas do comportamento 'Platform'.",
+        description: "Variáveis mapeadas para as propriedades nativas do comportamento 'Plataforma' no Construct 3 em Português.",
         gravity: { min: 100.0, max: 5000.0, default: 1500.0, step: 50.0 },
         jump: { min: 100.0, max: 1500.0, default: 650.0, step: 10.0 },
         speed: { min: 50.0, max: 1000.0, default: 330.0, step: 10.0 },
@@ -58,14 +70,27 @@ frictionAir = {frictionAir};   // Fricção no ar`
         accelAir: { min: 50.0, max: 5000.0, default: 1500.0, step: 50.0 },
         frictionAir: { min: 10.0, max: 2000.0, default: 1500.0, step: 10.0 },
         maxFallSpeed: { min: 100.0, max: 2500.0, default: 1000.0, step: 50.0 },
+        doubleJump: { default: false },
+        labels: {
+            gravity: "Gravidade",
+            jump: "Força do pulo",
+            speed: "Velocidade máxima",
+            accelGround: "Aceleração",
+            frictionGround: "Desaceleração",
+            accelAir: "Aceleração (Ar)",
+            frictionAir: "Desaceleração (Ar)",
+            maxFallSpeed: "Velocidade máxima de queda",
+            doubleJump: "Pulo duplo"
+        },
         code_template: 
-`// Ajuste estas propriedades no comportamento 'Platform' do seu Objeto:
-Max Speed = {speed}
-Acceleration = {accelGround}
-Deceleration = {frictionGround}
-Gravity = {gravity}
-Jump Strength = {jump}
-Max Fall Speed = {maxFallSpeed}`
+`// Ajuste estas propriedades no comportamento 'Plataforma' do seu Objeto:
+Velocidade máxima = {speed}
+Aceleração = {accelGround}
+Desaceleração = {frictionGround}
+Força do pulo = {jump}
+Gravidade = {gravity}
+Velocidade máxima de queda = {maxFallSpeed}
+Pulo duplo = {doubleJump}`
     },
     "Scratch": {
         title: "Scratch (Física adaptada)",
@@ -78,6 +103,18 @@ Max Fall Speed = {maxFallSpeed}`
         accelAir: { min: 0.05, max: 2.0, default: 0.4, step: 0.05 },
         frictionAir: { min: 0.50, max: 0.99, default: 0.95, step: 0.01 },
         maxFallSpeed: { min: -25.0, max: -2.0, default: -15.0, step: 1.0 },
+        doubleJump: { default: false },
+        labels: {
+            gravity: "Gravidade",
+            jump: "Força do Pulo",
+            speed: "Velocidade Máxima",
+            accelGround: "Aceleração Chão",
+            frictionGround: "Atrito Chão",
+            accelAir: "Aceleração Ar",
+            frictionAir: "Atrito Ar",
+            maxFallSpeed: "Queda Máxima",
+            doubleJump: "Pulo duplo"
+        },
         code_template: 
 `// Defina as variáveis no script do seu Ator Jogador:
 mude [velocidade_max v] para ({speed})
@@ -91,6 +128,15 @@ mude [queda_maxima v] para ({maxFallSpeed})`
     }
 };
 
+// Global Scroll Lock no Navegador
+window.addEventListener('keydown', (event) => {
+    const k = event.key.toLowerCase();
+    if ([" ", "space", "arrowup", "arrowdown", "arrowleft", "arrowright", "pageup", "pagedown"].includes(k)) {
+        // Bloqueia rolagem padrão da janela
+        event.preventDefault();
+    }
+}, { passive: false });
+
 // ==========================================
 // CLASSE DE FÍSICA DO JOGADOR
 // ==========================================
@@ -102,11 +148,13 @@ class PlayerPhysics {
         this.vsp = 0.0;
         this.isGrounded = false;
         
-        // Métricas de Salto
+        // Métricas de Salto e Pulo Duplo
         this.isJumping = false;
         this.jumpStartX = 0.0;
         this.jumpPeakY = parseFloat(startY);
         this.jumpLandX = 0.0;
+        this.jumpCount = 0;
+        this.jumpKeyWasDown = false;
         
         this.arcPoints = [];
         
@@ -124,6 +172,8 @@ class PlayerPhysics {
         this.vsp = 0.0;
         this.isGrounded = false;
         this.isJumping = false;
+        this.jumpCount = 0;
+        this.jumpKeyWasDown = false;
         this.arcPoints = [];
         
         this.lastJumpPeakY = null;
@@ -133,7 +183,7 @@ class PlayerPhysics {
     }
 
     update(keys, grv_int, jump_int, speed_int, accel_ground_int, fric_ground_int,
-           accel_air_int, fric_air_int, max_fall_int, obstacles) {
+           accel_air_int, fric_air_int, max_fall_int, obstacles, doubleJumpEnabled = false) {
         
         // Garante que o jogador não caia fora do chão principal
         if (this.y + GRID_SIZE > GROUND_Y) {
@@ -165,22 +215,37 @@ class PlayerPhysics {
         // Clampa velocidade
         this.hsp = Math.max(-speed_int, Math.min(this.hsp, speed_int));
 
-        // 3. Movimento Vertical
+        // Reseta contador de pulos no chão
+        if (this.isGrounded) {
+            this.jumpCount = 0;
+        }
+
+        // 3. Movimento Vertical e Pulo / Pulo Duplo
         if (!this.isGrounded) {
             this.vsp += grv_int;
             this.vsp = Math.min(this.vsp, max_fall_int);
         } else {
             this.vsp = 0.0;
-            if (keys.jump) {
-                this.vsp = jump_int; // Impulso para cima
-                this.isGrounded = false;
-                
-                // Inicia rastreio de pulo
-                this.isJumping = true;
-                this.jumpStartX = this.x + GRID_SIZE / 2.0;
-                this.jumpPeakY = this.y;
-                this.arcPoints = [[this.jumpStartX, this.y + GRID_SIZE / 2.0]];
+        }
+
+        if (keys.jump) {
+            if (!this.jumpKeyWasDown) {
+                const maxJumpsAllowed = doubleJumpEnabled ? 2 : 1;
+                if (this.isGrounded || this.jumpCount < maxJumpsAllowed) {
+                    this.vsp = jump_int; // Impulso para cima
+                    this.isGrounded = false;
+                    this.jumpCount++;
+                    
+                    // Inicia rastreio de pulo
+                    this.isJumping = true;
+                    this.jumpStartX = this.x + GRID_SIZE / 2.0;
+                    this.jumpPeakY = this.y;
+                    this.arcPoints = [[this.jumpStartX, this.y + GRID_SIZE / 2.0]];
+                }
             }
+            this.jumpKeyWasDown = true;
+        } else {
+            this.jumpKeyWasDown = false;
         }
 
         // 4. Rastreamento de Salto
@@ -311,12 +376,19 @@ document.addEventListener('DOMContentLoaded', () => {
     btnResetPlayer.addEventListener('click', resetPlayer);
     btnCopyCode.addEventListener('click', copyVariablesCode);
 
-    // Binds para as caixas físicas atualizarem o código dinamicamente
+    // Binds para as caixas físicas e checkbox atualizarem o código dinamicamente
     const inputsList = ["gravity", "jump", "speed", "accelGround", "frictionGround", "accelAir", "frictionAir", "maxFallSpeed"];
     inputsList.forEach(key => {
         const input = document.getElementById(`input-${key}`);
-        input.addEventListener('input', updateCodeTemplate);
+        if (input) {
+            input.addEventListener('input', updateCodeTemplate);
+        }
     });
+
+    const inputDoubleJump = document.getElementById('input-doubleJump');
+    if (inputDoubleJump) {
+        inputDoubleJump.addEventListener('change', updateCodeTemplate);
+    }
 
     // Inicia Engine GM por padrão
     onEngineChange();
@@ -339,6 +411,10 @@ function getGridCoords(event) {
 }
 
 function onMouseDown(event) {
+    // Desfoca qualquer caixa de texto ou seletor ativo ao clicar no canvas
+    if (document.activeElement && document.activeElement !== document.body) {
+        document.activeElement.blur();
+    }
     const [col, row] = getGridCoords(event);
     if (col >= 0 && col < COLS && row >= 0 && row < GROUND_ROW) {
         if (event.button === 0) {
@@ -364,10 +440,16 @@ function onMouseMove(event) {
 }
 
 function clearCanvas() {
+    if (document.activeElement && document.activeElement !== document.body) {
+        document.activeElement.blur();
+    }
     obstacles.clear();
 }
 
 function resetPlayer() {
+    if (document.activeElement && document.activeElement !== document.body) {
+        document.activeElement.blur();
+    }
     player.reset(2 * GRID_SIZE, GROUND_Y - 3 * GRID_SIZE);
 }
 
@@ -375,17 +457,26 @@ function resetPlayer() {
 // CONTROLE DE INPUTS E PRESETS
 // ==========================================
 function resetToDefault(key) {
+    if (document.activeElement && document.activeElement !== document.body) {
+        document.activeElement.blur();
+    }
     const engine = comboEngine.value;
     const preset = ENGINE_PRESETS[engine];
-    const defaultVal = preset[key].default;
-
-    const input = document.getElementById(`input-${key}`);
-    input.classList.remove('error');
-
-    if (engine === "Construct 3") {
-        input.value = Math.round(defaultVal);
+    
+    if (key === "doubleJump") {
+        const input = document.getElementById('input-doubleJump');
+        if (input) input.checked = preset.doubleJump.default;
     } else {
-        input.value = defaultVal.toFixed(2);
+        const defaultVal = preset[key].default;
+        const input = document.getElementById(`input-${key}`);
+        if (input) {
+            input.classList.remove('error');
+            if (engine === "Construct 3") {
+                input.value = Math.round(defaultVal);
+            } else {
+                input.value = defaultVal.toFixed(2);
+            }
+        }
     }
     updateCodeTemplate();
 }
@@ -395,16 +486,42 @@ function onEngineChange() {
     const preset = ENGINE_PRESETS[engine];
     lblEngineDesc.textContent = preset.description;
 
-    const inputsList = ["gravity", "jump", "speed", "accelGround", "frictionGround", "accelAir", "frictionAir", "maxFallSpeed"];
+    // Desfoca o seletor para evitar sequestro de teclas de seta
+    comboEngine.blur();
+
+    // Controle de visibilidade dos campos específicos do motor
+    const rowAccelAir = document.getElementById('row-accelAir');
+    const rowFrictionAir = document.getElementById('row-frictionAir');
+    const rowDoubleJump = document.getElementById('row-doubleJump');
+
+    if (engine === "Construct 3") {
+        if (rowAccelAir) rowAccelAir.style.display = 'none';
+        if (rowFrictionAir) rowFrictionAir.style.display = 'none';
+        if (rowDoubleJump) rowDoubleJump.style.display = 'block';
+    } else {
+        if (rowAccelAir) rowAccelAir.style.display = 'block';
+        if (rowFrictionAir) rowFrictionAir.style.display = 'block';
+        if (rowDoubleJump) rowDoubleJump.style.display = 'none';
+    }
+
+    const inputsList = ["gravity", "jump", "speed", "accelGround", "frictionGround", "accelAir", "frictionAir", "maxFallSpeed", "doubleJump"];
     inputsList.forEach(key => {
-        const defaultVal = preset[key].default;
         const defaultBtn = document.querySelector(`#row-${key} .default-btn`);
+        const labelElem = document.getElementById(`lbl-input-${key}`);
+
+        // Atualiza rótulo em português de acordo com o preset do motor
+        if (preset.labels && preset.labels[key] && labelElem) {
+            labelElem.textContent = preset.labels[key];
+        }
         
         // Atualiza rótulo padrão
-        if (engine === "Construct 3") {
-            defaultBtn.textContent = `Padrão: ${Math.round(defaultVal)}`;
-        } else {
-            defaultBtn.textContent = `Padrão: ${defaultVal.toFixed(2)}`;
+        if (defaultBtn) {
+            if (key === "doubleJump") {
+                defaultBtn.textContent = `Padrão: ${preset.doubleJump.default ? 'Sim' : 'Não'}`;
+            } else {
+                const defaultVal = preset[key].default;
+                defaultBtn.textContent = (engine === "Construct 3") ? `Padrão: ${Math.round(defaultVal)}` : `Padrão: ${defaultVal.toFixed(2)}`;
+            }
         }
 
         // Restaura valores de fábrica na caixa
@@ -426,25 +543,28 @@ function getConvertedPhysicsValues() {
         const defaultVal = preset[key].default;
         
         try {
-            const rawVal = input.value.trim();
+            const rawVal = input ? input.value.trim() : "";
             if (rawVal === "") {
                 vals[key] = defaultVal;
-                input.classList.remove('error');
+                if (input) input.classList.remove('error');
             } else {
                 const num = parseFloat(rawVal);
                 if (isNaN(num)) {
                     vals[key] = defaultVal;
-                    input.classList.add('error');
+                    if (input) input.classList.add('error');
                 } else {
                     vals[key] = num;
-                    input.classList.remove('error');
+                    if (input) input.classList.remove('error');
                 }
             }
         } catch (e) {
             vals[key] = defaultVal;
-            input.classList.add('error');
+            if (input) input.classList.add('error');
         }
     });
+
+    const inputDoubleJump = document.getElementById('input-doubleJump');
+    const doubleJumpEnabled = (engine === "Construct 3" && inputDoubleJump) ? inputDoubleJump.checked : false;
 
     const grv = vals.gravity;
     const jump = vals.jump;
@@ -457,7 +577,7 @@ function getConvertedPhysicsValues() {
 
     // Conversão matemática de escalas para a física de ticks do canvas (padrão GameMaker)
     if (engine === "GameMaker") {
-        return [grv, jump, speed, accel_g, fric_g, accel_a, fric_a, max_fall];
+        return [grv, jump, speed, accel_g, fric_g, accel_a, fric_a, max_fall, false];
     } 
     else if (engine === "Construct 3") {
         return [
@@ -466,9 +586,10 @@ function getConvertedPhysicsValues() {
             speed / 60.0,
             accel_g / 3600.0,
             fric_g / 3600.0,
-            accel_a / 3600.0,
-            fric_a / 3600.0,
-            max_fall / 60.0
+            accel_g / 3600.0, // Construct 3 usa mesmo aceleração para ar/chão
+            fric_g / 3600.0,  // Construct 3 usa mesma desaceleração para ar/chão
+            max_fall / 60.0,
+            doubleJumpEnabled
         ];
     }
     else if (engine === "Scratch") {
@@ -480,11 +601,12 @@ function getConvertedPhysicsValues() {
             (1.0 - fric_g) / 0.5,
             accel_a / 2.0,
             (1.0 - fric_a) / 0.5,
-            -max_fall / 1.25
+            -max_fall / 1.25,
+            false
         ];
     }
 
-    return [0.3, -7.0, 4.0, 0.35, 0.15, 0.20, 0.05, 12.0];
+    return [0.3, -7.0, 4.0, 0.35, 0.15, 0.20, 0.05, 12.0, false];
 }
 
 function updateCodeTemplate() {
@@ -496,18 +618,22 @@ function updateCodeTemplate() {
     inputsList.forEach(key => {
         const input = document.getElementById(`input-${key}`);
         const defaultVal = preset[key].default;
-        const val = parseFloat(input.value.trim());
+        const val = input ? parseFloat(input.value.trim()) : defaultVal;
         vals[key] = isNaN(val) ? defaultVal : val;
     });
+
+    const inputDoubleJump = document.getElementById('input-doubleJump');
+    vals['doubleJump'] = inputDoubleJump ? (inputDoubleJump.checked ? "Habilitado" : "Desabilitado") : "Desabilitado";
 
     let code = preset.code_template;
     for (const key in vals) {
         let replacement = vals[key];
-        if (engine !== "Construct 3") {
-            // Scratch e GameMaker mostram duas casas decimais
-            replacement = (key === "jump" || key === "speed" || key === "maxFallSpeed") ? replacement.toFixed(1) : replacement.toFixed(2);
-        } else {
-            replacement = Math.round(replacement);
+        if (key !== "doubleJump") {
+            if (engine !== "Construct 3") {
+                replacement = (key === "jump" || key === "speed" || key === "maxFallSpeed") ? replacement.toFixed(1) : replacement.toFixed(2);
+            } else {
+                replacement = Math.round(replacement);
+            }
         }
         code = code.replace(`{${key}}`, replacement);
     }
@@ -549,6 +675,13 @@ function showToast(message) {
 function onKeyPress(event) {
     const key = event.key.toLowerCase();
     
+    // Se o elemento ativo for um input, select ou botão, remove o foco quando o usuário tenta mover o personagem
+    if ([" ", "arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"].includes(key)) {
+        if (document.activeElement && document.activeElement !== document.body) {
+            document.activeElement.blur();
+        }
+    }
+
     // Evita scroll da tela com Space e Arrows nas páginas
     if ([" ", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(event.key)) {
         event.preventDefault();
@@ -581,7 +714,7 @@ function gameLoop() {
     // 1. Ler e Converter os Parâmetros Físicos Atuais
     const [grv_int, jump_int, speed_int,
            accel_g_int, fric_g_int,
-           accel_a_int, fric_a_int, max_fall_int] = getConvertedPhysicsValues();
+           accel_a_int, fric_a_int, max_fall_int, doubleJumpEnabled] = getConvertedPhysicsValues();
 
     // 2. Slow Motion (Câmera Lenta roda física 1 vez a cada 4 frames)
     let runPhysics = true;
@@ -601,7 +734,8 @@ function gameLoop() {
             accel_a_int,
             fric_a_int,
             max_fall_int,
-            obstacles
+            obstacles,
+            doubleJumpEnabled
         );
     }
 

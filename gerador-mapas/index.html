@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2.1">
 </head>
 <body>
 
@@ -125,6 +125,48 @@
                         <span class="tile-label">Espinhos</span>
                     </button>
 
+                    <!-- Moeda / Coletável -->
+                    <button class="palette-item" data-tool="coin" title="Inserir moeda ou item coletável">
+                        <div class="tile-preview tile-coin">🪙</div>
+                        <span class="tile-label">Moeda</span>
+                    </button>
+
+                    <!-- Chave -->
+                    <button class="palette-item" data-tool="key" title="Inserir chave para abrir trancas">
+                        <div class="tile-preview tile-key">🔑</div>
+                        <span class="tile-label">Chave</span>
+                    </button>
+
+                    <!-- Porta / Tranca -->
+                    <button class="palette-item" data-tool="door" title="Inserir porta fechada que exige chave">
+                        <div class="tile-preview tile-door">🚪</div>
+                        <span class="tile-label">Porta</span>
+                    </button>
+
+                    <!-- Caixa / Bloco Destruível -->
+                    <button class="palette-item" data-tool="crate" title="Inserir caixa empurrável ou quebrável">
+                        <div class="tile-preview tile-crate">📦</div>
+                        <span class="tile-label">Caixa</span>
+                    </button>
+
+                    <!-- Checkpoint -->
+                    <button class="palette-item" data-tool="checkpoint" title="Marcar ponto de salvamento / respawn">
+                        <div class="tile-preview tile-checkpoint">🚩</div>
+                        <span class="tile-label">Checkpoint</span>
+                    </button>
+
+                    <!-- Parede Falsa -->
+                    <button class="palette-item" data-tool="secret" title="Parede falsa / ilusão secreta">
+                        <div class="tile-preview tile-secret">👻</div>
+                        <span class="tile-label">Parede Falsa</span>
+                    </button>
+
+                    <!-- Lava / Perigo -->
+                    <button class="palette-item" data-tool="lava" title="Inserir poço de lava ou perigo líquido">
+                        <div class="tile-preview tile-lava">🌋</div>
+                        <span class="tile-label">Lava / Perigo</span>
+                    </button>
+
                     <!-- Borracha -->
                     <button class="palette-item" data-tool="empty" title="Apagar bloco do cenário">
                         <div class="tile-preview tile-empty">❌</div>
@@ -184,7 +226,7 @@
 
     <!-- Scripts principais -->
     <script src="../theme-toggle.js"></script>
-    <script src="script.js?v=1.0"></script>
+    <script src="script.js?v=2.1"></script>
     <script src="../lock-listener.js"></script>
 </body>
 </html>

@@ -77,9 +77,9 @@ body {
 
 /* 2. LAYOUT MASTER */
 .app-container {
-    max-width: 1550px;
+    max-width: 98vw;
     margin: 0 auto;
-    width: 100%;
+    width: 98vw;
     height: calc(100vh - 2.5rem);
     display: flex;
     flex-direction: column;
@@ -322,6 +322,13 @@ body {
     flex-direction: column;
     gap: 0.45rem;
 }
+
+.form-grid-2col {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+}
+
 
 .group-header {
     display: flex;
@@ -1061,4 +1068,417 @@ body {
     background: #ffffff;
     border-color: #cbd5e1;
     color: #0f172a;
+}
+
+/* ==========================================================================
+   NOVOS ESTILOS DE UX DE 100% DE LARGURA, TRILHA DE PROGRESSO E GAVETA OFF-CANVAS
+   ========================================================================== */
+
+/* WORKSPACE LAYOUT COM TRILHA LATERAL E EDITOR DE 100% */
+.workspace-layout {
+    display: grid;
+    grid-template-columns: 55px 1fr;
+    gap: 1.25rem;
+    flex: 1;
+    min-height: 0;
+}
+
+@media (max-width: 900px) {
+    .workspace-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ABAS DE PONTA A PONTA */
+.form-tabs {
+    display: flex;
+    width: 100%;
+    gap: 0.5rem;
+}
+
+.tab-trigger {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1rem;
+    text-align: center;
+}
+
+.tab-badge {
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.tab-badge.warning {
+    background: rgba(234, 179, 8, 0.2);
+    color: #facc15;
+    border: 1px solid rgba(234, 179, 8, 0.4);
+}
+
+.tab-badge.success {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+/* TRILHA LATERAL DE PROGRESSO 100% DA ALTURA DE CIMA A BAIXO DO PAINEL */
+.progress-rail-sidebar {
+    position: relative !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    background: rgba(10, 14, 23, 0.95) !important;
+    border: 1.5px solid var(--color-border-glass) !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+}
+
+/* COLUNA DE ENERGIA VERTICAL (100% DA BORDA SUPERIOR À INFERIOR DO PAINEL) */
+.energy-gauge-vertical {
+    position: absolute !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.85) !important;
+    display: flex !important;
+    flex-direction: column-reverse !important;
+    z-index: 1 !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.energy-gauge-fill {
+    width: 100% !important;
+    background: linear-gradient(0deg, #ef4444 0%, #f97316 35%, #eab308 65%, #22c55e 100%) !important;
+    box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(249, 115, 22, 0.8) !important;
+    transition: height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    position: relative !important;
+}
+
+.energy-cells-pattern {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.45) 0px,
+        rgba(0, 0, 0, 0.45) 6px,
+        transparent 6px,
+        transparent 14px
+    ) !important;
+}
+
+/* ORBES DE NAVEGAÇÃO SOBREPOSTOS Á BARRA DE ENERGIA */
+.gauge-markers-overlay {
+    position: absolute !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 10 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+    padding: 2rem 0 !important;
+    pointer-events: none !important;
+}
+
+.gauge-marker {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 50% !important;
+    background: rgba(10, 14, 23, 0.95) !important;
+    border: 2px solid rgba(255, 255, 255, 0.4) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    transition: var(--transition-smooth) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.8) !important;
+}
+
+.gauge-marker:hover {
+    transform: scale(1.2) !important;
+    border-color: var(--color-neon-cyan) !important;
+    box-shadow: 0 0 18px var(--color-neon-cyan) !important;
+}
+
+.gauge-marker.active {
+    border-color: var(--color-neon-cyan) !important;
+    background: rgba(0, 240, 255, 0.3) !important;
+    box-shadow: 0 0 18px var(--color-neon-cyan) !important;
+}
+
+.gauge-marker.completed {
+    border-color: #22c55e !important;
+    background: rgba(34, 197, 94, 0.3) !important;
+    box-shadow: 0 0 18px #22c55e !important;
+}
+
+.marker-icon {
+    font-size: 1.1rem !important;
+}
+
+/* SELETOR DE REFERÊNCIA INTEGRADO NA ABA 1 */
+.reference-selector-card {
+    background: rgba(0, 240, 255, 0.04);
+    border: 1px solid rgba(0, 240, 255, 0.2);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.reference-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.reference-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-neon-cyan);
+}
+
+.reference-badge {
+    font-size: 0.65rem;
+    font-weight: 800;
+    background: rgba(0, 240, 255, 0.2);
+    color: var(--color-neon-cyan);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+}
+
+/* BOTÕES DE NAVEGAÇÃO DE PASSO NO RODAPÉ DAS ABAS */
+.tab-footer-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nav-step-btn {
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.primary-step {
+    background: var(--color-neon-cyan);
+    color: #000;
+    border: none;
+}
+
+.primary-step:hover {
+    background: #38bdf8;
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+}
+
+.secondary-step {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--color-border-glass);
+    color: var(--color-text-white);
+}
+
+.secondary-step:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.success-step {
+    background: #22c55e;
+    color: #000;
+    border: none;
+}
+
+.success-step:hover {
+    background: #4ade80;
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
+}
+
+/* ABA VERTICAL STICKY NA BORDA DIREITA */
+.sticky-drawer-tab-btn {
+    position: fixed;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 950;
+    background: rgba(10, 14, 23, 0.95);
+    border: 1.5px solid var(--color-neon-cyan);
+    border-right: none;
+    border-radius: 16px 0 0 16px;
+    color: #ffffff;
+    padding: 1.1rem 0.65rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+    box-shadow: -8px 0 25px rgba(0, 240, 255, 0.35);
+    transition: var(--transition-smooth);
+    backdrop-filter: blur(10px);
+}
+
+.sticky-drawer-tab-btn:hover {
+    transform: translateY(-50%) translateX(-4px);
+    box-shadow: -12px 0 35px rgba(0, 240, 255, 0.55);
+    background: rgba(0, 240, 255, 0.18);
+    border-color: #38bdf8;
+}
+
+.sticky-tab-icon {
+    font-size: 1.4rem;
+}
+
+.sticky-tab-text {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    letter-spacing: 1.5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--color-neon-cyan);
+}
+
+.sticky-tab-badge {
+    background: var(--color-neon-cyan);
+    color: #000;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 0.2rem 0.45rem;
+    border-radius: 12px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* GAVETA LATERAL FLUTUANTE (OFF-CANVAS DRAWER) */
+.drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    z-index: 998;
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition-smooth);
+}
+
+.drawer-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.gdd-drawer {
+    position: fixed;
+    top: 0;
+    right: -620px;
+    width: 600px;
+    max-width: 90vw;
+    height: 100vh;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.6);
+    border-left: 1.5px solid var(--color-neon-cyan);
+}
+
+.gdd-drawer.open {
+    transform: translateX(-620px);
+}
+
+.gdd-drawer-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.drawer-title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.drawer-icon {
+    font-size: 1.5rem;
+}
+
+.gdd-drawer-header h3 {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--color-neon-cyan);
+    margin: 0;
+}
+
+.drawer-subtitle {
+    font-size: 0.7rem;
+    color: var(--color-gray-muted);
+}
+
+.drawer-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.close-drawer-icon-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-text-white);
+    font-size: 1.75rem;
+    cursor: pointer;
+    line-height: 1;
+    transition: var(--transition-smooth);
+}
+
+.close-drawer-icon-btn:hover {
+    color: var(--color-neon-cyan);
+}
+
+.gdd-drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+}
+
+.gdd-drawer-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.85rem;
+    background: rgba(0, 0, 0, 0.3);
 }

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistente de IA | Escola de Tecnologias</title>
+    
+    <!-- Meta SEO -->
+    <meta name="description" content="Assistente Virtual de Inteligência Artificial para os cursos de Games, Robótica e Treinamento da Escola de Tecnologias.">
+    
+    <!-- Google Fonts (Outfit & Fira Code) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Estilo Principal do Assistente -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- BARRA SUPERIOR (HEADER APLICAÇÃO) -->
+    <header class="app-header">
+        <div class="brand-section">
+            <a href="../index.html" class="btn-back" onclick="window.location.href='../index.html'; return false;" title="Voltar ao Portal principal">
+                <span>←</span> Portal
+            </a>
+            <h1 class="app-title">
+                <span>Assistente Virtual</span>
+                <span class="ai-badge">✨ IA</span>
+            </h1>
+        </div>
+
+        <div class="header-actions">
+            <button class="btn-api-key" id="btn-api-key" onclick="openApiKeyModal()" title="Configurar Chave da API do Gemini">
+                🔑 <span id="api-key-status-label">API Key</span>
+            </button>
+            <!-- O botão de tema será injetado dinamicamente pelo theme-toggle.js ou renderizado aqui -->
+            <div id="theme-toggle-container"></div>
+        </div>
+    </header>
+
+    <!-- LAYOUT DA APLICAÇÃO (SIDEBAR + CHAT) -->
+    <div class="app-container">
+        
+        <!-- SIDEBAR DE SELEÇÃO (ESQUERDA) -->
+        <aside class="sidebar" id="sidebar">
+            <!-- TOPO DA SIDEBAR COM BOTÃO RECOLHER -->
+            <div class="sidebar-top-row">
+                <span class="sidebar-top-title">Painel de Opções</span>
+                <button class="btn-sidebar-toggle" id="btn-toggle-sidebar" onclick="toggleSidebar()" title="Recolher / Expandir Menu Lateral">
+                    <span id="sidebar-toggle-icon">◀</span>
+                </button>
+            </div>
+
+            <!-- SELETOR DE ÁREA DE ORIGEM -->
+            <div class="area-selector-card">
+                <span class="sidebar-label">Área de Conhecimento</span>
+                <div class="area-pills" id="area-pills-container">
+                    <button class="area-pill" data-area="games" onclick="changeArea('games')">
+                        <span>🎮</span> Games
+                    </button>
+                    <button class="area-pill" data-area="robotica" onclick="changeArea('robotica')">
+                        <span>🤖</span> Robótica
+                    </button>
+                    <button class="area-pill" data-area="treinamento" onclick="changeArea('treinamento')">
+                        <span>🏆</span> Treino
+                    </button>
+                </div>
+            </div>
+
+            <!-- SUB-SELETORES DINÂMICOS DA ÁREA -->
+            <div class="subselector-section">
+                <span class="sidebar-label" id="subselector-label">Tecnologia / Tópico</span>
+                <div class="subselector-group" id="subselector-container">
+                    <!-- Os seletores de tecnologias serão gerados via JavaScript -->
+                </div>
+            </div>
+
+            <!-- PAINEL DE MEMÓRIA (DEBUG & DIAGNÓSTICO) -->
+            <div class="memory-debug-card">
+                <div class="memory-debug-header">
+                    <span>Mapeamento JSON (Memória)</span>
+                    <span class="memory-status-badge">● Mapeado</span>
+                </div>
+                <div class="memory-path-box" id="debug-memory-path">
+                    memoria/games/scratch/
+                </div>
+                <div style="font-size: 0.7rem; color: var(--color-text-dim); margin-top: 0.2rem;">
+                    Área: <strong id="debug-area-name" style="color: var(--color-text-normal)">games</strong> | Sub: <strong id="debug-sub-name" style="color: var(--color-text-normal)">gamemaker</strong>
+                </div>
+                <div style="font-size: 0.7rem; color: var(--color-cyan); margin-top: 0.25rem; font-weight: 600;">
+                    Persona IA: <span id="debug-persona-profile" style="color: var(--color-text-white)">Técnico (Alunos Avançados)</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ÁREA DE CHAT PRINCIPAL (DIREITA) -->
+        <main class="chat-main">
+            <!-- HEADER DA CONVERSA -->
+            <div class="chat-header">
+                <div class="chat-breadcrumb" id="chat-breadcrumb">
+                    <span id="breadcrumb-area">Games</span>
+                    <span class="sep">›</span>
+                    <span id="breadcrumb-sub" style="color: var(--color-cyan);">Scratch</span>
+                </div>
+                <div class="status-indicator">
+                    <span class="status-dot" id="status-dot"></span>
+                    <span id="status-text">Pronto para Gemini 1.5 Flash</span>
+                </div>
+            </div>
+
+            <!-- HISTÓRICO DE MENSAGENS -->
+            <div class="chat-history" id="chat-history">
+                <!-- CARTÃO DE BOAS-VINDAS DINÂMICO -->
+                <div class="welcome-card" id="welcome-card">
+                    <div class="welcome-title-row">
+                        <div class="welcome-icon" id="welcome-icon">🎮</div>
+                        <div class="welcome-text">
+                            <h2 id="welcome-title">Olá! Sou seu Assistente de Games</h2>
+                            <p id="welcome-subtitle">Selecione uma tecnologia na barra lateral para direcionar o meu conhecimento. Como posso ajudar seu projeto hoje?</p>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 0.8rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px;">
+                        Sugestões de Perguntas Rápidas:
+                    </div>
+
+                    <div class="suggestions-grid" id="suggestions-grid">
+                        <!-- Gerado via JavaScript baseado no sub-seletor -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTAINER DO INPUT FIXO -->
+            <div class="chat-input-container">
+                <div class="input-box">
+                    <textarea 
+                        id="chat-textarea" 
+                        class="chat-textarea" 
+                        placeholder="Digite sua dúvida ou mensagem aqui..." 
+                        rows="1"
+                        onkeydown="handleKeyDown(event)"></textarea>
+                    <button class="btn-send" id="btn-send" onclick="sendMessage()" title="Enviar mensagem">
+                        ➤
+                    </button>
+                </div>
+                <div class="input-disclaimer" id="input-disclaimer">
+                    Base de conhecimento vinculada: <code id="footer-memory-code" style="color: var(--color-cyan)">memoria/games/scratch/</code>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL DE CONFIGURAÇÃO DA API KEY -->
+    <div class="modal-overlay" id="api-modal-overlay" onclick="closeApiKeyModal(event)">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>🔑 Configurar Gemini API Key</h3>
+                <button class="btn-close-modal" onclick="closeApiKeyModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 0.75rem;">
+                    Insira a sua <strong>Chave de API do Google Gemini</strong> para responder em tempo real consultando os arquivos <code>.md</code> de memória.
+                </p>
+                <div class="input-group">
+                    <input type="password" id="input-api-key" placeholder="Cole sua chave AIzaSy... aqui" autocomplete="off" />
+                    <button type="button" class="btn-toggle-pass" onclick="togglePasswordVisibility()">👁️</button>
+                </div>
+                <div class="api-help-note" style="margin-top: 0.85rem;">
+                    <small style="color: var(--color-text-dim); font-size: 0.78rem;">
+                        💡 Sua chave é salva exclusivamente no seu navegador via <code>localStorage</code> e nunca é compartilhada. Você pode obter uma chave gratuita no <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style="color: var(--color-cyan)">Google AI Studio</a>.
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer" style="margin-top: 1rem;">
+                <button class="btn-secondary" onclick="closeApiKeyModal()">Cancelar</button>
+                <button class="btn-primary" onclick="saveApiKey()">Salvar Chave</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts JavaScript Globais e Específicos -->
+    <script src="../theme-toggle.js"></script>
+    <script src="script.js?v=1.0.9"></script>
+</body>
+</html>

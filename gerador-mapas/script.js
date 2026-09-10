@@ -254,6 +254,13 @@ function getTileSymbol(tileType) {
         case "spring": return "🌀";
         case "spikes": return "🔺";
         case "goal": return "⭐";
+        case "coin": return "🪙";
+        case "key": return "🔑";
+        case "door": return "🚪";
+        case "crate": return "📦";
+        case "checkpoint": return "🚩";
+        case "secret": return "👻";
+        case "lava": return "🌋";
         default: return "";
     }
 }
@@ -536,6 +543,62 @@ function exportMapPNG() {
                     ctx.lineWidth = 1.5;
                     ctx.strokeRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
                     drawCenteredEmoji(ctx, "⭐", x, y);
+                    break;
+                case "coin":
+                    ctx.fillStyle = "rgba(255, 204, 0, 0.12)";
+                    ctx.fillRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+                    ctx.strokeStyle = "#ffcc00";
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+                    drawCenteredEmoji(ctx, "🪙", x, y);
+                    break;
+                case "key":
+                    ctx.fillStyle = "rgba(0, 240, 255, 0.12)";
+                    ctx.fillRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+                    ctx.strokeStyle = "#00f0ff";
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+                    drawCenteredEmoji(ctx, "🔑", x, y);
+                    break;
+                case "door":
+                    ctx.fillStyle = "rgba(249, 115, 22, 0.15)";
+                    ctx.fillRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+                    ctx.strokeStyle = "#f97316";
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+                    drawCenteredEmoji(ctx, "🚪", x, y);
+                    break;
+                case "crate":
+                    ctx.fillStyle = "rgba(180, 83, 9, 0.2)";
+                    ctx.fillRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+                    ctx.strokeStyle = "#d97706";
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+                    drawCenteredEmoji(ctx, "📦", x, y);
+                    break;
+                case "checkpoint":
+                    ctx.fillStyle = "rgba(0, 255, 102, 0.12)";
+                    ctx.fillRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+                    ctx.strokeStyle = "#00ff66";
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+                    drawCenteredEmoji(ctx, "🚩", x, y);
+                    break;
+                case "secret":
+                    ctx.fillStyle = "rgba(168, 85, 247, 0.15)";
+                    ctx.fillRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+                    ctx.strokeStyle = "#a855f7";
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+                    drawCenteredEmoji(ctx, "👻", x, y);
+                    break;
+                case "lava":
+                    ctx.fillStyle = "rgba(239, 68, 68, 0.25)";
+                    ctx.fillRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+                    ctx.strokeStyle = "#ff3333";
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+                    drawCenteredEmoji(ctx, "🌋", x, y);
                     break;
             }
         }

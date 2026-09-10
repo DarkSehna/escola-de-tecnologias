@@ -1,0 +1,1 @@
+Base de conhecimento de GameMaker: Maquinas de Estados (FSM), scripts GML e objetos.
