@@ -2,7 +2,8 @@
   "games": {
     "scratch": "memoria/games/scratch/",
     "construct": "memoria/games/construct/",
-    "gamemaker": "memoria/games/gamemaker/"
+    "gamemaker": "memoria/games/gamemaker/",
+    "gamedesign": "memoria/games/gamedesign/"
   },
   "robotica": {
     "lego": "memoria/robotica/lego/",

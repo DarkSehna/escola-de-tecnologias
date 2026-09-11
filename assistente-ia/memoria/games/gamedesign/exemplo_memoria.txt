@@ -1,0 +1,1 @@
+Base de Memória de Game Design - Escola de Tecnologias. Contém diretrizes de GDD, controle de escopo, avaliação Metacritic (teto 9.9) e estrutura socrática de perguntas.

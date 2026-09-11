@@ -27,9 +27,10 @@ const AREAS_CONFIG = {
         title: "Games",
         icon: "🎮",
         seletores: [
-            { id: "scratch", name: "Scratch", icon: "🧩", prompt: "Como usar blocos de transmissão e variáveis?" },
+            { id: "gamedesign", name: "Game Design", icon: "📋", prompt: "Como estruturar a ideia do meu jogo no Gerador de GDD?" },
+            { id: "gamemaker", name: "GameMaker", icon: "🎯", prompt: "Como estruturar uma Máquina de Estados (FSM) em GML?" },
             { id: "construct", name: "Construct", icon: "🏗️", prompt: "Como configurar comportamentos de plataforma e física?" },
-            { id: "gamemaker", name: "GameMaker", icon: "🎯", prompt: "Como estruturar uma Máquina de Estados (FSM) em GML?" }
+            { id: "scratch", name: "Scratch", icon: "🧩", prompt: "Como usar blocos de transmissão e variáveis?" }
         ]
     },
     "robotica": {
@@ -74,6 +75,53 @@ const GLOBAL_TEACHING_DIRECTIVES = `
 
 // CONFIGURAÇÕES DAS PERSONAS E INSTRUÇÕES DO SISTEMA GEMINI (SYSTEM INSTRUCTION)
 const PERSONAS_CONFIG = {
+    "gamedesign": {
+        profileName: "Lead Game Designer & Evaluator (Game Design - 4º Ano ao Ensino Médio)",
+        systemInstruction: `Você é o Lead Game Designer & Mentor de Design de Jogos da Escola de Tecnologias.
+Seu público varia do 4º ano do Ensino Fundamental ao 3º ano do Ensino Médio (9 a 17 anos).
+
+SUA MISSÃO & DUPLA FUNÇÃO PEDAGÓGICA:
+Você opera em dois modos fluidos, dependendo do pedido do aluno:
+
+======================================================================
+MODO A: COCRIADOR DE IDEIAS (ASSISTENTE DE BRAINSTORMING DE GDD)
+======================================================================
+Quando o aluno estiver em dúvida, sem ideias ou pedir ajuda para criar/planejar um jogo, guie-o a estruturar o projeto ESTRITAMENTE dentro dos campos do nosso GERADOR DE GDD:
+
+1. DIRETRIZES DO SISTEMA:
+   • Título & Gênero/Arquétipo (Plataforma, Top-Down RPG, Metroidvania, Puzzle, Shooter 2D, Outro)
+   • O Ciclo Principal (Core Loop): O que o jogador repete a maior parte do tempo? (Ex: Pular buracos, desviar de espinhos e atirar)
+   • Objetivo do Jogo, História/Lore, Quantidade de Fases e Tema do Mapa de cada fase
+
+2. AVATAR & CONTROLES:
+   • Nome & Visual/História do Protagonista
+   • Movimentação Básica (Andar, Pulo Duplo, Dash, Escalar) & Ações/Ataques (Atirar laser, Empurrar caixas, Usar escudo)
+
+3. REGRAS & AMEAÇAS:
+   • Mecânicas Especiais & Armadilhas do Cenário (Como funcionam plataformas móveis, botões no chão, espinhos)
+   • Bestiário: Inimigos Comuns (Minions) & Chefões (Bosses - fases de ataque)
+   • Regras do Jogo: Condição de Avanço (Como liberar a próxima fase) & Penalidade por Falha (Game Over / respawn)
+   • Sistemas Extras e Variáveis (Opcional: inventário, moedas, loja de upgrades)
+
+ADAPTAÇÃO DE LINGUAGEM DO MODO A:
+• Alunos menores (4º/5º ano): Use linguagem lúdica, visual e acessível ("Como é a roupinha do seu personagem?", "O que acontece quando ele aperta espaço?").
+• Alunos maiores (Ensino Médio): Use termos de lógica de sistemas, game feel, curvas de dificuldade e trade-offs de mecânicas.
+
+======================================================================
+MODO B: ANALISADOR E CRÍTICO DE GDD (AVALIAÇÃO PEDAGÓGICA / METACRITIC)
+======================================================================
+Quando o aluno enviar o texto, JSON ou rascunho de um GDD feito no Gerador de GDD, aja como um Lead Game Designer avaliador experiente.
+
+REGRA PEDAGÓGICA RIGOROSA DE NOTA (TETO METACRITIC):
+• A escala de avaliação é de 0.0 a 10.0, mas o TETO MÁXIMO ABSOLUTO É 9.9.
+• NUNCA ATRIBUA NOTA 10.0. Explique didaticamente a analogia do Metacritic (onde o jogo de maior nota da história da indústria recebeu 99/100, ex: Zelda Ocarina of Time): não existe jogo perfeito nem unanimidade em Game Design. Todo jogo envolve escolhas de compromisso (trade-offs) e sempre há margem para testes e polimento.
+
+ESTRUTURA OBRIGATÓRIA DE RESPOSTA NA AVALIAÇÃO (4 SEÇÕES):
+1. [NOTA METACRITIC]: Nota de 0.0 a 9.9 com breve justificativa de coerência do design.
+2. [PONTOS FORTES]: Destaques positivos e escolhas inteligentes do aluno.
+3. [ALERTAS DE DESIGN & ESCOPO]: Apontar incoerências mecânicas (ex: habilidades declaradas sem utilidade nas fases, ausência de punição) ou risco de escopo grande demais para o tempo de aula.
+4. [PERGUNTAS REFLEXIVAS]: Exatamente 3 perguntas socráticas para o aluno refletir e aprimorar o GDD por conta própria (sem dar a resposta pronta).`
+    },
     "gamemaker": {
         profileName: "Desenvolvedor Sênior (GameMaker - 6º Ano ao Ensino Médio)",
         systemInstruction: `Você é o Desenvolvedor Sênior & Mentor de GameMaker (GML) para a Escola de Tecnologias.
@@ -205,8 +253,9 @@ const appState = {
 };
 
 // MAPA DE DISPONIBILIDADE DOS SUB-SELETORES / PERSONAS DA IA
-// GameMaker e Construct estão 100% ativos; Scratch, Robótica e Treinamento estão temporariamente bloqueados.
+// GameDesign, GameMaker e Construct estão 100% ativos; Scratch, Robótica e Treinamento estão em atualização.
 const ENABLED_SUBSELECTORS = {
+    "gamedesign": true,
     "gamemaker": true,
     "construct": true,
     "scratch": false,
@@ -504,6 +553,9 @@ function updateUrlParams() {
 // ==========================================================================
 
 const MEMORY_INDEX = {
+    "gamedesign": [
+        "GD_diretrizes_gdd.md"
+    ],
     "gamemaker": [
         "GM_scripts_Dialogo_VisualNovel.md",
         "GM_scripts_FSM.md",
@@ -781,6 +833,42 @@ async function callGeminiApi(userPrompt) {
     return textResult;
 }
 
+// MANIPULADOR DE ARQUIVOS ANEXADOS DE GDD (.MD, .TXT, .JSON)
+let currentAttachedFile = null;
+
+function handleFileSelected(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        currentAttachedFile = {
+            name: file.name,
+            content: e.target.result
+        };
+        
+        const fileNameEl = document.getElementById("attached-filename");
+        const fileSizeEl = document.getElementById("attached-filesize");
+        const fileShelf = document.getElementById("file-attachment-shelf") || document.getElementById("file-attachment-bar");
+
+        if (fileNameEl) fileNameEl.textContent = file.name;
+        if (fileSizeEl) {
+            const sizeKb = (file.size / 1024).toFixed(1);
+            fileSizeEl.textContent = `${sizeKb} KB`;
+        }
+        if (fileShelf) fileShelf.style.display = "flex";
+    };
+    reader.readAsText(file);
+}
+
+function removeAttachedFile() {
+    currentAttachedFile = null;
+    const fileInput = document.getElementById("file-input-gdd");
+    const fileShelf = document.getElementById("file-attachment-shelf") || document.getElementById("file-attachment-bar");
+    if (fileInput) fileInput.value = "";
+    if (fileShelf) fileShelf.style.display = "none";
+}
+
 // 12. ENVIO DE MENSAGENS NO CHAT (COM SUPORTE A GEMINI REAL OU SIMULAÇÃO)
 async function sendMessage() {
     if (!ENABLED_SUBSELECTORS[appState.subSeletor]) return;
@@ -788,9 +876,32 @@ async function sendMessage() {
     const textarea = document.getElementById('chat-textarea');
     const text = textarea.value.trim();
 
-    if (!text) return;
+    // Se não houver texto E não houver arquivo anexado, ignora o envio
+    if (!text && !currentAttachedFile) return;
 
     const chatHistory = document.getElementById('chat-history');
+
+    // Prepara o conteúdo visual da mensagem do usuário e o prompt real enviado para a API
+    let userBubbleHtml = "";
+    let promptForApi = text;
+
+    if (currentAttachedFile) {
+        const fileKb = (currentAttachedFile.content.length / 1024).toFixed(1);
+        const attachedBadgeHtml = `
+            <div class="msg-attached-badge">
+                <svg class="file-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                <strong>${escapeHtml(currentAttachedFile.name)}</strong> (${fileKb} KB)
+            </div>`;
+        
+        userBubbleHtml = attachedBadgeHtml + (text ? `<div>${escapeHtml(text)}</div>` : `<div style="font-style: italic; opacity: 0.85;">[Arquivo enviado para análise e avaliação de GDD]</div>`);
+        
+        promptForApi = `[ARQUIVO ANEXADO PELO ALUNO: ${currentAttachedFile.name}]\n\`\`\`markdown\n${currentAttachedFile.content}\n\`\`\`\n\n${text || "Por favor, analise e avalie o GDD anexado acima com base no formato pedagógico de avaliação e teto Metacritic (máximo 9.9)."}`;
+    } else {
+        userBubbleHtml = escapeHtml(text);
+    }
 
     // Remove welcome card se for o primeiro envio
     const welcomeCard = document.getElementById('welcome-card');
@@ -798,18 +909,19 @@ async function sendMessage() {
         welcomeCard.style.display = 'none';
     }
 
-    // Adiciona Mensagem do Usuário
+    // Adiciona Mensagem do Usuário no chat
     const userMsg = document.createElement('div');
     userMsg.className = 'chat-message user';
     userMsg.innerHTML = `
-        <div class="message-bubble">${escapeHtml(text)}</div>
+        <div class="message-bubble">${userBubbleHtml}</div>
         <div class="message-avatar">🧑‍🎓</div>
     `;
     chatHistory.appendChild(userMsg);
 
-    // Limpa o textarea
+    // Limpa o textarea e remove o anexo
     textarea.value = '';
     textarea.style.height = '24px';
+    removeAttachedFile();
     chatHistory.scrollTop = chatHistory.scrollHeight;
 
     // SE HOUVER API KEY OU PROXY DA ESCOLA CONFIGURADO, EXECUTA A CHAMADA REAL AO GEMINI!
@@ -821,14 +933,14 @@ async function sendMessage() {
         loadingMsg.innerHTML = `
             <div class="message-avatar">✨</div>
             <div class="message-bubble" style="opacity: 0.85">
-                <em>Consultando manuais da pasta <code>${appState.currentMemoryPath}</code> e gerando resposta com a persona <strong>${appState.currentPersona?.profileName || ''}</strong>...</em>
+                <em>Consultando manuais e avaliando com a persona <strong>${appState.currentPersona?.profileName || ''}</strong>...</em>
             </div>
         `;
         chatHistory.appendChild(loadingMsg);
         chatHistory.scrollTop = chatHistory.scrollHeight;
 
         try {
-            const aiResponseText = await callGeminiApi(text);
+            const aiResponseText = await callGeminiApi(promptForApi);
             loadingMsg.remove();
 
             const aiMsg = document.createElement('div');
