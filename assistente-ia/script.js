@@ -833,32 +833,197 @@ async function callGeminiApi(userPrompt) {
     return textResult;
 }
 
-// MANIPULADOR DE ARQUIVOS ANEXADOS DE GDD (.MD, .TXT, .JSON)
+// PARSER E LEITOR DE ARQUIVOS DE PROJETO CONSTRUCT 3 (.C3P VIA JSZIP)
+async function parseC3PFile(arrayBuffer) {
+    if (typeof JSZip === 'undefined') {
+        throw new Error("Biblioteca JSZip para descompactação de arquivos .c3p não foi encontrada.");
+    }
+
+    const zip = await JSZip.loadAsync(arrayBuffer);
+
+    // Buscar o arquivo principal de manifesto do projeto (.c3proj / project.c3proj / c3project)
+    let projectFile = zip.file("project.c3proj") || zip.file("c3project") || zip.file("c3proj");
+    if (!projectFile) {
+        const matches = zip.file(/\.c3proj$/i);
+        if (matches && matches.length > 0) {
+            projectFile = matches[0];
+        }
+    }
+
+    let projectData = null;
+    if (projectFile) {
+        try {
+            const jsonStr = await projectFile.async("string");
+            projectData = JSON.parse(jsonStr);
+        } catch (e) {
+            console.warn("[Assistente IA] Aviso ao interpretar manifesto .c3proj:", e);
+        }
+    }
+
+    let summary = "=== MANIFESTO E ESTRUTURA DO PROJETO CONSTRUCT 3 (.C3P) ===\n";
+
+    if (projectData) {
+        summary += `\n📦 PROJETO: ${projectData.name || 'Sem Nome'}`;
+        if (projectData.author) summary += ` | Autor: ${projectData.author}`;
+        if (projectData.version) summary += ` | Versão: ${projectData.version}`;
+        summary += `\n`;
+
+        // OBJETOS E COMPORTAMENTOS (BEHAVIORS)
+        if (projectData.objectTypes && projectData.objectTypes.length > 0) {
+            summary += `\n🎨 OBJETOS E COMPORTAMENTOS DA CENA (${projectData.objectTypes.length}):\n`;
+            projectData.objectTypes.forEach(obj => {
+                const plugin = obj["plugin-id"] || obj.pluginId || "Objeto";
+                let behaviorsStr = "";
+                if (obj.behaviorTypes && obj.behaviorTypes.length > 0) {
+                    const bList = obj.behaviorTypes.map(b => `${b.name || b.id} [${b["behavior-id"] || b.behaviorId}]`);
+                    behaviorsStr = ` | Comportamentos: [${bList.join(", ")}]`;
+                }
+                summary += `  • ${obj.name} (Plugin: ${plugin})${behaviorsStr}\n`;
+            });
+        }
+
+        // LAYOUTS / FASES
+        if (projectData.layouts && projectData.layouts.length > 0) {
+            summary += `\n🖼️ LAYOUTS / FASES (${projectData.layouts.length}):\n`;
+            projectData.layouts.forEach(l => {
+                summary += `  • ${l.name || l.sid} (Tamanho: ${l.width || '?'}x${l.height || '?'})\n`;
+            });
+        }
+
+        // FOLHAS DE EVENTOS
+        if (projectData.eventSheets && projectData.eventSheets.length > 0) {
+            summary += `\n📜 FOLHAS DE EVENTOS DE LÓGICA (${projectData.eventSheets.length}):\n`;
+            projectData.eventSheets.forEach(es => {
+                summary += `  • ${es.name || es.sid}\n`;
+            });
+        }
+    }
+
+    // EXTRAIR EVENTOS E AÇÕES DAS FOLHAS DE EVENTOS DA PASTA eventSheets/
+    const eventFiles = zip.file(/^eventSheets\//i);
+    if (eventFiles && eventFiles.length > 0) {
+        summary += `\n⚡ LÓGICA E EVENTOS PROGRAMADOS NO PROJETO:\n`;
+        for (const file of eventFiles) {
+            if (file.name.endsWith('/') || file.dir) continue;
+            try {
+                const esContent = await file.async("string");
+                const esJson = JSON.parse(esContent);
+                const esName = esJson.name || file.name.replace(/^eventSheets\//i, '').replace(/\.json$/i, '');
+                summary += `\n--- [Folha de Eventos: ${esName}] ---\n`;
+                if (esJson.events && Array.isArray(esJson.events)) {
+                    summary += formatC3Events(esJson.events);
+                }
+            } catch (err) {
+                console.warn(`[Assistente IA] Erro ao extrair folha de eventos ${file.name}:`, err);
+            }
+        }
+    }
+
+    return summary;
+}
+
+function formatC3Events(events, depth = 0) {
+    let text = "";
+    const indent = "  ".repeat(depth);
+    
+    events.forEach(ev => {
+        if (ev.eventType === "comment") {
+            text += `${indent}💬 // ${ev.text}\n`;
+        } else if (ev.eventType === "block" || ev.conditions || ev.actions) {
+            let condList = [];
+            if (ev.conditions && Array.isArray(ev.conditions)) {
+                ev.conditions.forEach(c => {
+                    const target = c.objectType || c.type || "Sistema";
+                    const condName = c.id || c.cid || "Condição";
+                    condList.push(`${target}: ${condName}`);
+                });
+            }
+            
+            let actList = [];
+            if (ev.actions && Array.isArray(ev.actions)) {
+                ev.actions.forEach(a => {
+                    const target = a.objectType || a.type || "Sistema";
+                    const actName = a.id || a.aid || "Ação";
+                    actList.push(`${target} ➔ ${actName}`);
+                });
+            }
+            
+            if (condList.length > 0) {
+                text += `${indent}• Se (${condList.join(" E ")}):\n`;
+            } else {
+                text += `${indent}• Evento:\n`;
+            }
+
+            if (actList.length > 0) {
+                actList.forEach(act => {
+                    text += `${indent}   ⚡ ${act}\n`;
+                });
+            }
+
+            if (ev.children && Array.isArray(ev.children)) {
+                text += formatC3Events(ev.children, depth + 1);
+            }
+        }
+    });
+
+    return text;
+}
+
+// MANIPULADOR DE ARQUIVOS ANEXADOS DE GDD (.MD, .TXT, .JSON) E CONSTRUCT 3 (.C3P)
 let currentAttachedFile = null;
 
 function handleFileSelected(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        currentAttachedFile = {
-            name: file.name,
-            content: e.target.result
-        };
-        
-        const fileNameEl = document.getElementById("attached-filename");
-        const fileSizeEl = document.getElementById("attached-filesize");
-        const fileShelf = document.getElementById("file-attachment-shelf") || document.getElementById("file-attachment-bar");
+    const isC3P = file.name.toLowerCase().endsWith(".c3p");
 
-        if (fileNameEl) fileNameEl.textContent = file.name;
-        if (fileSizeEl) {
-            const sizeKb = (file.size / 1024).toFixed(1);
-            fileSizeEl.textContent = `${sizeKb} KB`;
-        }
-        if (fileShelf) fileShelf.style.display = "flex";
-    };
-    reader.readAsText(file);
+    if (isC3P) {
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            try {
+                const arrayBuffer = e.target.result;
+                const c3pSummary = await parseC3PFile(arrayBuffer);
+
+                currentAttachedFile = {
+                    name: file.name,
+                    content: c3pSummary,
+                    isC3P: true
+                };
+
+                updateAttachmentUI(file.name, file.size);
+            } catch (err) {
+                alert("Erro ao ler o projeto Construct 3 (.c3p): " + err.message);
+                removeAttachedFile();
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    } else {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            currentAttachedFile = {
+                name: file.name,
+                content: e.target.result,
+                isC3P: false
+            };
+
+            updateAttachmentUI(file.name, file.size);
+        };
+        reader.readAsText(file);
+    }
+}
+
+function updateAttachmentUI(fileName, fileSize) {
+    const fileNameEl = document.getElementById("attached-filename");
+    const fileSizeEl = document.getElementById("attached-filesize");
+    const fileShelf = document.getElementById("file-attachment-shelf") || document.getElementById("file-attachment-bar");
+
+    if (fileNameEl) fileNameEl.textContent = fileName;
+    if (fileSizeEl) {
+        const sizeKb = (fileSize / 1024).toFixed(1);
+        fileSizeEl.textContent = `(${sizeKb} KB)`;
+    }
+    if (fileShelf) fileShelf.style.display = "flex";
 }
 
 function removeAttachedFile() {
@@ -887,18 +1052,20 @@ async function sendMessage() {
 
     if (currentAttachedFile) {
         const fileKb = (currentAttachedFile.content.length / 1024).toFixed(1);
+        const iconSvg = currentAttachedFile.isC3P ?
+            `<svg class="file-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>` :
+            `<svg class="file-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`;
+
         const attachedBadgeHtml = `
             <div class="msg-attached-badge">
-                <svg class="file-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                </svg>
+                ${iconSvg}
                 <strong>${escapeHtml(currentAttachedFile.name)}</strong> (${fileKb} KB)
             </div>`;
         
-        userBubbleHtml = attachedBadgeHtml + (text ? `<div>${escapeHtml(text)}</div>` : `<div style="font-style: italic; opacity: 0.85;">[Arquivo enviado para análise e avaliação de GDD]</div>`);
+        const fileTypeLabel = currentAttachedFile.isC3P ? "[Projeto Construct 3 (.c3p) enviado para análise de objetos, comportamentos e eventos]" : "[Arquivo enviado para análise]";
+        userBubbleHtml = attachedBadgeHtml + (text ? `<div>${escapeHtml(text)}</div>` : `<div style="font-style: italic; opacity: 0.85;">${fileTypeLabel}</div>`);
         
-        promptForApi = `[ARQUIVO ANEXADO PELO ALUNO: ${currentAttachedFile.name}]\n\`\`\`markdown\n${currentAttachedFile.content}\n\`\`\`\n\n${text || "Por favor, analise e avalie o GDD anexado acima com base no formato pedagógico de avaliação e teto Metacritic (máximo 9.9)."}`;
+        promptForApi = `[ARQUIVO ANEXADO PELO ALUNO: ${currentAttachedFile.name}]\n\`\`\`markdown\n${currentAttachedFile.content}\n\`\`\`\n\n${text || "Por favor, analise a estrutura, objetos, comportamentos e a lógica do meu projeto enviado acima e me ajude a resolver minha dúvida."}`;
     } else {
         userBubbleHtml = escapeHtml(text);
     }
