@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criador de Timelines de Jogos | Escola de Tecnologias</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=3.0">
+</head>
+<body>
+
+    <!-- Ambient Glow Background -->
+    <div class="ambient-glow bg-left"></div>
+    <div class="ambient-glow bg-right"></div>
+
+    <div class="app-container">
+
+        <!-- CABEÇALHO DA APLICAÇÃO -->
+        <header class="app-header panel-glass">
+            <div class="header-main-row">
+                <div class="app-branding">
+                    <div class="back-nav">
+                        <a href="../" class="back-link">← Voltar ao Painel Central</a>
+                    </div>
+                    <div class="title-row">
+                        <span class="logo-icon">⏳</span>
+                        <div>
+                            <h1>CRIADOR DE TIMELINES DE JOGOS</h1>
+                            <span class="subtitle">Planejamento visual de fases e controle inteligente de escopo</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="header-actions">
+                    <button class="theme-toggle-btn" aria-label="Alternar Tema">🌙 <span class="theme-btn-text">Modo Escuro</span></button>
+                    <button id="btn-copy-markdown" class="tool-btn secondary-btn">
+                        <span>📋 Copiar Markdown para o GDD</span>
+                    </button>
+                    <button id="btn-save-json" class="tool-btn secondary-btn">
+                        <span>💾 Salvar JSON</span>
+                    </button>
+                    <input type="file" id="file-json-loader" accept=".json" style="display: none;">
+                    <button id="btn-load-json" class="tool-btn secondary-btn">
+                        <span>📁 Carregar JSON</span>
+                    </button>
+                    <button id="btn-clear-all" class="tool-btn danger-btn" title="Reiniciar timeline com Fase 1 em branco">
+                        <span>🗑️ Resetar</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- LAYOUT DE WORKSPACE SPLIT (BARRA LATERAL DE ENERGIA ESTILO GDD + ÁREA CENTRAL) -->
+        <div class="workspace-layout">
+
+            <!-- BARRA LATERAL DE TERMÔMETRO DE ENERGIA VERTICAL (100% ESTILO GERADOR DE GDD) -->
+            <aside class="progress-rail-sidebar panel-glass">
+                <div class="sidebar-header">
+                    <span class="scope-meter-icon">🌡️</span>
+                    <span class="scope-meter-label">ESCOPO</span>
+                </div>
+
+                <!-- COLUNA DE ENERGIA VERTICAL (100% DA BORDA SUPERIOR À INFERIOR DO MODAL) -->
+                <div class="energy-gauge-vertical">
+                    <div id="scope-gauge-fill-vertical" class="energy-gauge-fill level-blue" style="height: 25%;">
+                        <div class="energy-cells-pattern"></div>
+                    </div>
+                </div>
+
+                <!-- INDICADOR DE STATUS E CONTADOR -->
+                <div class="sidebar-status-container">
+                    <span id="scope-status-badge" class="scope-badge level-blue">Escopo Baixo</span>
+                    <span id="phase-counter-text" class="phase-count-highlight">1 Fase</span>
+                </div>
+            </aside>
+
+            <!-- ÁREA PRINCIPAL DO EDITOR DE TIMELINE -->
+            <section class="editor-section">
+
+                <!-- CABEÇALHO COMPACTO DE STATUS E DICA PEDAGÓGICA -->
+                <div class="scope-summary-banner panel-glass">
+                    <div class="banner-main-row">
+                        <div class="banner-title-group">
+                            <span class="banner-icon">📊</span>
+                            <span class="banner-label">STATUS DE PROGRESSÃO:</span>
+                            <span id="top-scope-status-badge" class="scope-badge level-blue">Escopo Baixo</span>
+                        </div>
+                        <div class="banner-count-group">
+                            <span id="top-phase-counter-text" class="phase-count-highlight">1 Fase Planejada</span>
+                        </div>
+                    </div>
+                    <div class="banner-feedback-row">
+                        <p id="scope-feedback-msg" class="scope-feedback">
+                            🔷 <strong>Escopo Baixo (Fase Inicial):</strong> O projeto está muito enxuto. Recomendamos planejar 2 ou 3 fases para uma progressão de jogo mais completa.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- CONTAINER PRINCIPAL DE FASES (MODO VERTICAL COM SETAS ↓) -->
+                <main class="timeline-main">
+                    <div id="timeline-container" class="timeline-flow layout-vertical">
+                        <!-- Cards de Fase serão renderizados dinamicamente aqui -->
+                    </div>
+                </main>
+
+            </section>
+        </div>
+
+        <!-- BOTÃO FLUTUANTE DE ADICIONAR FASE (FAB) -->
+        <button id="fab-add-phase" class="fab-button pulse-glow" title="Adicionar Nova Fase">
+            <span>➕ Adicionar Nova Fase</span>
+        </button>
+
+        <!-- NOTIFICAÇÃO TOAST VISUAL -->
+        <div id="toast-notification" class="toast-notification">
+            <span id="toast-message">Copiado! ✓</span>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="../theme-toggle.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
