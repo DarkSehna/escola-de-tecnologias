@@ -80,6 +80,9 @@ const PERSONAS_CONFIG = {
         systemInstruction: `Você é o Lead Game Designer & Mentor de Design de Jogos da Escola de Tecnologias.
 Seu público varia do 4º ano do Ensino Fundamental ao 3º ano do Ensino Médio (9 a 17 anos).
 
+[DIRETRIZ DE CONCISÃO OBRIGATÓRIA]:
+Responda sempre em NO MÁXIMO 2 a 3 parágrafos curtos. Use obrigatoriamente tópicos/bullet points (•). Seja direto, prático e motivador, sem blocos longos de texto teórico desnecessário.
+
 SUA MISSÃO & DUPLA FUNÇÃO PEDAGÓGICA:
 Você opera em dois modos fluidos, dependendo do pedido do aluno:
 
@@ -391,12 +394,141 @@ function renderSubselectors() {
     });
 }
 
+// 8. PERSISTÊNCIA DO CHAT NO LOCALSTORAGE POR PERSONA
+function getChatStorageKey(area, sub) {
+    const targetArea = area || appState.area;
+    const targetSub = sub || appState.subSeletor;
+    return `titan_chat_history_${targetArea}_${targetSub}`;
+}
+
+function saveChatToStorage() {
+    try {
+        const key = getChatStorageKey();
+        const chatHistoryEl = document.getElementById('chat-history');
+        if (!chatHistoryEl) return;
+
+        const uiMessages = [];
+        const bubbleNodes = chatHistoryEl.querySelectorAll('.chat-message');
+        bubbleNodes.forEach(node => {
+            if (node.id === 'loading-bubble') return;
+            const isUser = node.classList.contains('user');
+            const bubbleContent = node.querySelector('.message-bubble')?.innerHTML || '';
+            uiMessages.push({
+                role: isUser ? 'user' : 'model',
+                html: bubbleContent
+            });
+        });
+
+        const dataToSave = {
+            apiHistory: appState.conversationHistory,
+            uiMessages: uiMessages,
+            updatedAt: new Date().toISOString()
+        };
+
+        localStorage.setItem(key, JSON.stringify(dataToSave));
+    } catch (e) {
+        console.error('[Assistente IA] Erro ao salvar histórico no localStorage:', e);
+    }
+}
+
+function loadChatFromStorage(subId) {
+    try {
+        const key = getChatStorageKey(appState.area, subId);
+        const raw = localStorage.getItem(key);
+        if (!raw) return false;
+
+        const data = JSON.parse(raw);
+        if (!data || !data.uiMessages || data.uiMessages.length === 0) return false;
+
+        appState.conversationHistory = data.apiHistory || [];
+
+        const chatHistoryEl = document.getElementById('chat-history');
+        if (!chatHistoryEl) return false;
+
+        chatHistoryEl.innerHTML = '';
+
+        data.uiMessages.forEach(msg => {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `chat-message ${msg.role === 'user' ? 'user' : 'assistant'}`;
+            const avatar = msg.role === 'user' ? '🧑‍🎓' : '✨';
+            msgDiv.innerHTML = `
+                ${msg.role === 'user' ? '' : `<div class="message-avatar">${avatar}</div>`}
+                <div class="message-bubble">${msg.html}</div>
+                ${msg.role === 'user' ? `<div class="message-avatar">${avatar}</div>` : ''}
+            `;
+            chatHistoryEl.appendChild(msgDiv);
+        });
+
+        chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+        return true;
+    } catch (e) {
+        console.error('[Assistente IA] Erro ao carregar histórico do localStorage:', e);
+        return false;
+    }
+}
+
+function clearCurrentChatHistory() {
+    const key = getChatStorageKey();
+    try {
+        localStorage.removeItem(key);
+    } catch (e) {}
+
+    appState.conversationHistory = [];
+
+    const subObj = AREAS_CONFIG[appState.area].seletores.find(s => s.id === appState.subSeletor);
+    updateWelcomeCard(subObj);
+
+    showStatusToast('Conversa limpa com sucesso! ✓');
+}
+
+function showStatusToast(msg) {
+    let toast = document.getElementById('titan-status-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'titan-status-toast';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 5rem;
+            right: 2rem;
+            background: rgba(6, 182, 212, 0.95);
+            color: #ffffff;
+            padding: 0.65rem 1.25rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+            backdrop-filter: blur(8px);
+            z-index: 9999;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+        `;
+        document.body.appendChild(toast);
+    }
+
+    toast.textContent = msg;
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateY(0)';
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+    }, 2800);
+}
+
 // 8. SELECIONA UM SUB-SELETOR E ATUALIZA A VARIÁVEL DE MEMÓRIA
 function selectSubselector(subId) {
     appState.subSeletor = subId;
-    appState.conversationHistory = []; // Limpa o histórico de conversa ao trocar de tecnologia
 
     const isEnabled = ENABLED_SUBSELECTORS[subId] === true;
+
+    // Tenta restaurar histórico salvo no localStorage para esta persona
+    const hasLoadedHistory = isEnabled ? loadChatFromStorage(subId) : false;
+
+    if (!hasLoadedHistory) {
+        appState.conversationHistory = [];
+    }
 
     // Atualiza status do cabeçalho e estado do chat (habilitado/desabilitado)
     const statusText = document.getElementById('status-text');
@@ -473,8 +605,10 @@ function selectSubselector(subId) {
     const subName = subObj ? subObj.name : subId;
     document.getElementById('breadcrumb-sub').textContent = subName;
 
-    // Atualizar o cartão de boas-vindas do chat
-    updateWelcomeCard(subObj);
+    // Se NÃO havia histórico salvo no localStorage, renderiza o cartão de boas-vindas
+    if (!hasLoadedHistory) {
+        updateWelcomeCard(subObj);
+    }
 
     // Atualizar URL
     updateUrlParams();
@@ -506,6 +640,41 @@ function updateWelcomeCard(subObj) {
 
     const areaTitle = AREAS_CONFIG[appState.area].title;
 
+    let suggestionsHtml = '';
+    if (subObj.id === 'gamedesign') {
+        suggestionsHtml = `
+            <button class="suggestion-chip" onclick="fillPrompt('Como estruturar a ideia do meu jogo no Gerador de GDD?')">
+                💡 "Como estruturar a ideia do meu jogo no Gerador de GDD?"
+            </button>
+            <button class="suggestion-chip" onclick="fillPrompt('Como saber se meu jogo está muito difícil ou fácil?')">
+                ⚖️ "Como saber se meu jogo está muito difícil ou fácil?"
+            </button>
+            <button class="suggestion-chip" onclick="fillPrompt('Como evitar que o projeto fique grande demais para o prazo?')">
+                ⏳ "Como evitar que o projeto fique grande demais para o prazo?"
+            </button>
+            <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap; width: 100%;">
+                <a href="../criador-timelines/" target="_blank" class="tool-shortcut-btn" style="background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.4); color: #c084fc; padding: 0.45rem 0.85rem; border-radius: 8px; text-decoration: none; font-size: 0.8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s ease;">
+                    ⏳ Abrir Criador de Timelines ↗
+                </a>
+                <a href="../gerador-gdd/" target="_blank" class="tool-shortcut-btn" style="background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.4); color: #38bdf8; padding: 0.45rem 0.85rem; border-radius: 8px; text-decoration: none; font-size: 0.8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s ease;">
+                    📋 Abrir Gerador de GDD ↗
+                </a>
+            </div>
+        `;
+    } else {
+        suggestionsHtml = `
+            <button class="suggestion-chip" onclick="fillPrompt('${subObj.prompt}')">
+                💡 "${subObj.prompt}"
+            </button>
+            <button class="suggestion-chip" onclick="fillPrompt('Como depurar um erro comum em ${subObj.name}?')">
+                🛠️ "Como depurar erros comuns em ${subObj.name}?"
+            </button>
+            <button class="suggestion-chip" onclick="fillPrompt('Me dê um exemplo prático para iniciantes em ${subObj.name}.')">
+                🚀 "Exemplo prático inicial em ${subObj.name}"
+            </button>
+        `;
+    }
+
     chatHistory.innerHTML = `
         <div class="welcome-card" id="welcome-card">
             <div class="welcome-title-row">
@@ -517,19 +686,11 @@ function updateWelcomeCard(subObj) {
             </div>
 
             <div style="font-size: 0.8rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px;">
-                Sugestões de Perguntas Rápidas:
+                Sugestões de Perguntas Rápidas & Ferramentas:
             </div>
 
             <div class="suggestions-grid" id="suggestions-grid">
-                <button class="suggestion-chip" onclick="fillPrompt('${subObj.prompt}')">
-                    💡 "${subObj.prompt}"
-                </button>
-                <button class="suggestion-chip" onclick="fillPrompt('Como depurar um erro comum em ${subObj.name}?')">
-                    🛠️ "Como depurar erros comuns em ${subObj.name}?"
-                </button>
-                <button class="suggestion-chip" onclick="fillPrompt('Me dê um exemplo prático para iniciantes em ${subObj.name}.')">
-                    🚀 "Exemplo prático inicial em ${subObj.name}"
-                </button>
+                ${suggestionsHtml}
             </div>
         </div>
     `;
@@ -969,14 +1130,21 @@ function formatC3Events(events, depth = 0) {
     return text;
 }
 
-// MANIPULADOR DE ARQUIVOS ANEXADOS DE GDD (.MD, .TXT, .JSON) E CONSTRUCT 3 (.C3P)
+// MANIPULADOR DE ARQUIVOS ANEXADOS DE GDD (.MD, .TXT, .JSON) E CONSTRUCT 3 (.C3P / .ZIP)
 let currentAttachedFile = null;
 
 function handleFileSelected(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    const isC3P = file.name.toLowerCase().endsWith(".c3p");
+    const lowerName = file.name.toLowerCase();
+    const isC3P = lowerName.endsWith(".c3p") || lowerName.endsWith(".zip");
+
+    // Troca fluida de persona: se for projeto Construct 3 e o aluno estiver em outra persona de Games, altera automaticamente
+    if (isC3P && appState.area === 'games' && appState.subSeletor !== 'construct') {
+        selectSubselector('construct');
+        showStatusToast('Projeto Construct 3 (.c3p) detectado! Persona alternada para Construct 3. 🏗️');
+    }
 
     if (isC3P) {
         const reader = new FileReader();
@@ -1091,6 +1259,9 @@ async function sendMessage() {
     removeAttachedFile();
     chatHistory.scrollTop = chatHistory.scrollHeight;
 
+    // Salva o envio do usuário no localStorage
+    saveChatToStorage();
+
     // SE HOUVER API KEY OU PROXY DA ESCOLA CONFIGURADO, EXECUTA A CHAMADA REAL AO GEMINI!
     const effectiveKey = getEffectiveApiKey();
     if (effectiveKey || DEFAULT_TEACHER_PROXY_URL) {
@@ -1117,6 +1288,7 @@ async function sendMessage() {
                 <div class="message-bubble">${formatMarkdownText(aiResponseText)}</div>
             `;
             chatHistory.appendChild(aiMsg);
+            saveChatToStorage();
         } catch (err) {
             loadingMsg.remove();
             const errMsg = document.createElement('div');
@@ -1129,6 +1301,7 @@ async function sendMessage() {
                 </div>
             `;
             chatHistory.appendChild(errMsg);
+            saveChatToStorage();
         }
         chatHistory.scrollTop = chatHistory.scrollHeight;
         return;
@@ -1150,6 +1323,7 @@ async function sendMessage() {
             </div>
         `;
         chatHistory.appendChild(aiMsg);
+        saveChatToStorage();
         chatHistory.scrollTop = chatHistory.scrollHeight;
     }, 400);
 }

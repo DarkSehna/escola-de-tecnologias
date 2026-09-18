@@ -452,6 +452,34 @@ body {
     color: var(--color-text-dim);
 }
 
+.header-chat-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.btn-clear-chat {
+    background: rgba(239, 68, 68, 0.12);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: var(--transition-smooth);
+}
+
+.btn-clear-chat:hover {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: var(--color-red);
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+}
+
 .status-indicator {
     display: flex;
     align-items: center;
