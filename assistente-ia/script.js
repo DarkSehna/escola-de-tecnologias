@@ -252,7 +252,8 @@ const appState = {
     currentMemoryPath: 'memoria/games/gamemaker/',
     currentPersona: PERSONAS_CONFIG['gamemaker'],
     memoriaConfig: MEMORIA_MAP,
-    conversationHistory: []
+    conversationHistory: [],
+    lastFailedRequest: null
 };
 
 // MAPA DE DISPONIBILIDADE DOS SUB-SELETORES / PERSONAS DA IA
@@ -861,7 +862,7 @@ async function loadActiveMemoryContext() {
 }
 
 // CHAMAR A API REST DO GOOGLE GEMINI (DIRETO OU VIA PROXY DA ESCOLA)
-async function callGeminiApi(userPrompt) {
+async function callGeminiApi(userPrompt, retryCount = 0) {
     const userKey = getSavedApiKey();
     const effectiveKey = getEffectiveApiKey();
     const proxyUrl = DEFAULT_TEACHER_PROXY_URL;
@@ -894,11 +895,13 @@ async function callGeminiApi(userPrompt) {
 
     const fullPersonaInstruction = `${basePersonaInstruction}\n${activeTopicInfo}\n\n[BASE DE CONHECIMENTO E MANUAIS DO PROFESSOR DISPONÍVEIS DA AULA]:\n${memoryContext || "Nenhum arquivo adicional nesta pasta."}\n\n${GLOBAL_TEACHING_DIRECTIVES}`;
 
-    // 3. Registra o prompt do usuário (a memória fica fixa no System Instruction para pacotes super leves)
-    appState.conversationHistory.push({
-        role: "user",
-        parts: [{ text: userPrompt }]
-    });
+    // 3. Registra o prompt do usuário apenas se for a 1ª tentativa da chamada
+    if (retryCount === 0) {
+        appState.conversationHistory.push({
+            role: "user",
+            parts: [{ text: userPrompt }]
+        });
+    }
 
     // 4. Janela Deslizante (Sliding Window): Retém apenas as últimas 4 mensagens recentes
     const recentContents = appState.conversationHistory.slice(-4);
@@ -944,7 +947,27 @@ async function callGeminiApi(userPrompt) {
         appState.conversationHistory.pop(); // Remove o prompt falho do histórico em erro da API
         const errMsg = data.error?.message || `Erro na API HTTP ${response.status}`;
         
-        // Se a chamada for direta com chave do usuário e o modelo preferredModel falhar, tenta o fallbackModel
+        // Auto-retry transparente em erros de alta demanda / rate limit (até 2 re-tentativas)
+        const isHighDemand = errMsg.toLowerCase().includes("high demand") ||
+                             errMsg.toLowerCase().includes("resource_exhausted") ||
+                             errMsg.includes("429") ||
+                             errMsg.includes("503") ||
+                             errMsg.toLowerCase().includes("temporarily");
+
+        if (isHighDemand && retryCount < 2) {
+            const delaySec = (retryCount + 1) * 2.5;
+            console.warn(`[Assistente IA] Alta demanda detectada (${errMsg}). Re-tentando em ${delaySec}s (tentativa ${retryCount + 1}/2)...`);
+            
+            const loadingStatusEl = document.getElementById('loading-status-text');
+            if (loadingStatusEl) {
+                loadingStatusEl.textContent = `Alta demanda na IA. Tentando novamente em ${delaySec.toFixed(0)}s (Tentativa ${retryCount + 1}/2)...`;
+            }
+            
+            await new Promise(r => setTimeout(r, delaySec * 1000));
+            return await callGeminiApi(userPrompt, retryCount + 1);
+        }
+
+        // Se a chamada for direta com chave do usuário e o modelo preferredModel falhar por 404, tenta o fallbackModel
         if (userKey && (data.error?.code === 404 || response.status === 404) && endpoint.includes(preferredModel)) {
             console.warn(`[Assistente IA] Modelo ${preferredModel} indisponível para esta chave. Tentando ${fallbackModel}...`);
             const fallbackEndpoint = `https://generativelanguage.googleapis.com/v1/models/${fallbackModel}:generateContent?key=${encodeURIComponent(userKey)}`;
@@ -1259,19 +1282,29 @@ async function sendMessage() {
     removeAttachedFile();
     chatHistory.scrollTop = chatHistory.scrollHeight;
 
+    // Salva a requisição atual no estado para permitir retry rápido em caso de erro
+    appState.lastFailedRequest = {
+        promptForApi: promptForApi,
+        userBubbleHtml: userBubbleHtml
+    };
+
     // Salva o envio do usuário no localStorage
     saveChatToStorage();
 
     // SE HOUVER API KEY OU PROXY DA ESCOLA CONFIGURADO, EXECUTA A CHAMADA REAL AO GEMINI!
     const effectiveKey = getEffectiveApiKey();
     if (effectiveKey || DEFAULT_TEACHER_PROXY_URL) {
+        // Remove erro anterior do DOM se houver
+        const oldErrCard = document.getElementById('error-bubble-card');
+        if (oldErrCard) oldErrCard.remove();
+
         const loadingMsg = document.createElement('div');
         loadingMsg.className = 'chat-message assistant';
         loadingMsg.id = 'loading-bubble';
         loadingMsg.innerHTML = `
             <div class="message-avatar">✨</div>
             <div class="message-bubble" style="opacity: 0.85">
-                <em>Consultando manuais e avaliando com a persona <strong>${appState.currentPersona?.profileName || ''}</strong>...</em>
+                <em id="loading-status-text">Consultando manuais e avaliando com a persona <strong>${appState.currentPersona?.profileName || ''}</strong>...</em>
             </div>
         `;
         chatHistory.appendChild(loadingMsg);
@@ -1288,16 +1321,21 @@ async function sendMessage() {
                 <div class="message-bubble">${formatMarkdownText(aiResponseText)}</div>
             `;
             chatHistory.appendChild(aiMsg);
+            appState.lastFailedRequest = null; // Limpa em caso de sucesso
             saveChatToStorage();
         } catch (err) {
             loadingMsg.remove();
             const errMsg = document.createElement('div');
             errMsg.className = 'chat-message assistant';
+            errMsg.id = 'error-bubble-card';
             errMsg.innerHTML = `
                 <div class="message-avatar" style="background: var(--color-red)">⚠️</div>
                 <div class="message-bubble" style="border-color: rgba(239, 68, 68, 0.4)">
                     <strong>Erro na API do Gemini:</strong> ${escapeHtml(err.message)}<br><br>
-                    <small>Clique no botão <strong>🔑 API Key</strong> no topo para conferir sua chave.</small>
+                    <small>Clique no botão <strong>🔑 API Key</strong> no topo para conferir sua chave ou tente novamente abaixo.</small><br>
+                    <button class="btn-retry-chat" onclick="retryLastFailedMessage()" title="Re-enviar a pergunta para a IA">
+                        <span class="spin-icon">🔄</span> Tentar Novamente
+                    </button>
                 </div>
             `;
             chatHistory.appendChild(errMsg);
@@ -1334,6 +1372,69 @@ function handleKeyDown(event) {
         event.preventDefault();
         sendMessage();
     }
+}
+
+// RE-EXECUTAR A ÚLTIMA MENSAGEM QUE FALHOU AO APERTAR 'TENTAR NOVAMENTE'
+async function retryLastFailedMessage() {
+    if (!appState.lastFailedRequest || !appState.lastFailedRequest.promptForApi) {
+        showStatusToast('Nenhuma requisição pendente para tentar novamente.');
+        return;
+    }
+
+    const promptForApi = appState.lastFailedRequest.promptForApi;
+    const chatHistory = document.getElementById('chat-history');
+    if (!chatHistory) return;
+
+    // Remove card de erro anterior se presente no DOM
+    const oldErrCard = document.getElementById('error-bubble-card');
+    if (oldErrCard) oldErrCard.remove();
+
+    // Adiciona o indicador de carregamento
+    const loadingMsg = document.createElement('div');
+    loadingMsg.className = 'chat-message assistant';
+    loadingMsg.id = 'loading-bubble';
+    loadingMsg.innerHTML = `
+        <div class="message-avatar">✨</div>
+        <div class="message-bubble" style="opacity: 0.85">
+            <em id="loading-status-text">Re-enviando pergunta para a persona <strong>${appState.currentPersona?.profileName || ''}</strong>...</em>
+        </div>
+    `;
+    chatHistory.appendChild(loadingMsg);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+
+    try {
+        const aiResponseText = await callGeminiApi(promptForApi);
+        loadingMsg.remove();
+
+        const aiMsg = document.createElement('div');
+        aiMsg.className = 'chat-message assistant';
+        aiMsg.innerHTML = `
+            <div class="message-avatar">✨</div>
+            <div class="message-bubble">${formatMarkdownText(aiResponseText)}</div>
+        `;
+        chatHistory.appendChild(aiMsg);
+        appState.lastFailedRequest = null;
+        saveChatToStorage();
+        showStatusToast('Resposta gerada com sucesso! ✓');
+    } catch (err) {
+        loadingMsg.remove();
+        const errMsg = document.createElement('div');
+        errMsg.className = 'chat-message assistant';
+        errMsg.id = 'error-bubble-card';
+        errMsg.innerHTML = `
+            <div class="message-avatar" style="background: var(--color-red)">⚠️</div>
+            <div class="message-bubble" style="border-color: rgba(239, 68, 68, 0.4)">
+                <strong>Erro na API do Gemini:</strong> ${escapeHtml(err.message)}<br><br>
+                <small>Clique no botão <strong>🔑 API Key</strong> no topo para conferir sua chave ou tente novamente abaixo.</small><br>
+                <button class="btn-retry-chat" onclick="retryLastFailedMessage()" title="Re-enviar a pergunta para a IA">
+                    <span class="spin-icon">🔄</span> Tentar Novamente
+                </button>
+            </div>
+        `;
+        chatHistory.appendChild(errMsg);
+        saveChatToStorage();
+    }
+    chatHistory.scrollTop = chatHistory.scrollHeight;
 }
 
 // AJUSTE AUTOMÁTICO DE ALTURA DO TEXTAREA

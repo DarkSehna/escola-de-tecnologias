@@ -1069,3 +1069,43 @@ body {
     line-height: 1.5;
     color: #f8fafc;
 }
+
+/* BOTÃO DE RETRY (TENTAR NOVAMENTE) NOS CARDS DE ERRO */
+.btn-retry-chat {
+    margin-top: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(6, 182, 212, 0.25));
+    border: 1px solid rgba(168, 85, 247, 0.5);
+    color: #ffffff;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 0.82rem;
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.25 ease;
+    box-shadow: 0 0 12px rgba(168, 85, 247, 0.2);
+}
+
+.btn-retry-chat:hover {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.45), rgba(6, 182, 212, 0.45));
+    border-color: var(--color-cyan);
+    box-shadow: 0 0 18px rgba(6, 182, 212, 0.4);
+    transform: translateY(-2px);
+}
+
+.btn-retry-chat:active {
+    transform: translateY(0);
+}
+
+.btn-retry-chat .spin-icon {
+    display: inline-block;
+    transition: transform 0.4s ease;
+}
+
+.btn-retry-chat:hover .spin-icon {
+    transform: rotate(180deg);
+}
+
