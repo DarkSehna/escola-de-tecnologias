@@ -861,6 +861,50 @@ async function loadActiveMemoryContext() {
     return combinedText;
 }
 
+// PREPARAR E SANITIZAR CONTEÚDOS DE HISTÓRICO PARA A API DO GEMINI
+// Garante estritamente a alternância entre 'user' e 'model' e que a ÚLTIMA mensagem seja obrigatoriamente do tipo 'user'
+function prepareGeminiContents(userPrompt) {
+    let cleanTurns = [];
+    
+    if (appState.conversationHistory && Array.isArray(appState.conversationHistory)) {
+        appState.conversationHistory.forEach(msg => {
+            if (!msg || !msg.role || !msg.parts || !msg.parts[0] || !msg.parts[0].text) return;
+            const role = msg.role === 'assistant' ? 'model' : msg.role;
+            if (cleanTurns.length > 0 && cleanTurns[cleanTurns.length - 1].role === role) {
+                cleanTurns[cleanTurns.length - 1].parts[0].text += "\n\n" + msg.parts[0].text;
+            } else {
+                cleanTurns.push({ role: role, parts: [{ text: msg.parts[0].text }] });
+            }
+        });
+    }
+
+    // Aplica janela deslizante retendo até 6 mensagens do histórico
+    let windowed = cleanTurns.slice(-6);
+
+    // Se o último item da janela for do tipo 'user', remove para evitar mensagens 'user' consecutivas com a nova pergunta
+    if (windowed.length > 0 && windowed[windowed.length - 1].role === 'user') {
+        windowed.pop();
+    }
+
+    // Re-garante alternância de papéis
+    let finalContents = [];
+    for (const item of windowed) {
+        if (finalContents.length > 0 && finalContents[finalContents.length - 1].role === item.role) {
+            finalContents[finalContents.length - 1].parts[0].text += "\n\n" + item.parts[0].text;
+        } else {
+            finalContents.push({ role: item.role, parts: [{ text: item.parts[0].text }] });
+        }
+    }
+
+    // Adiciona OBRIGATORIAMENTE a pergunta atual do aluno como a última mensagem com role: 'user'
+    finalContents.push({
+        role: 'user',
+        parts: [{ text: userPrompt }]
+    });
+
+    return finalContents;
+}
+
 // CHAMAR A API REST DO GOOGLE GEMINI (DIRETO OU VIA PROXY DA ESCOLA)
 async function callGeminiApi(userPrompt, retryCount = 0) {
     const userKey = getSavedApiKey();
@@ -895,30 +939,22 @@ async function callGeminiApi(userPrompt, retryCount = 0) {
 
     const fullPersonaInstruction = `${basePersonaInstruction}\n${activeTopicInfo}\n\n[BASE DE CONHECIMENTO E MANUAIS DO PROFESSOR DISPONÍVEIS DA AULA]:\n${memoryContext || "Nenhum arquivo adicional nesta pasta."}\n\n${GLOBAL_TEACHING_DIRECTIVES}`;
 
-    // 3. Registra o prompt do usuário apenas se for a 1ª tentativa da chamada
-    if (retryCount === 0) {
-        appState.conversationHistory.push({
-            role: "user",
-            parts: [{ text: userPrompt }]
-        });
-    }
-
-    // 4. Janela Deslizante (Sliding Window): Retém apenas as últimas 4 mensagens recentes
-    const recentContents = appState.conversationHistory.slice(-4);
+    // 3. Prepara os conteúdos sanitizados garantindo que a última turn seja estritamente do tipo 'user'
+    const payloadContents = prepareGeminiContents(userPrompt);
 
     const payload = {
         model: preferredModel,
         system_instruction: {
             parts: [{ text: fullPersonaInstruction }]
         },
-        contents: recentContents,
+        contents: payloadContents,
         generationConfig: {
             temperature: 0.7,
             maxOutputTokens: 4096
         }
     };
 
-    // 5. Configuração de Timeout estendido de 60 segundos com AbortController
+    // 4. Configuração de Timeout estendido de 60 segundos com AbortController
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
 
@@ -933,7 +969,6 @@ async function callGeminiApi(userPrompt, retryCount = 0) {
         clearTimeout(timeoutId);
     } catch (fetchErr) {
         clearTimeout(timeoutId);
-        appState.conversationHistory.pop(); // Remove o prompt falho em caso de erro de rede
         if (fetchErr.name === 'AbortError') {
             throw new Error("A requisição demorou mais de 60 segundos para responder (Timeout). Tente refazer a pergunta.");
         }
@@ -944,7 +979,6 @@ async function callGeminiApi(userPrompt, retryCount = 0) {
 
     // Se o HTTP retornar erro ou se a resposta contiver um objeto 'error' do Gemini/Worker
     if (!response.ok || data.error) {
-        appState.conversationHistory.pop(); // Remove o prompt falho do histórico em erro da API
         const errMsg = data.error?.message || `Erro na API HTTP ${response.status}`;
         
         // Auto-retry transparente em erros de alta demanda / rate limit (até 2 re-tentativas)
@@ -988,10 +1022,8 @@ async function callGeminiApi(userPrompt, retryCount = 0) {
                 if (!fbData.error) {
                     const fbText = fbData.candidates?.[0]?.content?.parts?.[0]?.text || fbData.text || fbData.response;
                     if (fbText) {
-                        appState.conversationHistory.push({
-                            role: "model",
-                            parts: [{ text: fbText }]
-                        });
+                        appState.conversationHistory.push({ role: "user", parts: [{ text: userPrompt }] });
+                        appState.conversationHistory.push({ role: "model", parts: [{ text: fbText }] });
                         return fbText;
                     }
                 }
@@ -1004,15 +1036,12 @@ async function callGeminiApi(userPrompt, retryCount = 0) {
     const textResult = data.candidates?.[0]?.content?.parts?.[0]?.text || data.text || data.response;
 
     if (!textResult) {
-        appState.conversationHistory.pop();
         throw new Error("A API do Gemini não retornou resposta válida.");
     }
 
-    // Registra a resposta da IA no histórico multiturn da conversa
-    appState.conversationHistory.push({
-        role: "model",
-        parts: [{ text: textResult }]
-    });
+    // Registra a conversa no histórico apenas em confirmação de sucesso
+    appState.conversationHistory.push({ role: "user", parts: [{ text: userPrompt }] });
+    appState.conversationHistory.push({ role: "model", parts: [{ text: textResult }] });
 
     return textResult;
 }
