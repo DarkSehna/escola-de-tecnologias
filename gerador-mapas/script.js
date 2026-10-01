@@ -107,6 +107,130 @@ const inputCols = document.getElementById("input-cols");
 const inputRows = document.getElementById("input-rows");
 const btnResizeCustom = document.getElementById("btn-resize-custom");
 
+// Controles de Zoom
+const btnZoomIn = document.getElementById("btn-zoom-in");
+const btnZoomOut = document.getElementById("btn-zoom-out");
+const selectZoomLevel = document.getElementById("select-zoom-level");
+const btnZoomFit = document.getElementById("btn-zoom-fit");
+
+// Checklist de Jogo
+const statusChkPlayer = document.getElementById("status-chk-player");
+const statusChkGoal = document.getElementById("status-chk-goal");
+const countChkCoin = document.getElementById("count-chk-coin");
+const countChkEnemy = document.getElementById("count-chk-enemy");
+
+// --- SISTEMA DE ZOOM DINÂMICO ---
+const ZOOM_PRESETS = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5];
+let currentZoom = 1.0;
+
+function setZoom(newZoom, isCustom = false) {
+    currentZoom = Math.max(0.5, Math.min(2.5, Math.round(newZoom * 100) / 100));
+
+    // Calcula tamanho virtual exibido do tile em pixels
+    const displaySize = Math.round(TILE_SIZE * currentZoom);
+    paintGrid.style.setProperty("--tile-display-size", `${displaySize}px`);
+
+    // Atualiza template de colunas e linhas
+    paintGrid.style.gridTemplateColumns = `repeat(${gridCols}, var(--tile-display-size, 32px))`;
+    paintGrid.style.gridTemplateRows = `repeat(${gridRows}, var(--tile-display-size, 32px))`;
+
+    // Atualiza o select de zoom
+    if (selectZoomLevel) {
+        let matchingOption = Array.from(selectZoomLevel.options).find(opt => Math.abs(parseFloat(opt.value) - currentZoom) < 0.01);
+        if (!matchingOption) {
+            // Remove opções customizadas anteriores
+            const oldCustom = selectZoomLevel.querySelector('option[data-custom="true"]');
+            if (oldCustom) oldCustom.remove();
+
+            const customOpt = document.createElement("option");
+            customOpt.value = currentZoom;
+            customOpt.textContent = `${Math.round(currentZoom * 100)}% (Ajustado)`;
+            customOpt.dataset.custom = "true";
+            selectZoomLevel.appendChild(customOpt);
+            selectZoomLevel.value = currentZoom;
+        } else {
+            selectZoomLevel.value = matchingOption.value;
+        }
+    }
+
+    localStorage.setItem("titanTech_map_zoom", currentZoom);
+}
+
+function zoomIn() {
+    audio.playClick();
+    const nextZoom = ZOOM_PRESETS.find(z => z > currentZoom + 0.05) || 2.5;
+    setZoom(nextZoom);
+    updateStatus(`[ ZOOM ] Zoom aumentado para ${Math.round(currentZoom * 100)}%`, "var(--color-neon-cyan)");
+}
+
+function zoomOut() {
+    audio.playClick();
+    const reversed = [...ZOOM_PRESETS].reverse();
+    const prevZoom = reversed.find(z => z < currentZoom - 0.05) || 0.5;
+    setZoom(prevZoom);
+    updateStatus(`[ ZOOM ] Zoom reduzido para ${Math.round(currentZoom * 100)}%`, "var(--color-neon-cyan)");
+}
+
+function fitToScreen() {
+    const scrollContainer = document.querySelector(".viewport-scroll-container");
+    if (!scrollContainer) return;
+
+    audio.playClick();
+
+    // Dimensões úteis do container visível com margem confortável
+    const availableW = scrollContainer.clientWidth - 60;
+    const availableH = scrollContainer.clientHeight - 60;
+
+    if (availableW <= 0 || availableH <= 0) return;
+
+    const mapBaseW = gridCols * TILE_SIZE;
+    const mapBaseH = gridRows * TILE_SIZE;
+
+    const zoomW = availableW / mapBaseW;
+    const zoomH = availableH / mapBaseH;
+
+    let targetZoom = Math.min(zoomW, zoomH);
+    targetZoom = Math.max(0.5, Math.min(2.5, targetZoom));
+    targetZoom = Math.round(targetZoom * 100) / 100;
+
+    setZoom(targetZoom, true);
+    showToast(`Zoom ajustado: ${Math.round(targetZoom * 100)}%`);
+    updateStatus(`[ ZOOM ] Grade ajustada à tela (${Math.round(targetZoom * 100)}%)`, "var(--color-neon-green)");
+}
+
+// --- CHECKLIST DO JOGO (GAME DESIGN VALIDATOR) ---
+function updateLevelChecklist() {
+    let hasPlayer = false;
+    let hasGoal = false;
+    let coinCount = 0;
+    let enemyCount = 0;
+
+    for (let r = 0; r < gridRows; r++) {
+        for (let c = 0; c < gridCols; c++) {
+            const tile = gridMatrix[r][c];
+            if (tile === "player") hasPlayer = true;
+            else if (tile === "goal") hasGoal = true;
+            else if (tile === "coin") coinCount++;
+            else if (tile === "enemy") enemyCount++;
+        }
+    }
+
+    if (statusChkPlayer) {
+        statusChkPlayer.textContent = hasPlayer ? "Definido" : "Faltando";
+        statusChkPlayer.className = "chk-status " + (hasPlayer ? "ok" : "missing");
+    }
+    if (statusChkGoal) {
+        statusChkGoal.textContent = hasGoal ? "Definido" : "Faltando";
+        statusChkGoal.className = "chk-status " + (hasGoal ? "ok" : "missing");
+    }
+    if (countChkCoin) {
+        countChkCoin.textContent = coinCount;
+    }
+    if (countChkEnemy) {
+        countChkEnemy.textContent = enemyCount;
+    }
+}
+
 // --- INICIALIZAÇÃO ---
 document.addEventListener("DOMContentLoaded", () => {
     // 1. Carrega tamanho padrão (32x12)
@@ -122,7 +246,41 @@ document.addEventListener("DOMContentLoaded", () => {
     // 4. Ouvinte de Redimensionamento Customizado
     btnResizeCustom.addEventListener("click", handleCustomResize);
 
-    // 5. Ações Globais
+    // 5. Controles de Zoom
+    if (btnZoomIn) btnZoomIn.addEventListener("click", zoomIn);
+    if (btnZoomOut) btnZoomOut.addEventListener("click", zoomOut);
+    if (btnZoomFit) btnZoomFit.addEventListener("click", fitToScreen);
+    if (selectZoomLevel) {
+        selectZoomLevel.addEventListener("change", (e) => {
+            audio.playClick();
+            setZoom(parseFloat(e.target.value));
+        });
+    }
+
+    // Zoom via Ctrl + Mouse Wheel
+    const scrollContainer = document.querySelector(".viewport-scroll-container");
+    if (scrollContainer) {
+        scrollContainer.addEventListener("wheel", (e) => {
+            if (e.ctrlKey) {
+                e.preventDefault();
+                if (e.deltaY < 0) {
+                    zoomIn();
+                } else {
+                    zoomOut();
+                }
+            }
+        }, { passive: false });
+    }
+
+    // Restaura zoom salvo ou auto-ajusta
+    const savedZoom = localStorage.getItem("titanTech_map_zoom");
+    if (savedZoom) {
+        setZoom(parseFloat(savedZoom));
+    } else {
+        setTimeout(() => fitToScreen(), 150);
+    }
+
+    // 6. Ações Globais
     btnClearGrid.addEventListener("click", clearGridConfirm);
     btnSaveMap.addEventListener("click", downloadMapJSON);
     btnLoadMap.addEventListener("click", () => {
@@ -132,10 +290,10 @@ document.addEventListener("DOMContentLoaded", () => {
     jsonUploader.addEventListener("change", loadMapJSON);
     btnExportPng.addEventListener("click", exportMapPNG);
 
-    // 6. Monitoramento de arraste do mouse para desenho rápido
+    // 7. Monitoramento de arraste do mouse para desenho rápido
     window.addEventListener("mouseup", () => { isDrawing = false; });
 
-    // 7. Controle de Visibilidade da Grade
+    // 8. Controle de Visibilidade da Grade
     const selectGridVis = document.getElementById("select-grid-visibility");
     if (selectGridVis) {
         const savedGridMode = localStorage.getItem("titanTech_map_grid_mode") || "high";
@@ -198,9 +356,11 @@ function resizeMatrix(newCols, newRows) {
 // --- DESENHAR E RENDERIZAR A INTERFACE DO GRID ---
 
 function renderGridUI() {
-    // Ajusta a largura e o template de grid CSS dinamicamente
-    paintGrid.style.gridTemplateColumns = `repeat(${gridCols}, 32px)`;
-    paintGrid.style.gridTemplateRows = `repeat(${gridRows}, 32px)`;
+    // Ajusta a largura e o template de grid CSS dinamicamente com suporte a zoom
+    const displaySize = Math.round(TILE_SIZE * currentZoom);
+    paintGrid.style.setProperty("--tile-display-size", `${displaySize}px`);
+    paintGrid.style.gridTemplateColumns = `repeat(${gridCols}, var(--tile-display-size, 32px))`;
+    paintGrid.style.gridTemplateRows = `repeat(${gridRows}, var(--tile-display-size, 32px))`;
     paintGrid.innerHTML = "";
 
     // Reconstrói as células
@@ -243,6 +403,9 @@ function renderGridUI() {
     dimensionsIndicator.textContent = `${gridCols} x ${gridRows} (${pxWidth} x ${pxHeight} px)`;
     inputCols.value = gridCols;
     inputRows.value = gridRows;
+
+    // Atualiza checklist do jogo
+    updateLevelChecklist();
 }
 
 // Retorna os emojis ou caracteres correspondentes a cada ferramenta para exibição na célula
@@ -286,6 +449,9 @@ function paintCell(cellElement, col, row) {
 
     // Feedback de som
     audio.playDraw();
+    
+    // Atualiza o checklist do jogo
+    updateLevelChecklist();
     
     updateStatus(`[ DESENHAR ] Pintou célula (${col + 1}, ${row + 1}) como: ${activeTool.toUpperCase()}`, "var(--color-neon-cyan)");
 }

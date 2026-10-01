@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=1.3">
+    <link rel="stylesheet" href="style.css?v=2.7">
 </head>
 <body>
 
@@ -111,8 +111,17 @@
                         <input type="number" id="input-maxFallSpeed" class="physics-input" step="1">
                     </div>
 
-                    <!-- 7. Pulo duplo (Checkbox para Construct 3) -->
-                    <div class="input-row" id="row-doubleJump">
+                    <!-- 7. Número de Pulos (GameMaker e Scratch) -->
+                    <div class="input-row" id="row-maxJumps">
+                        <div class="row-header">
+                            <span class="input-name" id="lbl-input-maxJumps">Número de Pulos</span>
+                            <button class="default-btn" onclick="resetToDefault('maxJumps')">Padrão: 1</button>
+                        </div>
+                        <input type="number" id="input-maxJumps" class="physics-input" min="1" max="10" step="1" value="1">
+                    </div>
+
+                    <!-- 7.1 Pulo duplo (Checkbox para Construct 3) -->
+                    <div class="input-row" id="row-doubleJump" style="display: none;">
                         <div class="row-header">
                             <span class="input-name" id="lbl-input-doubleJump">Pulo duplo</span>
                             <button class="default-btn" onclick="resetToDefault('doubleJump')">Padrão: Não</button>
@@ -147,12 +156,65 @@
             <section class="simulation-column">
                 <div class="canvas-wrapper panel-glass">
                     <div class="canvas-header">
-                        <span class="panel-tag">Área de Playground</span>
-                        <span id="resolution-indicator" class="panel-decor">Grade: 20x15</span>
+                        <div class="canvas-header-title">
+                            <span class="panel-tag">Área de Playground</span>
+                            <span id="resolution-indicator" class="panel-decor">Grade: 40x15 (1280x480 - Widescreen)</span>
+                        </div>
+                        <div class="canvas-controls-group">
+                            <!-- Controle de Zoom do Canvas -->
+                            <div class="header-control-item">
+                                <label for="select-canvas-zoom" class="vis-label">🔍 Zoom:</label>
+                                <select id="select-canvas-zoom" class="grid-vis-select" title="Escala do Canvas de Simulação">
+                                    <option value="fit" selected>⛶ Ajustar à Tela (Panorâmico)</option>
+                                    <option value="100">100% (1280x480)</option>
+                                    <option value="75">75% (960x360)</option>
+                                    <option value="125">125% (1600x600)</option>
+                                </select>
+                            </div>
+                            <!-- Visibilidade da Grade -->
+                            <div class="header-control-item">
+                                <label for="select-grid-visibility" class="vis-label">📐 Grade:</label>
+                                <select id="select-grid-visibility" class="grid-vis-select" title="Seleção de Nitidez e Linhas Guia da Grade">
+                                    <option value="high" selected>📐 Nítida</option>
+                                    <option value="neon">⚡ Neon Cyan</option>
+                                    <option value="grid4x4">🔲 Guia 4x4</option>
+                                    <option value="subtle">👁️ Suave</option>
+                                    <option value="off">🚫 Oculta</option>
+                                </select>
+                            </div>
+                            <!-- Botão Rápido de Integração -->
+                            <div class="header-control-item">
+                                <button type="button" id="btn-header-code" class="grid-vis-select btn-code-trigger" title="Ver variáveis para seu motor de jogo">💻 Integração</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- HUD de Comparação de Métricas de Pulo -->
+                    <div class="jump-metrics-hud">
+                        <div class="hud-pill pill-current" title="Métricas do salto atual ou em andamento">
+                            <span class="hud-label">🚀 Salto Atual:</span>
+                            <span class="hud-val" id="hud-current-metrics">Alt: <strong>--</strong> | Dist: <strong>--</strong></span>
+                        </div>
+                        <div class="hud-pill pill-previous" id="hud-previous-pill" title="Salto anterior registrado para comparação">
+                            <span class="hud-label" id="hud-ref-label">⏱️ Salto Anterior:</span>
+                            <span class="hud-val" id="hud-previous-metrics">Alt: <strong>--</strong> | Dist: <strong>--</strong></span>
+                        </div>
+                        <div class="hud-pill pill-delta" id="hud-delta-pill" title="Diferença em blocos e porcentagem entre o salto atual e o anterior/referência" style="display: none;">
+                            <span class="hud-label">📊 Comparação:</span>
+                            <span class="hud-val" id="hud-delta-metrics">Δ Alt: <strong>--</strong> | Δ Dist: <strong>--</strong></span>
+                        </div>
+                        <div class="hud-actions">
+                            <button type="button" id="btn-pin-reference" class="hud-btn" title="Fixar este salto como referência permanente para testes">
+                                📌 Fixar Referência
+                            </button>
+                            <button type="button" id="btn-clear-metrics" class="hud-btn hud-btn-subtle" title="Limpar histórico de saltos">
+                                🗑️ Limpar
+                            </button>
+                        </div>
                     </div>
                     <div class="canvas-container">
-                        <!-- Canvas principal da simulação -->
-                        <canvas id="sim-canvas" width="640" height="480"></canvas>
+                        <!-- Canvas principal da simulação (40x15 blocos widescreen) -->
+                        <canvas id="sim-canvas" width="1280" height="480"></canvas>
                     </div>
                 </div>
 
@@ -168,35 +230,44 @@
                     <div class="toolbar-actions">
                         <button id="btn-clear-canvas" class="action-btn danger-btn">🧹 Limpar Desenhos</button>
                         <button id="btn-reset-player" class="action-btn primary-btn">🔄 Reiniciar Bloco</button>
+                        <button id="btn-open-code-modal" class="action-btn code-action-btn">💻 Código de Integração</button>
                     </div>
                 </div>
-            </section>
-
-            <!-- Coluna 3: Código de Integração -->
-            <section class="code-panel panel-glass">
-                <div class="panel-header">
-                    <h2>💻 INTEGRAÇÃO</h2>
-                </div>
-
-                <p class="panel-description">
-                    Copie as variáveis abaixo e cole no seu motor de jogo para obter exatamente o mesmo comportamento físico simulado.
-                </p>
-
-                <div class="code-container">
-                    <span class="code-header">CÓDIGO DE INTEGRAÇÃO</span>
-                    <pre class="code-block"><code id="code-template-display">grv = 0.30;
-jspd = -7.0;
-// ...</code></pre>
-                </div>
-
-                <button id="btn-copy-code" class="copy-btn">📋 COPIAR VARIÁVEIS</button>
             </section>
         </main>
     </div>
 
+    <!-- Modal Flutuante de Código de Integração -->
+    <div id="code-modal-overlay" class="modal-overlay" style="display: none;">
+        <div class="code-modal panel-glass">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="modal-icon">💻</span>
+                    <h2>Código de Integração</h2>
+                </div>
+                <button type="button" id="btn-close-code-modal" class="modal-close-btn" aria-label="Fechar Modal">✕</button>
+            </div>
+
+            <p class="panel-description">
+                Copie as variáveis abaixo e cole no seu motor de jogo para obter exatamente o mesmo comportamento físico simulado.
+            </p>
+
+            <div class="code-container">
+                <span class="code-header" id="modal-engine-badge">CÓDIGO DE INTEGRAÇÃO</span>
+                <pre class="code-block"><code id="code-template-display">grv = 0.30;
+jspd = -7.0;
+// ...</code></pre>
+            </div>
+
+            <div class="modal-footer">
+                <button id="btn-copy-code" class="copy-btn">📋 COPIAR VARIÁVEIS</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Script principal -->
     <script src="../theme-toggle.js"></script>
-    <script src="script.js?v=2.1"></script>
+    <script src="script.js?v=3.0"></script>
     <script src="../lock-listener.js"></script>
 </body>
 </html>

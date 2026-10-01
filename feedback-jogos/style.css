@@ -49,10 +49,10 @@ body {
     color: var(--color-text-white);
     min-height: 100vh;
     position: relative;
-    padding: 2rem 1rem;
+    padding: 1.25rem 1vw;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     overflow-x: hidden;
 }
 
@@ -80,14 +80,16 @@ body {
     right: -150px;
 }
 
-/* 3. LAYOUT DO FORMULÁRIO (ALUNO) & CABEÇALHO */
+/* 3. LAYOUT DO FORMULÁRIO (ALUNO WIDESCREEN 98vw) */
 .app-container {
-    max-width: 1200px;
+    max-width: 98vw;
+    width: 98vw;
+    min-height: calc(100vh - 2.5rem);
     margin: 0 auto;
-    width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    justify-content: space-between;
+    gap: 1rem;
 }
 
 .panel-glass {
@@ -99,7 +101,7 @@ body {
 }
 
 .app-header {
-    padding: 1.25rem 1.75rem;
+    padding: 0.9rem 1.75rem;
     flex-shrink: 0;
 }
 
@@ -205,51 +207,72 @@ body {
 
 .form-container {
     width: 100%;
-    padding: 2.25rem 2rem;
+    flex: 1;
+    padding: 0.95rem 1.4rem;
     display: flex;
     flex-direction: column;
-    gap: 1.75rem;
     position: relative;
+    min-height: 0;
+}
+
+.form-layout-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.85rem;
+    min-height: 0;
 }
 
 .form-grid-layout {
+    flex: 1;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 2rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.15rem;
     align-items: stretch;
 }
 
 .form-col {
+    background: rgba(13, 17, 28, 0.45);
+    border: 1px solid var(--color-border-glass);
+    border-radius: 16px;
+    padding: 0.85rem 1.15rem;
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    justify-content: space-between;
+    gap: 0.55rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    transition: var(--transition-smooth);
+}
+
+.form-col:hover {
+    border-color: rgba(255, 0, 127, 0.25);
+    background: rgba(13, 17, 28, 0.55);
 }
 
 .col-title {
-    font-size: 0.95rem;
+    font-size: 0.88rem;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
     color: var(--color-neon-pink);
     border-bottom: 1.5px solid rgba(255, 0, 127, 0.2);
-    padding-bottom: 0.5rem;
-    margin-bottom: 0.25rem;
+    padding-bottom: 0.35rem;
+    margin-bottom: 0;
     text-shadow: 0 0 8px var(--color-neon-pink-glow);
 }
-
-
 
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 0.65rem;
+    gap: 0.4rem;
 }
 
 .label-title {
-    font-size: 0.8rem;
+    font-size: 0.76rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.07em;
     color: var(--color-text-muted);
     display: flex;
     justify-content: space-between;
@@ -266,9 +289,9 @@ body {
     background: #090d16;
     border: 1.5px solid var(--color-border-glass);
     border-radius: 10px;
-    padding: 0.85rem 1.25rem;
+    padding: 0.62rem 1.1rem;
     color: var(--color-text-white);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 600;
     outline: none;
     cursor: pointer;
@@ -298,6 +321,7 @@ body {
     justify-content: center;
     gap: 0.65rem;
     direction: rtl; /* Permite selecionar no sentido correto via seletores ~ */
+    padding: 0.1rem 0;
 }
 
 .star-input {
@@ -305,11 +329,12 @@ body {
 }
 
 .star-label {
-    font-size: 2.25rem;
+    font-size: 1.85rem;
     color: rgba(255, 255, 255, 0.15);
     cursor: pointer;
     transition: var(--transition-smooth);
     user-select: none;
+    line-height: 1;
 }
 
 /* Efeito de hover e seleção de estrelas em cascata */
@@ -328,7 +353,7 @@ body {
 .bugs-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 0.65rem;
+    gap: 0.5rem;
 }
 
 .difficulty-btn,
@@ -337,10 +362,10 @@ body {
 .bugs-btn {
     background: #090d16;
     border: 1.5px solid var(--color-border-glass);
-    border-radius: 10px;
-    padding: 0.75rem 0.5rem;
+    border-radius: 9px;
+    padding: 0.48rem 0.35rem;
     color: var(--color-text-muted);
-    font-size: 0.8rem;
+    font-size: 0.74rem;
     font-weight: 700;
     text-transform: uppercase;
     cursor: pointer;
@@ -348,14 +373,14 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.35rem;
+    gap: 0.25rem;
 }
 
 .difficulty-btn .emoji,
 .progress-btn .emoji,
 .entendimento-btn .emoji,
 .bugs-btn .emoji {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     filter: grayscale(100%);
     opacity: 0.6;
     transition: var(--transition-smooth);
@@ -469,16 +494,16 @@ body {
 .tags-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
+    gap: 0.4rem;
 }
 
 .tag-btn {
     background: #090d1600;
     border: 1px solid var(--color-border-glass);
     border-radius: 8px;
-    padding: 0.6rem 0.5rem;
+    padding: 0.45rem 0.4rem;
     color: var(--color-text-muted);
-    font-size: 0.78rem;
+    font-size: 0.74rem;
     font-weight: 600;
     cursor: pointer;
     transition: var(--transition-smooth);
@@ -507,7 +532,7 @@ body {
     text-shadow: 0 0 4px var(--color-neon-yellow-glow);
 }
 
-/* Botão Enviar */
+/* Botão Enviar Padrão (Compatibilidade) */
 .btn-submit {
     width: 100%;
     background: transparent;
@@ -543,6 +568,79 @@ body {
 .btn-submit:disabled:hover {
     background: transparent;
     box-shadow: none;
+}
+
+/* Barra Inferior Panorâmica (Mensagem + Envio) */
+.form-bottom-bar {
+    display: flex;
+    align-items: flex-end;
+    gap: 1.5rem;
+    background: rgba(13, 17, 28, 0.65);
+    border: 1px solid var(--color-border-glass);
+    border-radius: 18px;
+    padding: 1.15rem 1.45rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    flex-shrink: 0;
+}
+
+.comment-group {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.comment-group .cyber-textarea {
+    height: 84px;
+    min-height: 84px;
+    max-height: 100px;
+    font-size: 0.92rem;
+    padding: 0.8rem 1.15rem;
+    line-height: 1.45;
+}
+
+.submit-action-box {
+    width: 340px;
+    flex-shrink: 0;
+}
+
+.btn-submit-hero {
+    width: 100%;
+    height: 84px;
+    background: linear-gradient(135deg, rgba(255, 0, 127, 0.25) 0%, rgba(255, 0, 127, 0.08) 100%);
+    border: 2px solid var(--color-neon-pink);
+    border-radius: 14px;
+    color: var(--color-text-white);
+    font-size: 1.15rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: 0 0 20px var(--color-neon-pink-glow);
+    user-select: none;
+}
+
+.btn-submit-hero:hover {
+    background: var(--color-neon-pink);
+    color: #070a13;
+    box-shadow: 0 0 28px var(--color-neon-pink), 0 0 50px var(--color-neon-pink-glow);
+    transform: translateY(-2px);
+}
+
+.btn-submit-hero:active {
+    transform: translateY(1px);
+}
+
+.btn-submit-hero:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border-color: var(--color-text-muted);
+    color: var(--color-text-muted);
+    box-shadow: none;
+    transform: none;
 }
 
 /* Spinner de Carregamento */
@@ -958,6 +1056,27 @@ body {
 }
 
 /* Responsividade */
+@media (max-width: 1024px) {
+    .app-container {
+        min-height: auto;
+        height: auto;
+    }
+    .form-grid-layout {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+    .form-bottom-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .submit-action-box {
+        width: 100%;
+    }
+    .comment-group .cyber-textarea {
+        height: 70px;
+    }
+}
+
 @media (max-width: 900px) {
     .charts-grid {
         grid-template-columns: 1fr;
@@ -966,12 +1085,8 @@ body {
 }
 
 @media (max-width: 768px) {
-    .form-grid-layout {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
     .form-container {
-        padding: 1.75rem 1.25rem;
+        padding: 1.25rem 1rem;
     }
 }
 
@@ -998,6 +1113,12 @@ body {
     box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
 }
 
+[data-theme="light"] .form-col,
+[data-theme="light"] .form-bottom-bar {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
 [data-theme="light"] .cyber-select,
 [data-theme="light"] .cyber-textarea,
 [data-theme="light"] .cyber-input,
@@ -1006,5 +1127,12 @@ body {
     background: #ffffff;
     border-color: #cbd5e1;
     color: #0f172a;
+}
+
+[data-theme="light"] .btn-submit-hero {
+    color: #0f172a;
+}
+[data-theme="light"] .btn-submit-hero:hover {
+    color: #ffffff;
 }
 

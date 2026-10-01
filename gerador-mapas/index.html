@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=2.1">
+    <link rel="stylesheet" href="style.css?v=2.4">
 </head>
 <body>
 
@@ -177,28 +177,72 @@
                 <div class="sidebar-actions">
                     <button id="btn-clear-grid" class="clear-btn">🚨 Limpar Mapa</button>
                 </div>
-
-                <div class="help-box">
-                    <h4>💡 Dica de Desenho:</h4>
-                    <p>Segure e arraste o mouse sobre o grid para pintar rapidamente com a ferramenta ativa!</p>
-                </div>
             </aside>
 
             <!-- ÁREA CENTRAL: GRID DE PINTURA (BUILDER) -->
             <main class="grid-viewport panel-glass">
-                <div class="viewport-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-                    <div style="display: flex; align-items: center; gap: 0.75rem;">
-                        <span class="viewport-title">MAP_VIEWPORT [ONLINE]</span>
+                <div class="viewport-header">
+                    <div class="viewport-header-left">
+                        <span class="viewport-title">MAP_VIEWPORT</span>
                         <span id="grid-dimensions-indicator" class="dimensions-badge">32 x 12 (1024 x 384 px)</span>
+
+                        <!-- HUD HORIZONTAL: STATUS DO JOGO -->
+                        <div class="game-hud-status-bar" id="game-hud-status" title="Validação de elementos essenciais da fase">
+                            <div class="hud-status-pill" title="Status do Jogador">
+                                <span class="hud-icon">👾</span>
+                                <span class="hud-label">Jogador:</span>
+                                <span class="chk-status missing" id="status-chk-player">Faltando</span>
+                            </div>
+                            <div class="hud-status-pill" title="Status da Saída / Fim da Fase">
+                                <span class="hud-icon">⭐</span>
+                                <span class="hud-label">Saída:</span>
+                                <span class="chk-status missing" id="status-chk-goal">Faltando</span>
+                            </div>
+                            <div class="hud-status-pill" title="Quantidade de Moedas / Coletáveis">
+                                <span class="hud-icon">🪙</span>
+                                <span class="hud-label">Moedas:</span>
+                                <span class="chk-badge" id="count-chk-coin">0</span>
+                            </div>
+                            <div class="hud-status-pill" title="Quantidade de Inimigos / Obstáculos">
+                                <span class="hud-icon">💀</span>
+                                <span class="hud-label">Inimigos:</span>
+                                <span class="chk-badge" id="count-chk-enemy">0</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="grid-vis-controls" style="display: flex; align-items: center; gap: 0.5rem;">
-                        <label for="select-grid-visibility" style="font-size: 0.8rem; font-weight: 700; color: var(--color-text-normal);">📐 Visibilidade da Grade:</label>
-                        <select id="select-grid-visibility" class="cyber-select" title="Seleção de Contraste e Linhas Guia da Grade">
-                            <option value="high" selected>📐 Nítida (Alta Visibilidade)</option>
-                            <option value="neon">⚡ Neon Vibrant (Cyan)</option>
-                            <option value="grid4x4">🔲 Guia 4x4 (Blocos)</option>
-                            <option value="subtle">👁️ Suave</option>
-                        </select>
+
+                    <!-- CONTROLES DE ZOOM E VISIBILIDADE -->
+                    <div class="viewport-toolbar-right">
+                        <!-- Controles de Zoom -->
+                        <div class="zoom-controls-group">
+                            <span class="control-label">🔍 Zoom:</span>
+                            <button id="btn-zoom-out" class="zoom-btn" title="Diminuir Zoom (Ctrl + Scroll Down)">−</button>
+                            <select id="select-zoom-level" class="cyber-select zoom-select" title="Nível de Zoom da Grade">
+                                <option value="0.5">50%</option>
+                                <option value="0.75">75%</option>
+                                <option value="1" selected>100%</option>
+                                <option value="1.25">125%</option>
+                                <option value="1.5">150%</option>
+                                <option value="1.75">175%</option>
+                                <option value="2">200%</option>
+                                <option value="2.5">250%</option>
+                            </select>
+                            <button id="btn-zoom-in" class="zoom-btn" title="Aumentar Zoom (Ctrl + Scroll Up)">+</button>
+                            <button id="btn-zoom-fit" class="zoom-fit-btn" title="Ajustar automaticamente o mapa para preencher todo o espaço visível">⛶ Ajustar à Tela</button>
+                        </div>
+
+                        <div class="divider-v"></div>
+
+                        <!-- Visibilidade da Grade -->
+                        <div class="grid-vis-controls">
+                            <label for="select-grid-visibility" class="vis-label">📐 Grade:</label>
+                            <select id="select-grid-visibility" class="cyber-select" title="Seleção de Contraste e Linhas Guia da Grade">
+                                <option value="high" selected>📐 Nítida</option>
+                                <option value="neon">⚡ Neon Cyan</option>
+                                <option value="grid4x4">🔲 Guia 4x4</option>
+                                <option value="subtle">👁️ Suave</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="viewport-scroll-container">
@@ -226,7 +270,7 @@
 
     <!-- Scripts principais -->
     <script src="../theme-toggle.js"></script>
-    <script src="script.js?v=2.1"></script>
+    <script src="script.js?v=2.4"></script>
     <script src="../lock-listener.js"></script>
 </body>
 </html>

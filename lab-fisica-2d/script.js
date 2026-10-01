@@ -5,9 +5,9 @@
 
 // Tamanho do Bloco Físico
 const GRID_SIZE = 32;
-const COLS = 20;
+const COLS = 40; // 40 colunas (Widescreen Panorâmico)
 const ROWS = 15;
-const SCREEN_WIDTH = COLS * GRID_SIZE;  // 640
+const SCREEN_WIDTH = COLS * GRID_SIZE;  // 1280
 const SCREEN_HEIGHT = ROWS * GRID_SIZE; // 480
 const GROUND_ROW = 13;
 const GROUND_Y = GROUND_ROW * GRID_SIZE; // 416
@@ -34,7 +34,7 @@ const ENGINE_PRESETS = {
         accelAir: { min: 0.01, max: 2.0, default: 0.20, step: 0.05 },
         frictionAir: { min: 0.01, max: 1.0, default: 0.05, step: 0.01 },
         maxFallSpeed: { min: 2.0, max: 25.0, default: 12.0, step: 1.0 },
-        doubleJump: { default: false },
+        maxJumps: { min: 1, max: 10, default: 1, step: 1 },
         labels: {
             gravity: "Gravidade",
             jump: "Força do Pulo",
@@ -44,13 +44,14 @@ const ENGINE_PRESETS = {
             accelAir: "Aceleração Ar",
             frictionAir: "Atrito Ar",
             maxFallSpeed: "Vel. Queda Máx",
-            doubleJump: "Pulo duplo"
+            maxJumps: "Número de Pulos"
         },
         code_template: 
 `// --- Variáveis no obj_lifeForm (Pai) ---
 grv = {gravity};          // Gravidade
 jspd = {jump};         // Força do pulo
 maxFallSpeed = {maxFallSpeed}; // Queda limite
+maxJumps = {maxJumps};         // Número de pulos permitidos (1 = padrão, 2 = pulo duplo)
 
 // --- Variáveis no obj_player (Filho) ---
 moveSpeed = {speed};      // Velocidade máx lateral
@@ -103,7 +104,7 @@ Pulo duplo = {doubleJump}`
         accelAir: { min: 0.05, max: 2.0, default: 0.4, step: 0.05 },
         frictionAir: { min: 0.50, max: 0.99, default: 0.95, step: 0.01 },
         maxFallSpeed: { min: -25.0, max: -2.0, default: -15.0, step: 1.0 },
-        doubleJump: { default: false },
+        maxJumps: { min: 1, max: 10, default: 1, step: 1 },
         labels: {
             gravity: "Gravidade",
             jump: "Força do Pulo",
@@ -113,7 +114,7 @@ Pulo duplo = {doubleJump}`
             accelAir: "Aceleração Ar",
             frictionAir: "Atrito Ar",
             maxFallSpeed: "Queda Máxima",
-            doubleJump: "Pulo duplo"
+            maxJumps: "Número de Pulos"
         },
         code_template: 
 `// Defina as variáveis no script do seu Ator Jogador:
@@ -124,7 +125,8 @@ mude [aceleração_ar v] para ({accelAir})
 mude [atrito_ar v] para ({frictionAir})
 mude [gravidade v] para ({gravity})
 mude [força_pulo v] para ({jump})
-mude [queda_maxima v] para ({maxFallSpeed})`
+mude [queda_maxima v] para ({maxFallSpeed})
+mude [numero_pulos v] para ({maxJumps})`
     }
 };
 
@@ -157,12 +159,14 @@ class PlayerPhysics {
         this.jumpKeyWasDown = false;
         
         this.arcPoints = [];
+        this.midAirJumpPoints = [];
         
         // Histórico do último pulo completo
         this.lastJumpPeakY = null;
         this.lastJumpStartX = null;
         this.lastJumpLandX = null;
         this.lastArcPoints = [];
+        this.lastMidAirJumpPoints = [];
     }
 
     reset(startX, startY) {
@@ -175,21 +179,38 @@ class PlayerPhysics {
         this.jumpCount = 0;
         this.jumpKeyWasDown = false;
         this.arcPoints = [];
+        this.midAirJumpPoints = [];
         
         this.lastJumpPeakY = null;
         this.lastJumpStartX = null;
         this.lastJumpLandX = null;
         this.lastArcPoints = [];
+        this.lastMidAirJumpPoints = [];
     }
 
     update(keys, grv_int, jump_int, speed_int, accel_ground_int, fric_ground_int,
-           accel_air_int, fric_air_int, max_fall_int, obstacles, doubleJumpEnabled = false) {
+           accel_air_int, fric_air_int, max_fall_int, obstacles, maxJumpsAllowed = 1) {
         
         // Garante que o jogador não caia fora do chão principal
         if (this.y + GRID_SIZE > GROUND_Y) {
             this.y = GROUND_Y - GRID_SIZE;
             this.vsp = 0.0;
             this.isGrounded = true;
+            this.jumpCount = 0;
+
+            if (this.isJumping) {
+                this.isJumping = false;
+                this.jumpLandX = this.x + GRID_SIZE / 2.0;
+                this.lastJumpPeakY = this.jumpPeakY;
+                this.lastJumpStartX = this.jumpStartX;
+                this.lastJumpLandX = this.jumpLandX;
+                this.lastArcPoints = [...this.arcPoints];
+                this.lastMidAirJumpPoints = [...this.midAirJumpPoints];
+                this.midAirJumpPoints = [];
+                if (typeof onJumpCompleted === "function") {
+                    onJumpCompleted(this);
+                }
+            }
         }
 
         // 1. Constantes com base no estado do jogador
@@ -230,17 +251,26 @@ class PlayerPhysics {
 
         if (keys.jump) {
             if (!this.jumpKeyWasDown) {
-                const maxJumpsAllowed = doubleJumpEnabled ? 2 : 1;
-                if (this.isGrounded || this.jumpCount < maxJumpsAllowed) {
+                const maxAllowed = typeof maxJumpsAllowed === "number" ? maxJumpsAllowed : (maxJumpsAllowed ? 2 : 1);
+                if (this.isGrounded || this.jumpCount < maxAllowed) {
                     this.vsp = jump_int; // Impulso para cima
                     this.isGrounded = false;
                     this.jumpCount++;
                     
-                    // Inicia rastreio de pulo
-                    this.isJumping = true;
-                    this.jumpStartX = this.x + GRID_SIZE / 2.0;
-                    this.jumpPeakY = this.y;
-                    this.arcPoints = [[this.jumpStartX, this.y + GRID_SIZE / 2.0]];
+                    if (!this.isJumping) {
+                        // Primeiro salto a partir do solo ou no ar
+                        this.isJumping = true;
+                        this.jumpStartX = this.x + GRID_SIZE / 2.0;
+                        this.jumpPeakY = this.y;
+                        this.arcPoints = [[this.jumpStartX, this.y + GRID_SIZE / 2.0]];
+                        this.midAirJumpPoints = [];
+                    } else {
+                        // Salto adicional no ar (pulo duplo / múltiplo):
+                        // NÃO apaga o arco anterior! Mantém a curva contínua e marca o ponto do impulso aéreo
+                        const boostPt = [this.x + GRID_SIZE / 2.0, this.y + GRID_SIZE / 2.0];
+                        this.arcPoints.push(boostPt);
+                        this.midAirJumpPoints.push(boostPt);
+                    }
                 }
             }
             this.jumpKeyWasDown = true;
@@ -286,6 +316,7 @@ class PlayerPhysics {
 
             if (this.vsp > 0) {
                 this.isGrounded = true;
+                this.jumpCount = 0;
                 
                 if (this.isJumping) {
                     this.isJumping = false;
@@ -295,6 +326,11 @@ class PlayerPhysics {
                     this.lastJumpStartX = this.jumpStartX;
                     this.lastJumpLandX = this.jumpLandX;
                     this.lastArcPoints = [...this.arcPoints];
+                    this.lastMidAirJumpPoints = [...this.midAirJumpPoints];
+                    this.midAirJumpPoints = [];
+                    if (typeof onJumpCompleted === "function") {
+                        onJumpCompleted(this);
+                    }
                 }
             }
             this.vsp = 0.0;
@@ -305,6 +341,9 @@ class PlayerPhysics {
         // 7. Checa queda de plataforma
         if (this.isGrounded && !this.placeMeeting(this.x, this.y + 1.0, obstacles)) {
             this.isGrounded = false;
+            if (this.jumpCount === 0) {
+                this.jumpCount = 1;
+            }
         }
     }
 
@@ -339,6 +378,8 @@ class PlayerPhysics {
 // BIND DE CONTROLES E CONFIGURAÇÃO DA JANELA
 // ==========================================
 const canvasElement = document.getElementById('sim-canvas');
+canvasElement.width = SCREEN_WIDTH;
+canvasElement.height = SCREEN_HEIGHT;
 const ctx = canvasElement.getContext('2d');
 const comboEngine = document.getElementById('combo-engine');
 const lblEngineDesc = document.getElementById('lbl-engine-desc');
@@ -355,6 +396,12 @@ const player = new PlayerPhysics(2 * GRID_SIZE, GROUND_Y - 3 * GRID_SIZE);
 let slowMotionCounter = 0;
 let isDrawing = false;
 let isErasing = false;
+let gridMode = "high";
+
+// Estado de Comparação de Métricas de Pulo
+let currentJump = null;
+let previousJump = null;
+let pinnedReference = null;
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', () => {
@@ -376,8 +423,73 @@ document.addEventListener('DOMContentLoaded', () => {
     btnResetPlayer.addEventListener('click', resetPlayer);
     btnCopyCode.addEventListener('click', copyVariablesCode);
 
+    // 4. Controle de Visibilidade e Nitidez da Grade
+    const selectGridVis = document.getElementById("select-grid-visibility");
+    if (selectGridVis) {
+        const savedGridMode = localStorage.getItem("titanTech_physics_grid_mode") || "high";
+        selectGridVis.value = savedGridMode;
+        gridMode = savedGridMode;
+
+        selectGridVis.addEventListener("change", (e) => {
+            gridMode = e.target.value;
+            localStorage.setItem("titanTech_physics_grid_mode", gridMode);
+            if (document.activeElement && document.activeElement !== document.body) {
+                document.activeElement.blur();
+            }
+        });
+    }
+
+    // 5. Controle de Zoom do Canvas (Ajustar, 100%, 125%, 150%)
+    const selectZoom = document.getElementById("select-canvas-zoom");
+    if (selectZoom) {
+        const savedZoom = localStorage.getItem("titanTech_physics_zoom") || "fit";
+        selectZoom.value = savedZoom;
+        canvasElement.setAttribute("data-zoom", savedZoom);
+
+        selectZoom.addEventListener("change", (e) => {
+            const zoomVal = e.target.value;
+            canvasElement.setAttribute("data-zoom", zoomVal);
+            localStorage.setItem("titanTech_physics_zoom", zoomVal);
+            if (document.activeElement && document.activeElement !== document.body) {
+                document.activeElement.blur();
+            }
+        });
+    }
+
+    // 6. Botões do HUD de Comparação de Pulo
+    const btnPin = document.getElementById("btn-pin-reference");
+    if (btnPin) {
+        btnPin.addEventListener("click", () => {
+            if (pinnedReference) {
+                pinnedReference = null;
+                showToast("Referência desafixada.");
+            } else if (currentJump) {
+                pinnedReference = { ...currentJump };
+                showToast("Salto atual fixado como referência!");
+            } else {
+                showToast("Pule pelo menos uma vez para fixar como referência.");
+            }
+            updateJumpMetricsUI();
+        });
+    }
+
+    const btnClearMetrics = document.getElementById("btn-clear-metrics");
+    if (btnClearMetrics) {
+        btnClearMetrics.addEventListener("click", () => {
+            currentJump = null;
+            previousJump = null;
+            pinnedReference = null;
+            player.lastJumpPeakY = null;
+            player.lastJumpStartX = null;
+            player.lastJumpLandX = null;
+            player.lastArcPoints = [];
+            updateJumpMetricsUI();
+            showToast("Métricas de salto resetadas.");
+        });
+    }
+
     // Binds para as caixas físicas e checkbox atualizarem o código dinamicamente
-    const inputsList = ["gravity", "jump", "speed", "accelGround", "frictionGround", "accelAir", "frictionAir", "maxFallSpeed"];
+    const inputsList = ["gravity", "jump", "speed", "accelGround", "frictionGround", "accelAir", "frictionAir", "maxFallSpeed", "maxJumps"];
     inputsList.forEach(key => {
         const input = document.getElementById(`input-${key}`);
         if (input) {
@@ -389,6 +501,39 @@ document.addEventListener('DOMContentLoaded', () => {
     if (inputDoubleJump) {
         inputDoubleJump.addEventListener('change', updateCodeTemplate);
     }
+
+    // 7. Modal Flutuante de Código de Integração
+    const codeModal = document.getElementById("code-modal-overlay");
+    const btnOpenModal = document.getElementById("btn-open-code-modal");
+    const btnHeaderCode = document.getElementById("btn-header-code");
+    const btnCloseModal = document.getElementById("btn-close-code-modal");
+
+    const openCodeModal = () => {
+        if (codeModal) {
+            updateCodeTemplate();
+            codeModal.style.display = "flex";
+        }
+    };
+    const closeCodeModal = () => {
+        if (codeModal) {
+            codeModal.style.display = "none";
+        }
+    };
+
+    if (btnOpenModal) btnOpenModal.addEventListener("click", openCodeModal);
+    if (btnHeaderCode) btnHeaderCode.addEventListener("click", openCodeModal);
+    if (btnCloseModal) btnCloseModal.addEventListener("click", closeCodeModal);
+
+    if (codeModal) {
+        codeModal.addEventListener("click", (e) => {
+            if (e.target === codeModal) closeCodeModal();
+        });
+    }
+    window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && codeModal && codeModal.style.display === "flex") {
+            closeCodeModal();
+        }
+    });
 
     // Inicia Engine GM por padrão
     onEngineChange();
@@ -402,7 +547,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==========================================
 function getGridCoords(event) {
     const rect = canvasElement.getBoundingClientRect();
-    // Converte a coordenada real do clique para o espaço virtual de 640x480
+    // Converte a coordenada real do clique para o espaço virtual de 1280x480
     const clickX = (event.clientX - rect.left) * (SCREEN_WIDTH / rect.width);
     const clickY = (event.clientY - rect.top) * (SCREEN_HEIGHT / rect.height);
     const col = Math.floor(clickX / GRID_SIZE);
@@ -451,6 +596,17 @@ function resetPlayer() {
         document.activeElement.blur();
     }
     player.reset(2 * GRID_SIZE, GROUND_Y - 3 * GRID_SIZE);
+
+    // Reinicia métricas guardadas, fixadas e traçados de salto
+    currentJump = null;
+    previousJump = null;
+    pinnedReference = null;
+    player.lastJumpPeakY = null;
+    player.lastJumpStartX = null;
+    player.lastJumpLandX = null;
+    player.lastArcPoints = [];
+    updateJumpMetricsUI();
+    showToast("Bloco e métricas reiniciados.");
 }
 
 // ==========================================
@@ -465,8 +621,15 @@ function resetToDefault(key) {
     
     if (key === "doubleJump") {
         const input = document.getElementById('input-doubleJump');
-        if (input) input.checked = preset.doubleJump.default;
-    } else {
+        if (input) input.checked = preset.doubleJump ? preset.doubleJump.default : false;
+    } else if (key === "maxJumps") {
+        const input = document.getElementById('input-maxJumps');
+        const defaultVal = preset.maxJumps ? preset.maxJumps.default : 1;
+        if (input) {
+            input.classList.remove('error');
+            input.value = defaultVal;
+        }
+    } else if (preset[key]) {
         const defaultVal = preset[key].default;
         const input = document.getElementById(`input-${key}`);
         if (input) {
@@ -489,22 +652,31 @@ function onEngineChange() {
     // Desfoca o seletor para evitar sequestro de teclas de seta
     comboEngine.blur();
 
+    // Atualiza cabeçalho no modal de código se presente
+    const modalBadge = document.getElementById("modal-engine-badge");
+    if (modalBadge) {
+        modalBadge.textContent = `CÓDIGO DE INTEGRAÇÃO (${engine.toUpperCase()})`;
+    }
+
     // Controle de visibilidade dos campos específicos do motor
     const rowAccelAir = document.getElementById('row-accelAir');
     const rowFrictionAir = document.getElementById('row-frictionAir');
     const rowDoubleJump = document.getElementById('row-doubleJump');
+    const rowMaxJumps = document.getElementById('row-maxJumps');
 
     if (engine === "Construct 3") {
         if (rowAccelAir) rowAccelAir.style.display = 'none';
         if (rowFrictionAir) rowFrictionAir.style.display = 'none';
         if (rowDoubleJump) rowDoubleJump.style.display = 'block';
+        if (rowMaxJumps) rowMaxJumps.style.display = 'none';
     } else {
         if (rowAccelAir) rowAccelAir.style.display = 'block';
         if (rowFrictionAir) rowFrictionAir.style.display = 'block';
         if (rowDoubleJump) rowDoubleJump.style.display = 'none';
+        if (rowMaxJumps) rowMaxJumps.style.display = 'block';
     }
 
-    const inputsList = ["gravity", "jump", "speed", "accelGround", "frictionGround", "accelAir", "frictionAir", "maxFallSpeed", "doubleJump"];
+    const inputsList = ["gravity", "jump", "speed", "accelGround", "frictionGround", "accelAir", "frictionAir", "maxFallSpeed", "maxJumps", "doubleJump"];
     inputsList.forEach(key => {
         const defaultBtn = document.querySelector(`#row-${key} .default-btn`);
         const labelElem = document.getElementById(`lbl-input-${key}`);
@@ -517,8 +689,10 @@ function onEngineChange() {
         // Atualiza rótulo padrão
         if (defaultBtn) {
             if (key === "doubleJump") {
-                defaultBtn.textContent = `Padrão: ${preset.doubleJump.default ? 'Sim' : 'Não'}`;
-            } else {
+                defaultBtn.textContent = `Padrão: ${preset.doubleJump && preset.doubleJump.default ? 'Sim' : 'Não'}`;
+            } else if (key === "maxJumps") {
+                defaultBtn.textContent = `Padrão: ${preset.maxJumps ? preset.maxJumps.default : 1}`;
+            } else if (preset[key]) {
                 const defaultVal = preset[key].default;
                 defaultBtn.textContent = (engine === "Construct 3") ? `Padrão: ${Math.round(defaultVal)}` : `Padrão: ${defaultVal.toFixed(2)}`;
             }
@@ -564,7 +738,14 @@ function getConvertedPhysicsValues() {
     });
 
     const inputDoubleJump = document.getElementById('input-doubleJump');
-    const doubleJumpEnabled = (engine === "Construct 3" && inputDoubleJump) ? inputDoubleJump.checked : false;
+    const inputMaxJumps = document.getElementById('input-maxJumps');
+
+    let maxJumpsAllowed = 1;
+    if (engine === "Construct 3") {
+        maxJumpsAllowed = (inputDoubleJump && inputDoubleJump.checked) ? 2 : 1;
+    } else {
+        maxJumpsAllowed = inputMaxJumps ? Math.max(1, parseInt(inputMaxJumps.value, 10) || 1) : 1;
+    }
 
     const grv = vals.gravity;
     const jump = vals.jump;
@@ -577,7 +758,7 @@ function getConvertedPhysicsValues() {
 
     // Conversão matemática de escalas para a física de ticks do canvas (padrão GameMaker)
     if (engine === "GameMaker") {
-        return [grv, jump, speed, accel_g, fric_g, accel_a, fric_a, max_fall, false];
+        return [grv, jump, speed, accel_g, fric_g, accel_a, fric_a, max_fall, maxJumpsAllowed];
     } 
     else if (engine === "Construct 3") {
         return [
@@ -589,7 +770,7 @@ function getConvertedPhysicsValues() {
             accel_g / 3600.0, // Construct 3 usa mesmo aceleração para ar/chão
             fric_g / 3600.0,  // Construct 3 usa mesma desaceleração para ar/chão
             max_fall / 60.0,
-            doubleJumpEnabled
+            maxJumpsAllowed
         ];
     }
     else if (engine === "Scratch") {
@@ -602,11 +783,11 @@ function getConvertedPhysicsValues() {
             accel_a / 2.0,
             (1.0 - fric_a) / 0.5,
             -max_fall / 1.25,
-            false
+            maxJumpsAllowed
         ];
     }
 
-    return [0.3, -7.0, 4.0, 0.35, 0.15, 0.20, 0.05, 12.0, false];
+    return [0.3, -7.0, 4.0, 0.35, 0.15, 0.20, 0.05, 12.0, 1];
 }
 
 function updateCodeTemplate() {
@@ -625,10 +806,17 @@ function updateCodeTemplate() {
     const inputDoubleJump = document.getElementById('input-doubleJump');
     vals['doubleJump'] = inputDoubleJump ? (inputDoubleJump.checked ? "Habilitado" : "Desabilitado") : "Desabilitado";
 
+    const inputMaxJumps = document.getElementById('input-maxJumps');
+    vals['maxJumps'] = inputMaxJumps ? Math.max(1, parseInt(inputMaxJumps.value, 10) || 1) : 1;
+
     let code = preset.code_template;
     for (const key in vals) {
         let replacement = vals[key];
-        if (key !== "doubleJump") {
+        if (key === "doubleJump") {
+            // mantém formato textual
+        } else if (key === "maxJumps") {
+            replacement = Math.round(replacement);
+        } else {
             if (engine !== "Construct 3") {
                 replacement = (key === "jump" || key === "speed" || key === "maxFallSpeed") ? replacement.toFixed(1) : replacement.toFixed(2);
             } else {
@@ -651,6 +839,96 @@ function copyVariablesCode() {
         });
     } catch (e) {
         console.error(e);
+    }
+}
+
+// ==========================================
+// RASTREAMENTO E COMPARAÇÃO DE SALTOS (HUD)
+// ==========================================
+function onJumpCompleted(playerObj) {
+    if (playerObj.lastJumpPeakY === null || playerObj.lastJumpStartX === null || playerObj.lastJumpLandX === null) return;
+
+    const heightPixels = Math.max(0, GROUND_Y - (playerObj.lastJumpPeakY + GRID_SIZE));
+    const heightBlocks = heightPixels / GRID_SIZE;
+    const distPixels = Math.abs(playerObj.lastJumpLandX - playerObj.lastJumpStartX);
+    const distBlocks = distPixels / GRID_SIZE;
+
+    // Se já havia um salto anterior registrado e não há referência fixada, o atual passa a ser o anterior
+    if (currentJump && !pinnedReference) {
+        previousJump = { ...currentJump };
+    }
+
+    currentJump = {
+        heightPixels,
+        heightBlocks,
+        distPixels,
+        distBlocks,
+        arcPoints: [...playerObj.lastArcPoints],
+        midAirJumpPoints: [...(playerObj.lastMidAirJumpPoints || [])],
+        peakY: playerObj.lastJumpPeakY,
+        startX: playerObj.lastJumpStartX,
+        landX: playerObj.lastJumpLandX
+    };
+
+    updateJumpMetricsUI();
+}
+
+function updateJumpMetricsUI() {
+    const hudCurrent = document.getElementById('hud-current-metrics');
+    const hudPrevious = document.getElementById('hud-previous-metrics');
+    const hudDeltaPill = document.getElementById('hud-delta-pill');
+    const hudDelta = document.getElementById('hud-delta-metrics');
+    const hudRefLabel = document.getElementById('hud-ref-label');
+    const btnPin = document.getElementById('btn-pin-reference');
+
+    if (!hudCurrent) return;
+
+    if (currentJump) {
+        hudCurrent.innerHTML = `Alt: <strong>${currentJump.heightBlocks.toFixed(2)} bl</strong> (${Math.round(currentJump.heightPixels)}px) | Dist: <strong>${currentJump.distBlocks.toFixed(2)} bl</strong> (${Math.round(currentJump.distPixels)}px)`;
+    } else {
+        hudCurrent.innerHTML = `Alt: <strong>--</strong> | Dist: <strong>--</strong>`;
+    }
+
+    const refTarget = pinnedReference || previousJump;
+
+    if (pinnedReference) {
+        hudRefLabel.textContent = "📌 Ref. Fixada:";
+        hudPrevious.innerHTML = `Alt: <strong>${pinnedReference.heightBlocks.toFixed(2)} bl</strong> | Dist: <strong>${pinnedReference.distBlocks.toFixed(2)} bl</strong>`;
+        if (btnPin) {
+            btnPin.textContent = "📍 Desafixar";
+            btnPin.classList.add("is-pinned");
+        }
+    } else if (previousJump) {
+        hudRefLabel.textContent = "⏱️ Salto Anterior:";
+        hudPrevious.innerHTML = `Alt: <strong>${previousJump.heightBlocks.toFixed(2)} bl</strong> | Dist: <strong>${previousJump.distBlocks.toFixed(2)} bl</strong>`;
+        if (btnPin) {
+            btnPin.textContent = "📌 Fixar Referência";
+            btnPin.classList.remove("is-pinned");
+        }
+    } else {
+        hudRefLabel.textContent = "⏱️ Salto Anterior:";
+        hudPrevious.innerHTML = `Alt: <strong>--</strong> | Dist: <strong>--</strong>`;
+        if (btnPin) {
+            btnPin.textContent = "📌 Fixar Referência";
+            btnPin.classList.remove("is-pinned");
+        }
+    }
+
+    // Calcula Diferença Delta se houver salto atual e referência
+    if (currentJump && refTarget && (currentJump !== refTarget)) {
+        const dAlt = currentJump.heightBlocks - refTarget.heightBlocks;
+        const dDist = currentJump.distBlocks - refTarget.distBlocks;
+
+        const formatDelta = (val) => {
+            const sign = val > 0 ? "+" : "";
+            const color = val > 0.05 ? "var(--color-neon-green)" : (val < -0.05 ? "var(--color-neon-red)" : "var(--color-neon-blue)");
+            return `<span style="color: ${color}; font-weight: 700;">${sign}${val.toFixed(2)} bl</span>`;
+        };
+
+        hudDelta.innerHTML = `Δ Alt: ${formatDelta(dAlt)} | Δ Dist: ${formatDelta(dDist)}`;
+        hudDeltaPill.style.display = "flex";
+    } else {
+        hudDeltaPill.style.display = "none";
     }
 }
 
@@ -714,7 +992,7 @@ function gameLoop() {
     // 1. Ler e Converter os Parâmetros Físicos Atuais
     const [grv_int, jump_int, speed_int,
            accel_g_int, fric_g_int,
-           accel_a_int, fric_a_int, max_fall_int, doubleJumpEnabled] = getConvertedPhysicsValues();
+           accel_a_int, fric_a_int, max_fall_int, maxJumpsAllowed] = getConvertedPhysicsValues();
 
     // 2. Slow Motion (Câmera Lenta roda física 1 vez a cada 4 frames)
     let runPhysics = true;
@@ -735,7 +1013,7 @@ function gameLoop() {
             fric_a_int,
             max_fall_int,
             obstacles,
-            doubleJumpEnabled
+            maxJumpsAllowed
         );
     }
 
@@ -753,20 +1031,50 @@ function drawFrame(playerPhysics, obstaclesSet) {
     ctx.fillStyle = COLOR_CANVAS_BG;
     ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    // 1. Desenhar a Grade de Guia (Grid 32x32)
-    ctx.strokeStyle = COLOR_GRID;
-    ctx.lineWidth = 1;
-    for (let c = 0; c <= COLS; c++) {
-        ctx.beginPath();
-        ctx.moveTo(c * GRID_SIZE, 0);
-        ctx.lineTo(c * GRID_SIZE, SCREEN_HEIGHT);
-        ctx.stroke();
-    }
-    for (let r = 0; r <= ROWS; r++) {
-        ctx.beginPath();
-        ctx.moveTo(0, r * GRID_SIZE);
-        ctx.lineTo(SCREEN_WIDTH, r * GRID_SIZE);
-        ctx.stroke();
+    // 1. Desenhar a Grade de Guia (Grid 32x32 com modos de nitidez)
+    if (gridMode !== "off") {
+        let gridColor = "rgba(255, 255, 255, 0.16)"; // Default: Nítida
+        const is4x4 = (gridMode === "grid4x4");
+
+        if (gridMode === "neon") {
+            gridColor = "rgba(0, 210, 255, 0.28)";
+        } else if (gridMode === "subtle") {
+            gridColor = "#1a1a24";
+        } else if (gridMode === "grid4x4") {
+            gridColor = "rgba(255, 255, 255, 0.08)";
+        }
+
+        ctx.lineWidth = 1;
+        for (let c = 0; c <= COLS; c++) {
+            ctx.beginPath();
+            ctx.moveTo(c * GRID_SIZE, 0);
+            ctx.lineTo(c * GRID_SIZE, SCREEN_HEIGHT);
+            if (is4x4 && c % 4 === 0) {
+                ctx.save();
+                ctx.strokeStyle = "rgba(0, 210, 255, 0.55)";
+                ctx.lineWidth = 1.75;
+                ctx.stroke();
+                ctx.restore();
+            } else {
+                ctx.strokeStyle = gridColor;
+                ctx.stroke();
+            }
+        }
+        for (let r = 0; r <= ROWS; r++) {
+            ctx.beginPath();
+            ctx.moveTo(0, r * GRID_SIZE);
+            ctx.lineTo(SCREEN_WIDTH, r * GRID_SIZE);
+            if (is4x4 && r % 4 === 0) {
+                ctx.save();
+                ctx.strokeStyle = "rgba(0, 210, 255, 0.55)";
+                ctx.lineWidth = 1.75;
+                ctx.stroke();
+                ctx.restore();
+            } else {
+                ctx.strokeStyle = gridColor;
+                ctx.stroke();
+            }
+        }
     }
 
     // 2. Desenhar Chão Sólido Verde
@@ -801,6 +1109,51 @@ function drawFrame(playerPhysics, obstaclesSet) {
         arc = playerPhysics.lastArcPoints;
     }
 
+    // A0. Desenhar Arco Fantasma de Referência / Salto Anterior
+    const refToDraw = pinnedReference || (playerPhysics.isJumping ? (currentJump || previousJump) : previousJump);
+    if (refToDraw && refToDraw.arcPoints && refToDraw.arcPoints.length > 1) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(refToDraw.arcPoints[0][0], refToDraw.arcPoints[0][1]);
+        for (let i = 1; i < refToDraw.arcPoints.length; i++) {
+            ctx.lineTo(refToDraw.arcPoints[i][0], refToDraw.arcPoints[i][1]);
+        }
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = pinnedReference ? "rgba(0, 210, 255, 0.75)" : "rgba(180, 195, 220, 0.45)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Linha de Pico da Referência
+        if (refToDraw.peakY !== null) {
+            ctx.beginPath();
+            ctx.setLineDash([3, 5]);
+            ctx.moveTo(0, refToDraw.peakY + GRID_SIZE);
+            ctx.lineTo(SCREEN_WIDTH, refToDraw.peakY + GRID_SIZE);
+            ctx.strokeStyle = pinnedReference ? "rgba(0, 210, 255, 0.5)" : "rgba(180, 195, 220, 0.25)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            ctx.font = '600 10px Outfit, sans-serif';
+            ctx.fillStyle = pinnedReference ? "#00d2ff" : "#94a3b8";
+            ctx.textAlign = 'right';
+            const labelRef = pinnedReference 
+                ? `[ Ref. Fixada ] Pico: ${refToDraw.heightBlocks.toFixed(2)} bl` 
+                : `[ Anterior ] Pico: ${refToDraw.heightBlocks.toFixed(2)} bl`;
+            ctx.fillText(labelRef, SCREEN_WIDTH - 15, refToDraw.peakY + GRID_SIZE - 6);
+        }
+
+        // Pontos de impulso de pulo duplo na curva fantasma de referência
+        if (refToDraw.midAirJumpPoints && refToDraw.midAirJumpPoints.length > 0) {
+            for (const bPt of refToDraw.midAirJumpPoints) {
+                ctx.beginPath();
+                ctx.arc(bPt[0], bPt[1], 4, 0, 2 * Math.PI);
+                ctx.fillStyle = pinnedReference ? "rgba(0, 210, 255, 0.7)" : "rgba(180, 195, 220, 0.5)";
+                ctx.fill();
+            }
+        }
+        ctx.restore();
+    }
+
     // A. Desenhar Arco do Salto (Pontos conectados)
     if (arc.length > 1) {
         ctx.beginPath();
@@ -818,6 +1171,29 @@ function drawFrame(playerPhysics, obstaclesSet) {
         ctx.arc(lastPt[0], lastPt[1], 4, 0, 2 * Math.PI);
         ctx.fillStyle = COLOR_ARC_LINE;
         ctx.fill();
+
+        // Marcadores visuais neon nos pontos onde ocorreu o pulo duplo no ar
+        const boostPts = playerPhysics.isJumping ? playerPhysics.midAirJumpPoints : (playerPhysics.lastMidAirJumpPoints || []);
+        if (boostPts && boostPts.length > 0) {
+            ctx.save();
+            for (const bPt of boostPts) {
+                // Anel neon ciano
+                ctx.beginPath();
+                ctx.arc(bPt[0], bPt[1], 6, 0, 2 * Math.PI);
+                ctx.fillStyle = "rgba(0, 210, 255, 0.35)";
+                ctx.fill();
+                ctx.strokeStyle = "#00d2ff";
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // Ponto de luz central
+                ctx.beginPath();
+                ctx.arc(bPt[0], bPt[1], 2.5, 0, 2 * Math.PI);
+                ctx.fillStyle = "#ffffff";
+                ctx.fill();
+            }
+            ctx.restore();
+        }
     }
 
     // B. Desenhar Linha de Pico Altura Máxima (Dashed Vermelho)
