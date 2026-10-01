@@ -945,7 +945,7 @@ function checkAndStartStateTimer(stateName) {
 
     for (const tgt in connectionsMap) {
         const cond = connectionsMap[tgt];
-        const isTime = cond.toLowerCase().endswith("s") && !isNaN(parseFloat(cond));
+        const isTime = cond.toLowerCase().endsWith("s") && !isNaN(parseFloat(cond));
         if (isTime) {
             // Verifica se o nó de destino está colocado
             if (fsmData.nodes[tgt]) {
