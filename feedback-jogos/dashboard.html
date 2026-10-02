@@ -74,22 +74,26 @@
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 1.5rem; flex-wrap: wrap;">
                 <div class="dashboard-title">
-                    <h1>Painel de <span>Feedback</span></h1>
-                    <p>Estatísticas e Gráficos das turmas de Game Design em tempo real</p>
+                    <h1>Painel do <span>Professor</span></h1>
+                    <p>Métricas, gráficos e feedbacks de Game Design em tempo real</p>
                 </div>
                 <div class="dashboard-controls">
                     <!-- Filtro por Turma -->
-                    <div class="cyber-select-wrapper" style="width: 180px; text-align: left;">
+                    <div class="cyber-select-wrapper" style="width: 170px; text-align: left;">
                         <select id="filter-class" class="cyber-select">
                             <option value="">Todas as Turmas</option>
                         </select>
                     </div>
                     <!-- Filtro por Jogo -->
-                    <div class="cyber-select-wrapper" style="width: 200px; text-align: left;">
+                    <div class="cyber-select-wrapper" style="width: 190px; text-align: left;">
                         <select id="filter-game" class="cyber-select">
                             <option value="">Todos os Jogos</option>
                         </select>
                     </div>
+                    <!-- Botão Gerenciar Turmas e Alunos -->
+                    <button class="btn-manage-classes" id="btn-open-manage-modal" title="Adicione ou remova turmas e alunos sem precisar abrir a planilha">
+                        ⚙️ Gerenciar Turmas & Jogos
+                    </button>
                     <div class="refresh-badge">
                         <span class="refresh-dot"></span>
                         Live Update
@@ -99,59 +103,162 @@
             </div>
         </header>
 
-        <!-- Feedbacks em Detalhe (Mover para Cima) -->
+        <!-- CARDS DE MÉTRICAS KPI (RESUMO RÁPIDO) -->
+        <section class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-icon kpi-icon-cyan">📋</div>
+                <div class="kpi-info">
+                    <span class="kpi-label">Total de Avaliações</span>
+                    <span class="kpi-value" id="kpi-total-feedbacks">0</span>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon kpi-icon-yellow">⭐</div>
+                <div class="kpi-info">
+                    <span class="kpi-label">Média de Diversão</span>
+                    <span class="kpi-value" id="kpi-avg-stars">0.0 ★</span>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon kpi-icon-green">🏆</div>
+                <div class="kpi-info">
+                    <span class="kpi-label">Taxa de Conclusão</span>
+                    <span class="kpi-value" id="kpi-completion-rate">0%</span>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon kpi-icon-pink">🛡️</div>
+                <div class="kpi-info">
+                    <span class="kpi-label">Sem Bugs Reportados</span>
+                    <span class="kpi-value" id="kpi-bugfree-rate">0%</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feedbacks em Detalhe (Tabela Widescreen Completa) -->
         <section class="feedback-list-card">
-            <h2>Lista de Feedbacks Recentes</h2>
+            <div class="feedback-list-header">
+                <h2>📋 Feedbacks Recentes Recebidos</h2>
+                <span id="table-total-count" class="table-count-badge">0 feedbacks</span>
+            </div>
             <div class="feedback-table-wrapper">
                 <table class="feedback-table">
                     <thead>
                         <tr>
                             <th style="width: 12%;">Data/Hora</th>
-                            <th style="width: 12%;">Turma</th>
-                            <th style="width: 16%;">Jogo Selecionado</th>
-                            <th style="width: 11%;">Diversão</th>
+                            <th style="width: 8%;">Turma</th>
+                            <th style="width: 13%;">Jogo / Aluno</th>
+                            <th style="width: 10%;">Diversão</th>
                             <th style="width: 11%;">Dificuldade</th>
-                            <th style="width: 12%;">Onde Parou</th>
+                            <th style="width: 13%;">Onde Parou</th>
+                            <th style="width: 11%;">Estabilidade</th>
                             <th style="width: 12%;">Tags Marcadas</th>
-                            <th style="width: 14%;">Comentários</th>
+                            <th style="width: 10%;">Comentários</th>
                         </tr>
                     </thead>
                     <tbody id="feedback-table-body">
                         <tr>
-                            <td colspan="8" class="no-data-msg" style="text-align: center; padding: 2rem;">Aguardando liberação de dados...</td>
+                            <td colspan="9" class="no-data-msg" style="text-align: center; padding: 2rem;">Aguardando liberação de dados...</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </section>
 
-        <!-- Grid de Gráficos (Mover para Baixo) -->
+        <!-- Grid de Gráficos (4 Métricas Principais) -->
         <section class="charts-grid">
-            <!-- Gráfico de Diversão -->
+            <!-- Gráfico 1: Diversão (Estrelas) -->
             <div class="chart-card">
-                <h2>Média de Diversão</h2>
+                <div class="chart-card-header">
+                    <h2>Média de Diversão</h2>
+                    <span class="chart-badge-sub" id="badge-stars-count">0 votos</span>
+                </div>
                 <div class="chart-wrapper">
                     <canvas id="chart-stars"></canvas>
                 </div>
             </div>
 
-            <!-- Gráfico de Dificuldade -->
+            <!-- Gráfico 2: Dificuldade -->
             <div class="chart-card">
-                <h2>Distribuição de Dificuldade</h2>
+                <div class="chart-card-header">
+                    <h2>Equilíbrio de Dificuldade</h2>
+                    <span class="chart-badge-sub" id="badge-diff-status">-</span>
+                </div>
                 <div class="chart-wrapper">
                     <canvas id="chart-difficulty"></canvas>
                 </div>
             </div>
 
-            <!-- Gráfico de Tags Frequentes -->
+            <!-- Gráfico 3: Jornada & Progresso (Onde Parou) -->
             <div class="chart-card">
-                <h2>Tags de Feedback Mais Marcadas</h2>
+                <div class="chart-card-header">
+                    <h2>Jornada do Jogador</h2>
+                    <span class="chart-badge-sub" id="badge-progress-status">-</span>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="chart-progress"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfico 4: Tags Mais Frequentes -->
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h2>Tags Mais Votadas</h2>
+                    <span class="chart-badge-sub" id="badge-tags-count">Top destaques</span>
+                </div>
                 <div class="chart-wrapper">
                     <canvas id="chart-tags"></canvas>
                 </div>
             </div>
         </section>
     </main>
+
+    <!-- MODAL DE GERENCIAMENTO DE TURMAS E JOGOS -->
+    <div id="modal-manage-classes" class="cyber-modal-overlay" style="display: none;">
+        <div class="cyber-modal-card">
+            <header class="cyber-modal-header">
+                <div class="modal-title-box">
+                    <span class="modal-icon">⚙️</span>
+                    <div>
+                        <h2>Gerenciador de Turmas & Jogos</h2>
+                        <p>Adicione ou remova turmas e alunos sem precisar abrir o Google Drive ou planilhas</p>
+                    </div>
+                </div>
+                <button class="cyber-modal-close" id="btn-close-modal" aria-label="Fechar">&times;</button>
+            </header>
+
+            <div class="modal-toolbar">
+                <div class="toolbar-left">
+                    <div class="input-with-btn">
+                        <input type="text" id="input-new-class" class="cyber-input-sm" placeholder="Nome da Turma (ex: 7M, 4N)...">
+                        <button class="pin-btn action-btn enter" id="btn-add-class" style="padding: 0.45rem 0.85rem; font-size: 0.75rem;">+ Nova Turma</button>
+                    </div>
+                </div>
+                <div class="toolbar-right">
+                    <button class="pin-btn action-btn" id="btn-sync-history" title="Importar automaticamente turmas e alunos que já enviaram feedbacks na planilha" style="border-color: var(--color-neon-cyan); color: var(--color-neon-cyan); padding: 0.45rem 0.85rem; font-size: 0.75rem;">
+                        🔄 Sincronizar com Planilha
+                    </button>
+                    <button class="pin-btn action-btn" id="btn-export-json" title="Baixar arquivo jogos_da_semana.json pronto para o repositório" style="border-color: var(--color-neon-yellow); color: var(--color-neon-yellow); padding: 0.45rem 0.85rem; font-size: 0.75rem;">
+                        📥 Baixar JSON
+                    </button>
+                </div>
+            </div>
+
+            <div class="classes-manager-list" id="classes-manager-container">
+                <!-- Gerado dinamicamente via JS com cards para cada turma -->
+            </div>
+
+            <footer class="cyber-modal-footer">
+                <div class="modal-footer-tip">
+                    💡 Salvo no navegador: reflete imediatamente nos filtros do professor e no formulário dos alunos.
+                </div>
+                <div class="modal-footer-actions">
+                    <button class="pin-btn action-btn clear" id="btn-reset-classes" style="padding: 0.5rem 1rem; font-size: 0.75rem;">Restaurar Padrão</button>
+                    <button class="pin-btn action-btn enter" id="btn-save-classes" style="padding: 0.5rem 1.4rem; font-size: 0.8rem; background: var(--color-neon-cyan); color: #090d16; border-color: var(--color-neon-cyan); font-weight: 800;">💾 Salvar Alterações</button>
+                </div>
+            </footer>
+        </div>
+    </div>
 
     <!-- Toast Notification -->
     <div id="tt-toast" class="toast"></div>

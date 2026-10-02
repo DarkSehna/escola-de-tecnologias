@@ -127,57 +127,81 @@ function populateGames(className, data) {
     }
 }
 
-// Carrega as turmas e jogos do arquivo JSON local
+// Carrega as turmas e jogos do localStorage ou do arquivo JSON local
 function loadGamesDropdown() {
     const selectClass = document.getElementById("select-class");
     const selectGame = document.getElementById("select-game");
     let gamesData = {};
     
+    function setupDropdownWithData(data) {
+        gamesData = data;
+        const classes = Object.keys(data).sort();
+        
+        selectClass.innerHTML = '<option value="" disabled selected>Selecione a turma...</option>';
+        classes.forEach(className => {
+            const opt = document.createElement("option");
+            opt.value = className;
+            opt.textContent = className;
+            selectClass.appendChild(opt);
+        });
+
+        // Verifica parâmetro na URL para pré-seleção automática da turma
+        const urlParams = new URLSearchParams(window.location.search);
+        const turmaParam = urlParams.get("turma");
+        if (turmaParam) {
+            const matchedClass = findBestClassMatch(turmaParam, classes);
+            if (matchedClass) {
+                selectClass.value = matchedClass;
+                formState.turma = matchedClass;
+                populateGames(matchedClass, gamesData);
+            }
+        }
+    }
+
+    function attachDropdownListeners() {
+        selectClass.onchange = (e) => {
+            const selectedClass = e.target.value;
+            formState.turma = selectedClass;
+            audio.playClick();
+            populateGames(selectedClass, gamesData);
+        };
+
+        selectGame.onchange = (e) => {
+            formState.jogo = e.target.value;
+            audio.playClick();
+        };
+    }
+
+    // Tenta carregar do localStorage configurado pelo professor primeiro
+    const localSaved = localStorage.getItem("titanTech_jogos_da_semana");
+    if (localSaved) {
+        try {
+            const parsed = JSON.parse(localSaved);
+            if (parsed && Object.keys(parsed).length > 0) {
+                setupDropdownWithData(parsed);
+                attachDropdownListeners();
+                return;
+            }
+        } catch(e) {
+            console.warn("Falha ao ler turmas locais:", e);
+        }
+    }
+
     fetch("jogos_da_semana.json")
         .then(response => {
             if (!response.ok) throw new Error("Erro ao carregar lista de jogos.");
             return response.json();
         })
         .then(data => {
-            gamesData = data;
-            const classes = Object.keys(data);
-            
-            // Popula o dropdown de turmas
-            classes.forEach(className => {
-                const opt = document.createElement("option");
-                opt.value = className;
-                opt.textContent = className;
-                selectClass.appendChild(opt);
-            });
-
-            // Verifica parâmetro na URL para pré-seleção automática da turma
-            const urlParams = new URLSearchParams(window.location.search);
-            const turmaParam = urlParams.get("turma");
-            if (turmaParam) {
-                const matchedClass = findBestClassMatch(turmaParam, classes);
-                if (matchedClass) {
-                    selectClass.value = matchedClass;
-                    formState.turma = matchedClass;
-                    populateGames(matchedClass, gamesData);
-                }
-            }
+            setupDropdownWithData(data);
         })
         .catch(err => {
             console.error(err);
             showToast("Falha ao carregar lista de jogos.", "pink-toast");
+        })
+        .finally(() => {
+            attachDropdownListeners();
         });
-
-    selectClass.addEventListener("change", (e) => {
-        const selectedClass = e.target.value;
-        formState.turma = selectedClass;
-        audio.playClick();
-        populateGames(selectedClass, gamesData);
-    });
-
-    selectGame.addEventListener("change", (e) => {
-        formState.jogo = e.target.value;
-        audio.playClick();
-    });
 }
 
 // Configura o sistema de estrelas
