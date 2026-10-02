@@ -78,14 +78,20 @@
                     <p>Métricas, gráficos e feedbacks de Game Design em tempo real</p>
                 </div>
                 <div class="dashboard-controls">
+                    <!-- Filtro por Semestre -->
+                    <div class="cyber-select-wrapper" style="width: 165px; text-align: left;">
+                        <select id="filter-semester" class="cyber-select">
+                            <option value="">Todos os Semestres</option>
+                        </select>
+                    </div>
                     <!-- Filtro por Turma -->
-                    <div class="cyber-select-wrapper" style="width: 170px; text-align: left;">
+                    <div class="cyber-select-wrapper" style="width: 155px; text-align: left;">
                         <select id="filter-class" class="cyber-select">
                             <option value="">Todas as Turmas</option>
                         </select>
                     </div>
                     <!-- Filtro por Jogo -->
-                    <div class="cyber-select-wrapper" style="width: 190px; text-align: left;">
+                    <div class="cyber-select-wrapper" style="width: 175px; text-align: left;">
                         <select id="filter-game" class="cyber-select">
                             <option value="">Todos os Jogos</option>
                         </select>
@@ -93,6 +99,10 @@
                     <!-- Botão Gerenciar Turmas e Alunos -->
                     <button class="btn-manage-classes" id="btn-open-manage-modal" title="Adicione ou remova turmas e alunos sem precisar abrir a planilha">
                         ⚙️ Gerenciar Turmas & Jogos
+                    </button>
+                    <!-- Botão Exportar Planilha Excel / CSV -->
+                    <button class="btn-export-excel" id="btn-export-excel" title="Baixar todos os feedbacks atualmente filtrados para o Excel (.csv)">
+                        📥 Exportar Excel
                     </button>
                     <div class="refresh-badge">
                         <span class="refresh-dot"></span>
@@ -139,26 +149,31 @@
         <section class="feedback-list-card">
             <div class="feedback-list-header">
                 <h2>📋 Feedbacks Recentes Recebidos</h2>
-                <span id="table-total-count" class="table-count-badge">0 feedbacks</span>
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                    <button id="btn-restore-hidden" style="display: none; background: rgba(255, 51, 51, 0.1); border: 1px solid rgba(255, 51, 51, 0.3); color: var(--color-neon-red); font-size: 0.72rem; padding: 0.25rem 0.6rem; border-radius: 6px; cursor: pointer; font-weight: 700;">Restaurar Ocultos (0)</button>
+                    <span id="table-total-count" class="table-count-badge">0 feedbacks</span>
+                </div>
             </div>
             <div class="feedback-table-wrapper">
                 <table class="feedback-table">
                     <thead>
                         <tr>
-                            <th style="width: 12%;">Data/Hora</th>
-                            <th style="width: 8%;">Turma</th>
-                            <th style="width: 13%;">Jogo / Aluno</th>
-                            <th style="width: 10%;">Diversão</th>
-                            <th style="width: 11%;">Dificuldade</th>
-                            <th style="width: 13%;">Onde Parou</th>
-                            <th style="width: 11%;">Estabilidade</th>
-                            <th style="width: 12%;">Tags Marcadas</th>
-                            <th style="width: 10%;">Comentários</th>
+                            <th style="width: 11%;">Data/Hora</th>
+                            <th style="width: 7%;">Semestre</th>
+                            <th style="width: 7%;">Turma</th>
+                            <th style="width: 12%;">Jogo / Aluno</th>
+                            <th style="width: 9%;">Diversão</th>
+                            <th style="width: 10%;">Dificuldade</th>
+                            <th style="width: 12%;">Onde Parou</th>
+                            <th style="width: 10%;">Estabilidade</th>
+                            <th style="width: 11%;">Tags Marcadas</th>
+                            <th style="width: 8%;">Comentários</th>
+                            <th style="width: 3%; text-align: center;" title="Ocultar do painel">Ação</th>
                         </tr>
                     </thead>
                     <tbody id="feedback-table-body">
                         <tr>
-                            <td colspan="9" class="no-data-msg" style="text-align: center; padding: 2rem;">Aguardando liberação de dados...</td>
+                            <td colspan="11" class="no-data-msg" style="text-align: center; padding: 2rem;">Aguardando liberação de dados...</td>
                         </tr>
                     </tbody>
                 </table>

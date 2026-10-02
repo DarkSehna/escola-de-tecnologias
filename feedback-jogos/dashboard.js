@@ -3,8 +3,8 @@
 // Escola de Tecnologias - TitanTech
 // ==========================================================================
 
-// URL DO GOOGLE APPS SCRIPT WEB APP (Planilha Google Sheets)
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGXz4C9jOUuHABhxPgeGN7K83v4uvf49-7hhLtxtnqUE6R-09Z0aAHvpWD3il5eRHf/exec";
+// URL BASE DA API NO CLOUDFLARE WORKERS + D1
+const API_BASE_URL = "https://feedback-api.gabrielsehna.workers.dev/api";
 
 // PINs autorizados: Gabriel (2510) e Sandro (9405)
 const ALLOWED_PINS = ["2510", "9405"];
@@ -62,8 +62,10 @@ const dashboardState = {
         tags: null
     },
     pollingIntervalId: null,
+    selectedSemester: "",
     selectedClass: "",
     selectedGame: "",
+    hiddenRecordIds: JSON.parse(localStorage.getItem("titanTech_hidden_feedbacks") || "[]"),
     allRecords: [],
     classesData: {}
 };
@@ -206,8 +208,22 @@ function handleLogout() {
     updatePINDots();
 }
 
-// --- GERENCIAMENTO DE DADOS DE TURMAS & JOGOS (LOCALSTORAGE + FALLBACK) ---
+// --- GERENCIAMENTO DE DADOS DE TURMAS & JOGOS (CLOUDFLARE D1 + LOCALSTORAGE + FALLBACK) ---
 async function initClassesData() {
+    try {
+        const res = await fetch(`${API_BASE_URL}/turmas`);
+        if (res.ok) {
+            const remoteData = await res.json();
+            if (remoteData && Object.keys(remoteData).length > 0) {
+                dashboardState.classesData = remoteData;
+                localStorage.setItem("titanTech_jogos_da_semana", JSON.stringify(remoteData));
+                return dashboardState.classesData;
+            }
+        }
+    } catch(err) {
+        console.warn("Falha ao carregar turmas do Cloudflare D1:", err);
+    }
+
     const local = localStorage.getItem("titanTech_jogos_da_semana");
     if (local) {
         try {
@@ -231,9 +247,25 @@ async function initClassesData() {
     return dashboardState.classesData;
 }
 
-function saveClassesData(data) {
+async function saveClassesData(data) {
     dashboardState.classesData = data;
     localStorage.setItem("titanTech_jogos_da_semana", JSON.stringify(data));
+    try {
+        const res = await fetch(`${API_BASE_URL}/turmas`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                action: "replace_all",
+                data: data
+            })
+        });
+        if (!res.ok) throw new Error("Erro na gravação remota de turmas no D1");
+        console.log("Turmas sincronizadas com sucesso no Cloudflare D1!");
+    } catch(err) {
+        console.warn("Falha ao sincronizar turmas na nuvem D1:", err);
+    }
 }
 
 // Popula os seletores de filtros no cabeçalho
@@ -289,24 +321,150 @@ function repopulateGameFilter(selectedClass, data) {
 }
 
 function setupFilterListeners() {
+    const selectSemester = document.getElementById("filter-semester");
     const selectClass = document.getElementById("filter-class");
     const selectGame = document.getElementById("filter-game");
-    if (!selectClass || !selectGame) return;
 
-    selectClass.addEventListener("change", (e) => {
-        dashboardState.selectedClass = e.target.value;
-        audio.playClick();
-        repopulateGameFilter(dashboardState.selectedClass, dashboardState.classesData);
-        dashboardState.selectedGame = "";
-        selectGame.value = "";
-        processAndRenderFeedbacks(dashboardState.allRecords);
+    if (selectSemester) {
+        selectSemester.addEventListener("change", (e) => {
+            dashboardState.selectedSemester = e.target.value;
+            audio.playClick();
+            processAndRenderFeedbacks(dashboardState.allRecords);
+        });
+    }
+
+    if (selectClass) {
+        selectClass.addEventListener("change", (e) => {
+            dashboardState.selectedClass = e.target.value;
+            audio.playClick();
+            repopulateGameFilter(dashboardState.selectedClass, dashboardState.classesData);
+            dashboardState.selectedGame = "";
+            if (selectGame) selectGame.value = "";
+            processAndRenderFeedbacks(dashboardState.allRecords);
+        });
+    }
+
+    if (selectGame) {
+        selectGame.addEventListener("change", (e) => {
+            dashboardState.selectedGame = e.target.value;
+            audio.playClick();
+            processAndRenderFeedbacks(dashboardState.allRecords);
+        });
+    }
+
+    const btnRestore = document.getElementById("btn-restore-hidden");
+    if (btnRestore) {
+        btnRestore.addEventListener("click", () => {
+            dashboardState.hiddenRecordIds = [];
+            localStorage.removeItem("titanTech_hidden_feedbacks");
+            audio.playSuccess();
+            showToast("Feedbacks ocultos restaurados no painel!", "cyan-toast");
+            processAndRenderFeedbacks(dashboardState.allRecords);
+        });
+    }
+
+    const btnExportExcel = document.getElementById("btn-export-excel");
+    if (btnExportExcel) {
+        btnExportExcel.addEventListener("click", () => {
+            audio.playClick();
+            exportFilteredFeedbacksToCSV();
+        });
+    }
+}
+
+// Exporta a tabela filtrada atual para CSV compatível com Microsoft Excel
+function exportFilteredFeedbacksToCSV() {
+    let records = (dashboardState.allRecords || []).filter(rec => {
+        const recId = getRecordId(rec);
+        return !dashboardState.hiddenRecordIds.includes(recId);
     });
 
-    selectGame.addEventListener("change", (e) => {
-        dashboardState.selectedGame = e.target.value;
-        audio.playClick();
-        processAndRenderFeedbacks(dashboardState.allRecords);
+    if (dashboardState.selectedSemester) {
+        records = records.filter(rec => getRecordSemester(rec) === dashboardState.selectedSemester);
+    }
+    if (dashboardState.selectedClass) {
+        records = records.filter(rec => {
+            const cls = rec["Turma"] || rec["turma"] || "";
+            return cls.toUpperCase() === dashboardState.selectedClass.toUpperCase();
+        });
+    }
+    if (dashboardState.selectedGame) {
+        records = records.filter(rec => {
+            const game = rec["Jogo"] || rec["jogo"] || "";
+            return game === dashboardState.selectedGame;
+        });
+    }
+
+    if (records.length === 0) {
+        showToast("Nenhum feedback para exportar com os filtros atuais.");
+        audio.playError();
+        return;
+    }
+
+    const headers = ["ID", "Data/Hora", "Semestre", "Turma", "Jogo / Aluno", "Estrelas", "Entendimento", "Dificuldade", "Onde Parou", "Bugs", "Tags", "Comentários"];
+    
+    function escapeCSV(val) {
+        if (val === undefined || val === null) return '""';
+        let str = String(val).replace(/"/g, '""');
+        return `"${str}"`;
+    }
+
+    const rows = [headers.map(escapeCSV).join(";")];
+
+    records.forEach(rec => {
+        const id = rec.id || "";
+        const rawDate = rec["timestamp"] || rec["Data/Hora"] || rec["Timestamp"] || rec["data"] || "";
+        let dateFormatted = rawDate;
+        try {
+            const d = new Date(rawDate);
+            if (!isNaN(d.getTime())) {
+                dateFormatted = d.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+            }
+        } catch(e) {}
+
+        const semestre = getRecordSemester(rec);
+        const turma = rec["Turma"] || rec["turma"] || "";
+        const jogo = rec["Jogo"] || rec["jogo"] || "";
+        const estrelas = rec["Estrelas"] || rec["estrelas"] || "";
+        const entendimento = rec["Entendimento"] || rec["entendimento"] || "";
+        const dificuldade = rec["Dificuldade"] || rec["dificuldade"] || "";
+        const ondeParou = rec["onde_parou"] || rec["Onde Parou"] || rec["ondeParou"] || "";
+        const bugs = rec["Bugs"] || rec["bugs"] || "";
+        let tags = rec["Tags"] || rec["tags"] || "";
+        if (Array.isArray(tags)) tags = tags.join(", ");
+        const comentarios = rec["Comentários"] || rec["Comentarios"] || rec["comentarios"] || "";
+
+        rows.push([
+            escapeCSV(id),
+            escapeCSV(dateFormatted),
+            escapeCSV(semestre),
+            escapeCSV(turma),
+            escapeCSV(jogo),
+            escapeCSV(estrelas),
+            escapeCSV(entendimento),
+            escapeCSV(dificuldade),
+            escapeCSV(ondeParou),
+            escapeCSV(bugs),
+            escapeCSV(tags),
+            escapeCSV(comentarios)
+        ].join(";"));
     });
+
+    const csvContent = "\uFEFF" + rows.join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const semName = dashboardState.selectedSemester ? `_${dashboardState.selectedSemester}` : "";
+    const turmName = dashboardState.selectedClass ? `_Turma_${dashboardState.selectedClass}` : "";
+    a.href = url;
+    a.download = `feedbacks_jogos${semName}${turmName}_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    audio.playSuccess();
+    showToast(`Planilha com ${records.length} avaliações exportada com sucesso!`, "cyan-toast");
 }
 
 // --- MODAL DE GERENCIAMENTO DE TURMAS & JOGOS ---
@@ -426,13 +584,25 @@ function setupClassManagerModal() {
     });
 
     // Salvar alterações
-    btnSaveClasses.addEventListener("click", () => {
-        saveClassesData(dashboardState.classesData);
-        populateFilters();
-        processAndRenderFeedbacks(dashboardState.allRecords);
-        audio.playSuccess();
-        showToast("Turmas e jogos salvos com sucesso!", "cyan-toast");
-        modal.style.display = "none";
+    btnSaveClasses.addEventListener("click", async () => {
+        btnSaveClasses.disabled = true;
+        const originalText = btnSaveClasses.innerHTML;
+        btnSaveClasses.innerHTML = "Salvando na Nuvem...";
+        try {
+            await saveClassesData(dashboardState.classesData);
+            populateFilters();
+            processAndRenderFeedbacks(dashboardState.allRecords);
+            audio.playSuccess();
+            showToast("Turmas sincronizadas com o Cloudflare D1!", "cyan-toast");
+            modal.style.display = "none";
+        } catch(err) {
+            console.error("Erro ao salvar turmas:", err);
+            showToast("Erro ao sincronizar com o Cloudflare D1.");
+            audio.playError();
+        } finally {
+            btnSaveClasses.disabled = false;
+            btnSaveClasses.innerHTML = originalText;
+        }
     });
 }
 
@@ -562,22 +732,73 @@ function renderClassesManager() {
     });
 }
 
-// --- BUSCA DE DADOS NA PLANILHA GOOGLE VIA APPS SCRIPT ---
+// Auxiliares de Semestre e Identificação de Registro
+function getRecordSemester(rec) {
+    if (rec["semestre"]) return rec["semestre"];
+    const rawDate = rec["Data/Hora"] || rec["Timestamp"] || rec["timestamp"] || rec["data"] || "";
+    if (!rawDate) return "2026.1";
+    try {
+        const d = new Date(rawDate);
+        if (isNaN(d.getTime())) return "2026.1";
+        const year = d.getFullYear();
+        const month = d.getMonth() + 1;
+        // Meses 1 a 7 (até julho): 1º Semestre; Meses 8 a 12: 2º Semestre
+        const sem = month <= 7 ? "1" : "2";
+        return `${year}.${sem}`;
+    } catch(e) {
+        return "2026.1";
+    }
+}
+
+function getRecordId(rec) {
+    if (rec.id !== undefined && rec.id !== null) return String(rec.id);
+    const rawDate = rec["Data/Hora"] || rec["Timestamp"] || rec["timestamp"] || rec["data"] || "";
+    const turma = rec["Turma"] || rec["turma"] || "";
+    const jogo = rec["Jogo"] || rec["jogo"] || "";
+    const estrelas = rec["Estrelas"] || rec["estrelas"] || "";
+    return `${rawDate}_${turma}_${jogo}_${estrelas}`;
+}
+
+function updateSemesterFilter(records) {
+    const selectSem = document.getElementById("filter-semester");
+    if (!selectSem) return;
+
+    const semesters = new Set();
+    (records || []).forEach(rec => {
+        const sem = getRecordSemester(rec);
+        if (sem) semesters.add(sem);
+    });
+
+    const sorted = Array.from(semesters).sort().reverse();
+    const currentVal = dashboardState.selectedSemester;
+
+    selectSem.innerHTML = '<option value="">Todos os Semestres</option>';
+    sorted.forEach(sem => {
+        const opt = document.createElement("option");
+        opt.value = sem;
+        opt.textContent = `${sem} (${sem.endsWith('.1') ? '1º Semestre' : '2º Semestre'})`;
+        if (sem === currentVal) opt.selected = true;
+        selectSem.appendChild(opt);
+    });
+}
+
+// --- BUSCA DE DADOS NO BANCO CLOUDFLARE D1 ---
 function fetchAndRenderData() {
-    fetch(APPS_SCRIPT_URL)
+    fetch(`${API_BASE_URL}/feedbacks`)
         .then(response => {
-            if (!response.ok) throw new Error("Erro na conexão da API");
+            if (!response.ok) throw new Error("Erro na conexão da API Cloudflare");
             return response.json();
         })
         .then(data => {
             dashboardState.allRecords = Array.isArray(data) ? data : (data.value || []);
+            updateSemesterFilter(dashboardState.allRecords);
             processAndRenderFeedbacks(dashboardState.allRecords);
         })
         .catch(err => {
             console.warn("API indisponível ou CORS bloqueado.", err);
             dashboardState.allRecords = [];
             processAndRenderFeedbacks([]);
-            showToast("Aviso: Falha ao carregar dados da planilha Google.");
+            showToast("Aviso: Falha ao carregar dados do Cloudflare D1.");
         });
 }
 
@@ -586,14 +807,28 @@ function processAndRenderFeedbacks(records) {
     const tableBody = document.getElementById("feedback-table-body");
     tableBody.innerHTML = "";
 
-    // Filtra registros por turma e por jogo selecionados
-    let filteredRecords = records || [];
+    // 1. Remove registros ocultados pelo professor
+    let filteredRecords = (records || []).filter(rec => {
+        const recId = getRecordId(rec);
+        return !dashboardState.hiddenRecordIds.includes(recId);
+    });
+
+    // 2. Filtra por Semestre
+    if (dashboardState.selectedSemester) {
+        filteredRecords = filteredRecords.filter(rec => {
+            return getRecordSemester(rec) === dashboardState.selectedSemester;
+        });
+    }
+
+    // 3. Filtra por Turma
     if (dashboardState.selectedClass) {
         filteredRecords = filteredRecords.filter(rec => {
             const className = rec["Turma"] || rec["turma"] || "";
             return className.toUpperCase() === dashboardState.selectedClass.toUpperCase();
         });
     }
+
+    // 4. Filtra por Jogo
     if (dashboardState.selectedGame) {
         filteredRecords = filteredRecords.filter(rec => {
             const gameName = rec["Jogo"] || rec["jogo"] || "";
@@ -743,9 +978,12 @@ function processAndRenderFeedbacks(records) {
             const gameName = rec["Jogo"] || rec["jogo"] || "-";
             const numStars = parseInt(rec["Estrelas"] || rec["estrelas"]) || 0;
             const comentariosVal = rec["Comentários"] || rec["Comentarios"] || rec["comentarios"] || "";
+            const semVal = getRecordSemester(rec);
+            const recId = getRecordId(rec);
 
             tr.innerHTML = `
                 <td style="color: var(--color-text-muted); font-size: 0.78rem;">${dateStr}</td>
+                <td><span class="cell-semester-badge">${semVal}</span></td>
                 <td><span class="cell-class-pill click-filter-class" data-class="${className}" title="Filtrar por esta turma">${className}</span></td>
                 <td><span class="cell-game-pill click-filter-game" data-game="${gameName}" title="Filtrar por este jogo">${gameName}</span></td>
                 <td class="cell-stars">${"★".repeat(numStars) || "-"}</td>
@@ -753,7 +991,8 @@ function processAndRenderFeedbacks(records) {
                 <td class="cell-progress ${progClass}">${progEmoji}${pVal || "-"}</td>
                 <td class="cell-bugs ${bugClass}">${bugEmoji}${bVal || "-"}</td>
                 <td class="cell-tags">${tagsHTML || "-"}</td>
-                <td style="font-size: 0.78rem; color: var(--color-text-muted); font-style: italic; max-width: 200px; word-wrap: break-word;">${comentariosVal || "-"}</td>
+                <td style="font-size: 0.78rem; color: var(--color-text-muted); font-style: italic; max-width: 180px; word-wrap: break-word;">${comentariosVal || "-"}</td>
+                <td style="text-align: center;"><button class="btn-delete-row" data-id="${recId}" data-student="${gameName}" data-class="${className}" title="Ocultar esta avaliação do painel">🗑️</button></td>
             `;
             tableBody.appendChild(tr);
         });
@@ -780,6 +1019,58 @@ function processAndRenderFeedbacks(records) {
                 }
             });
         });
+
+        // Botão de lixeira para excluir/ocultar feedback individual
+        tableBody.querySelectorAll(".btn-delete-row").forEach(btn => {
+            btn.addEventListener("click", async (e) => {
+                e.stopPropagation();
+                const recId = btn.dataset.id;
+                const student = btn.dataset.student;
+                const cls = btn.dataset.class;
+                if (confirm(`Deseja excluir definitivamente a avaliação de "${student}" (Turma ${cls}) do banco de dados?`)) {
+                    audio.playClick();
+                    // Se for ID numérico (registro do Cloudflare D1), exclui direto no banco
+                    if (/^\d+$/.test(recId)) {
+                        try {
+                            btn.disabled = true;
+                            btn.textContent = "⏳";
+                            const res = await fetch(`${API_BASE_URL}/feedbacks/${recId}`, {
+                                method: "DELETE"
+                            });
+                            if (!res.ok) throw new Error("Erro ao excluir do banco D1");
+                            dashboardState.allRecords = dashboardState.allRecords.filter(r => String(getRecordId(r)) !== String(recId));
+                            processAndRenderFeedbacks(dashboardState.allRecords);
+                            audio.playSuccess();
+                            showToast(`Avaliação de ${student} excluída do banco com sucesso!`, "cyan-toast");
+                            return;
+                        } catch(err) {
+                            console.error("Falha ao deletar no D1:", err);
+                            showToast("Falha ao excluir no banco de dados.");
+                            audio.playError();
+                        } finally {
+                            btn.disabled = false;
+                            btn.textContent = "🗑️";
+                        }
+                    }
+                    // Fallback para ocultação local (caso seja registro legado ou offline)
+                    dashboardState.hiddenRecordIds.push(recId);
+                    localStorage.setItem("titanTech_hidden_feedbacks", JSON.stringify(dashboardState.hiddenRecordIds));
+                    showToast(`Avaliação de ${student} ocultada do painel.`);
+                    processAndRenderFeedbacks(dashboardState.allRecords);
+                }
+            });
+        });
+    }
+
+    // Atualiza botão de restaurar feedbacks ocultos
+    const btnRestore = document.getElementById("btn-restore-hidden");
+    if (btnRestore) {
+        if (dashboardState.hiddenRecordIds && dashboardState.hiddenRecordIds.length > 0) {
+            btnRestore.style.display = "inline-block";
+            btnRestore.textContent = `Restaurar Ocultos (${dashboardState.hiddenRecordIds.length})`;
+        } else {
+            btnRestore.style.display = "none";
+        }
     }
 
     // Renderiza os 4 Gráficos

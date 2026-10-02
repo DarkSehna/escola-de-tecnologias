@@ -3,8 +3,8 @@
 // Escola de Tecnologias - TitanTech
 // ==========================================================================
 
-// URL DO GOOGLE APPS SCRIPT WEB APP (Substituir pela URL gerada ao publicar o Web App)
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGXz4C9jOUuHABhxPgeGN7K83v4uvf49-7hhLtxtnqUE6R-09Z0aAHvpWD3il5eRHf/exec";
+// URL BASE DA API NO CLOUDFLARE WORKERS + D1
+const API_BASE_URL = "https://feedback-api.gabrielsehna.workers.dev/api";
 
 // --- SINTETIZADOR DE ÁUDIO (WEB AUDIO API) ---
 class SynthAudio {
@@ -172,35 +172,53 @@ function loadGamesDropdown() {
         };
     }
 
-    // Tenta carregar do localStorage configurado pelo professor primeiro
-    const localSaved = localStorage.getItem("titanTech_jogos_da_semana");
-    if (localSaved) {
-        try {
-            const parsed = JSON.parse(localSaved);
-            if (parsed && Object.keys(parsed).length > 0) {
-                setupDropdownWithData(parsed);
-                attachDropdownListeners();
-                return;
-            }
-        } catch(e) {
-            console.warn("Falha ao ler turmas locais:", e);
-        }
-    }
-
-    fetch("jogos_da_semana.json")
-        .then(response => {
-            if (!response.ok) throw new Error("Erro ao carregar lista de jogos.");
-            return response.json();
+    // 1. Tenta buscar em tempo real do Cloudflare D1
+    fetch(`${API_BASE_URL}/turmas`)
+        .then(res => {
+            if (!res.ok) throw new Error("Erro na API de turmas");
+            return res.json();
         })
-        .then(data => {
-            setupDropdownWithData(data);
+        .then(remoteData => {
+            if (remoteData && Object.keys(remoteData).length > 0) {
+                setupDropdownWithData(remoteData);
+                attachDropdownListeners();
+                localStorage.setItem("titanTech_jogos_da_semana", JSON.stringify(remoteData));
+            } else {
+                throw new Error("Dados remotos vazios");
+            }
         })
         .catch(err => {
-            console.error(err);
-            showToast("Falha ao carregar lista de jogos.", "pink-toast");
-        })
-        .finally(() => {
-            attachDropdownListeners();
+            console.warn("Falha ao buscar turmas no Cloudflare D1, usando fallback local:", err);
+            // 2. Fallback: localStorage
+            const localSaved = localStorage.getItem("titanTech_jogos_da_semana");
+            if (localSaved) {
+                try {
+                    const parsed = JSON.parse(localSaved);
+                    if (parsed && Object.keys(parsed).length > 0) {
+                        setupDropdownWithData(parsed);
+                        attachDropdownListeners();
+                        return;
+                    }
+                } catch(e) {
+                    console.warn("Falha ao ler turmas locais:", e);
+                }
+            }
+            // 3. Fallback: jogos_da_semana.json
+            fetch("jogos_da_semana.json")
+                .then(response => {
+                    if (!response.ok) throw new Error("Erro ao carregar lista de jogos.");
+                    return response.json();
+                })
+                .then(data => {
+                    setupDropdownWithData(data);
+                })
+                .catch(errJson => {
+                    console.error(errJson);
+                    showToast("Falha ao carregar lista de jogos.", "pink-toast");
+                })
+                .finally(() => {
+                    attachDropdownListeners();
+                });
         });
 }
 
@@ -346,17 +364,35 @@ function handleFormSubmit(e) {
     submitBtn.disabled = true;
     spinner.style.display = "inline-block";
 
-    // Envia os dados para a Google Planilha via fetch POST
-    fetch(APPS_SCRIPT_URL, {
+    const payload = {
+        turma: formState.turma,
+        jogo: formState.jogo,
+        estrelas: formState.estrelas,
+        entendimento: formState.entendimento,
+        dificuldade: formState.dificuldade,
+        onde_parou: formState.ondeParou,
+        ondeParou: formState.ondeParou,
+        bugs: formState.bugs,
+        tags: Array.isArray(formState.tags) ? formState.tags.join(', ') : (formState.tags || ''),
+        comentarios: formState.comentarios
+    };
+
+    // Envia os dados para o Cloudflare Workers + D1
+    fetch(`${API_BASE_URL}/feedbacks`, {
         method: "POST",
-        mode: "no-cors", // Necessário para contornar redirecionamentos de CORS do Apps Script
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify(formState)
+        body: JSON.stringify(payload)
+    })
+    .then(async (res) => {
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || "Erro no servidor ao salvar feedback");
+        }
+        return res.json();
     })
     .then(() => {
-        // Como o modo 'no-cors' não retorna conteúdo da resposta, assumimos sucesso caso a promise resolva.
         audio.playSuccess();
         showToast("Feedback enviado com sucesso! Obrigado!", "cyan-toast");
         resetForm();
