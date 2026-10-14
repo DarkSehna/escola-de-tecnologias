@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguidor de Linha PID & Mecânica | Escola de Tecnologias</title>
+    
+    <!-- Meta SEO -->
+    <meta name="description" content="Simulador de Seguidor de Linha com controle PID, física de sensores LEGO 60Hz, transição de estados Modo Garagem e Modo Corrida, e telemetria live.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Estilo v2 Definitivo -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="mode-garage">
+
+    <!-- BARRA SUPERIOR DA APLICAÇÃO -->
+    <header class="app-header">
+        <div class="brand-section">
+            <a href="../index.html" class="btn-back" title="Voltar ao Portal Principal">
+                <span>←</span> Portal
+            </a>
+            <h1 class="app-title">
+                <span>Seguidor de Linha</span>
+                <span class="highlight">PID & Mecânica</span>
+                <span class="mode-badge" id="app-mode-badge">🛠️ MODO GARAGEM</span>
+            </h1>
+        </div>
+        <div style="font-size: 0.85rem; color: var(--color-text-dim);">
+            Torneio de Robótica • Escola de Tecnologias
+        </div>
+    </header>
+
+    <!-- CONTAINER PRINCIPAL 100VH (ZERO-SCROLL ABSOLUTO) -->
+    <div class="app-container">
+        
+        <!-- PAINEL DA ESQUERDA: GARAGEM - GEOMETRIA MECÂNICA & PRESETS -->
+        <aside class="panel-card left-sidebar" id="garage-left-panel">
+            <div class="panel-header">
+                <h2 class="panel-title">
+                    <span>🛠️</span> Oficina & Mecânica
+                </h2>
+            </div>
+
+            <!-- GEOMETRIA E MECÂNICA DO ROBÔ -->
+            <div class="control-section">
+                <div class="section-label">
+                    <span>📐</span> Chassi & Rodas
+                </div>
+
+                <!-- Distância do Sensor ao Eixo (5cm a 25cm) -->
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <label for="sensor-dist-input">Braço do Sensor (Eixo ➔ Sensor)</label>
+                        <div class="slider-input-box">
+                            <input type="number" id="num-sensor-dist" class="num-input" value="10.0" step="0.5">
+                            <span class="unit-tag">cm</span>
+                        </div>
+                    </div>
+                    <input type="range" id="sensor-dist-input" min="5" max="25" step="0.5" value="10.0">
+                    <span style="font-size: 0.7rem; color: var(--color-text-dim);">Mínimo: 5 cm | Máximo: 25 cm (Padrão: 10 cm)</span>
+                </div>
+
+                <!-- Espaçamento entre Sensores -->
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <label for="sensor-gap-input">Espaçamento dos Sensores</label>
+                        <div class="slider-input-box">
+                            <input type="number" id="num-sensor-gap" class="num-input" value="2.2" step="0.1">
+                            <span class="unit-tag">cm</span>
+                        </div>
+                    </div>
+                    <input type="range" id="sensor-gap-input" min="1.0" max="6.0" step="0.1" value="2.2">
+                    <span style="font-size: 0.7rem; color: var(--color-text-dim);">Largura Fita: 2.0 cm (Padrão: 2.2 cm)</span>
+                </div>
+
+                <!-- Redução de Engrenagens -->
+                <div class="select-group">
+                    <label for="gear-ratio-select">Relação de Engrenagens (LEGO)</label>
+                    <select id="gear-ratio-select" class="styled-select">
+                        <option value="1">1:1 - Direto (Equilibrado)</option>
+                        <option value="0.333">1:3 - Velocidade (Maior v_max, menor torque)</option>
+                        <option value="3">3:1 - Torque (Arrancada rápida, menor v_max)</option>
+                    </select>
+                </div>
+
+                <!-- Diâmetro da Roda -->
+                <div class="select-group">
+                    <label for="wheel-size-select">Diâmetro das Rodas (LEGO)</label>
+                    <select id="wheel-size-select" class="styled-select">
+                        <option value="56">Média LEGO (56 mm)</option>
+                        <option value="30">Pequena LEGO (30 mm)</option>
+                        <option value="81">Grande LEGO (81 mm)</option>
+                    </select>
+                </div>
+
+                <!-- Modo de Leitura dos Sensores -->
+                <div class="select-group">
+                    <label for="sensor-mode-select">Modo dos Sensores</label>
+                    <select id="sensor-mode-select" class="styled-select">
+                        <option value="dual">Duplo Sensor (Linha no Meio)</option>
+                        <option value="single">Sensor Único (Seguidor de Borda)</option>
+                    </select>
+                </div>
+
+                <!-- Taxa de Amostragem do Sensor -->
+                <div class="select-group">
+                    <label for="sensor-rate-select">Tecnologia & Amostragem</label>
+                    <select id="sensor-rate-select" class="styled-select" onchange="changeSensorSamplingRate(this.value)">
+                        <option value="60">🔴 LEGO EV3 / Spike (60 Hz / 16ms)</option>
+                        <option value="500">⚡ Robô Maker QTR (500 Hz / 2ms)</option>
+                        <option value="1000">🚀 Ideal Sem Atraso (1000 Hz / 1ms)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- PRESETS DIDÁTICOS RÁPIDOS -->
+            <div class="control-section">
+                <div class="section-label">
+                    <span>🎯</span> Presets de Teste Rápido
+                </div>
+                <div class="preset-grid">
+                    <button class="btn-preset" onclick="applyPreset('stable')">🛡️ Estável</button>
+                    <button class="btn-preset" onclick="applyPreset('speed')">🚀 Torneio</button>
+                    <button class="btn-preset" onclick="applyPreset('oscillating')">〰️ Sem Kd</button>
+                    <button class="btn-preset" onclick="applyPreset('longAxle')">📏 Braço Longo</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- COLUNA CENTRAL: PISTAS, SIMULADOR CANVAS, LUPA 4X E COCKPIT -->
+        <main class="simulation-main" id="sim-main-container">
+            <!-- SELETOR DE PISTAS -->
+            <div class="track-selector-bar">
+                <button class="track-tab-btn active" id="tab-official" onclick="switchTrack('official')">
+                    <span>🏁</span> Pista Oficial Torneio
+                </button>
+                <label class="track-tab-btn" style="cursor: pointer;">
+                    <span>📁</span> Carregar Pista (Imagem)
+                    <input type="file" id="track-file-input" accept="image/*" style="display: none;" onchange="handleCustomTrackUpload(event)">
+                </label>
+            </div>
+
+            <!-- CONTAINER CANVAS DO SIMULADOR (EXPANSÃO DINÂMICA FLEX: 1) -->
+            <div class="canvas-container" id="canvas-wrapper">
+                <canvas id="sim-canvas" width="1024" height="420"></canvas>
+                
+                <!-- MINI-LUPA OVERLAY (PIP ZOOM 4X NO ROBÔ E SENSORES) -->
+                <div class="pip-zoom-box" id="pip-container" title="Lupa 4x: Visão Aumentada dos Sensores na Fita">
+                    <div class="pip-label">🔍 LUPA 4X PIP</div>
+                    <canvas id="pip-canvas" width="150" height="150"></canvas>
+                </div>
+            </div>
+
+            <!-- CONTROLES MODO GARAGEM (VISÍVEL APENAS NA GARAGEM) -->
+            <div class="sim-controls-bar garage-controls" id="garage-controls-bar">
+                <button class="btn-action btn-race-start" id="btn-race-start" onclick="enterRaceMode()">
+                    <span>🏎️</span> INICIAR CORRIDA
+                </button>
+                <button class="btn-action btn-secondary" onclick="resetSimulation()">
+                    <span>🔄</span> Resetar Robô
+                </button>
+                <button class="btn-action btn-secondary" id="btn-checkpoint" onclick="teleportToCheckpoint()" title="Reposicionar no último ponto válido da pista" style="display: none;">
+                    <span>📍</span> Checkpoint
+                </button>
+                <button class="btn-action btn-secondary" onclick="copyPythonVariables()" title="Copiar variáveis formatadas em Python para EV3Dev/MicroPython">
+                    <span>📋</span> Copiar Código
+                </button>
+                <button class="btn-action btn-secondary" id="btn-speed-toggle" onclick="toggleTurboSpeed()">
+                    <span>⚡</span> Velocidade: <strong id="speed-multiplier-label">1x</strong>
+                </button>
+                <button class="btn-action btn-danger" onclick="clearTrackTrail()">
+                    <span>🧹</span> Limpar Rastro
+                </button>
+            </div>
+
+            <!-- TELEMETRIA HUD GARAGEM -->
+            <div class="telemetry-hud-grid garage-hud" id="garage-hud-grid">
+                <div class="hud-stat-card">
+                    <span class="hud-stat-label">⏱️ Tempo de Volta</span>
+                    <span class="hud-stat-value highlight-cyan" id="hud-lap-time">00:00.00</span>
+                </div>
+                <div class="hud-stat-card">
+                    <span class="hud-stat-label">🏆 Melhor Volta</span>
+                    <span class="hud-stat-value highlight-green" id="hud-best-lap">--:--.--</span>
+                </div>
+                <div class="hud-stat-card">
+                    <span class="hud-stat-label">🏎️ Velocidade Real</span>
+                    <span class="hud-stat-value highlight-yellow" id="hud-real-speed">0 cm/s</span>
+                </div>
+                <div class="hud-stat-card">
+                    <span class="hud-stat-label">🚨 Infrações</span>
+                    <span class="hud-stat-value highlight-red" id="hud-infractions">0 / 5</span>
+                </div>
+                <div class="hud-stat-card">
+                    <span class="hud-stat-label">🏁 Status do Robô</span>
+                    <span class="hud-stat-value" id="hud-robot-status" style="font-size: 0.85rem; color: #4ade80;">Pronto na Largada</span>
+                </div>
+            </div>
+
+            <!-- PAINEL HORIZONTAL DE PID COM INPUTS NUMÉRICOS (MODO GARAGEM) -->
+            <div class="panel-card pid-horizontal-panel garage-pid" id="garage-pid-panel">
+                <div class="pid-panel-header">
+                    <h2 class="panel-title" style="font-size: 0.95rem;">
+                        <span>⚡</span> Calibração de PID & Motores (Oficina)
+                    </h2>
+                </div>
+                <div class="pid-horizontal-grid">
+                    <!-- Velocidade Base -->
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <label for="base-speed-input">Velocidade Base (V_base)</label>
+                            <div class="slider-input-box">
+                                <input type="number" id="num-base-speed" class="num-input" value="50" step="5">
+                                <span class="unit-tag">%</span>
+                            </div>
+                        </div>
+                        <input type="range" id="base-speed-input" min="10" max="100" step="5" value="50">
+                    </div>
+
+                    <!-- Kp (Proporcional) -->
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <label for="kp-input">Ganho Proporcional (Kp)</label>
+                            <div class="slider-input-box">
+                                <input type="number" id="num-kp" class="num-input" value="2.20" step="0.05">
+                            </div>
+                        </div>
+                        <input type="range" id="kp-input" min="0.00" max="5.00" step="0.05" value="2.20">
+                    </div>
+
+                    <!-- Ki (Integral) -->
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <label for="ki-input">Ganho Integral (Ki)</label>
+                            <div class="slider-input-box">
+                                <input type="number" id="num-ki" class="num-input" value="0.002" step="0.001">
+                            </div>
+                        </div>
+                        <input type="range" id="ki-input" min="0.000" max="0.050" step="0.001" value="0.002">
+                    </div>
+
+                    <!-- Kd (Derivativo) -->
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <label for="kd-input">Ganho Derivativo (Kd)</label>
+                            <div class="slider-input-box">
+                                <input type="number" id="num-kd" class="num-input" value="4.50" step="0.1">
+                            </div>
+                        </div>
+                        <input type="range" id="kd-input" min="0.00" max="10.00" step="0.1" value="4.50">
+                    </div>
+                </div>
+            </div>
+
+            <!-- COCKPIT FLUTUANTE DE CORRIDA (MODO PISTA / RACE) -->
+            <div class="race-cockpit-bar" id="race-cockpit">
+                <div class="cockpit-section live-hud">
+                    <div class="cockpit-stat">
+                        <span class="stat-lbl">⏱️ TEMPO</span>
+                        <span class="stat-val highlight-cyan" id="race-hud-lap">00:00.00</span>
+                    </div>
+                    <div class="cockpit-stat">
+                        <span class="stat-lbl">🏎️ VELOCIDADE</span>
+                        <span class="stat-val highlight-yellow" id="race-hud-speed">0 cm/s</span>
+                    </div>
+                    <div class="cockpit-stat">
+                        <span class="stat-lbl">🚨 INFRAÇÕES</span>
+                        <span class="stat-val highlight-red" id="race-hud-infractions">0/5</span>
+                    </div>
+                </div>
+
+                <div class="cockpit-section live-controls">
+                    <button class="btn-action btn-primary" id="btn-race-play-pause" onclick="toggleSimulation()">
+                        <span id="race-play-icon">⏸️</span> Pausar
+                    </button>
+                    <button class="btn-action btn-secondary" onclick="resetSimulation(true)" title="Reiniciar posição do robô na largada">
+                        <span>🔄</span> Reiniciar
+                    </button>
+                    <button class="btn-action btn-checkpoint" id="btn-race-checkpoint" onclick="teleportToCheckpoint()" style="display: none;">
+                        <span>📍</span> Checkpoint
+                    </button>
+                    <button class="btn-action btn-secondary" onclick="exitRaceModeToGarage()">
+                        <span>🛠️</span> Voltar à Garagem
+                    </button>
+                </div>
+
+                <!-- LIVE PID TUNING COM KP, KI E KD NO COCKPIT DE CORRIDA -->
+                <div class="cockpit-section live-tuning">
+                    <div class="mini-pid-box">
+                        <span class="pid-tag">Kp</span>
+                        <input type="number" id="race-num-kp" class="num-input-sm" value="2.20" step="0.05">
+                        <input type="range" id="race-kp-input" min="0.00" max="5.00" step="0.05" value="2.20" class="mini-range">
+                    </div>
+                    <div class="mini-pid-box">
+                        <span class="pid-tag">Ki</span>
+                        <input type="number" id="race-num-ki" class="num-input-sm" value="0.002" step="0.001">
+                        <input type="range" id="race-ki-input" min="0.000" max="0.050" step="0.001" value="0.002" class="mini-range">
+                    </div>
+                    <div class="mini-pid-box">
+                        <span class="pid-tag">Kd</span>
+                        <input type="number" id="race-num-kd" class="num-input-sm" value="4.50" step="0.1">
+                        <input type="range" id="race-kd-input" min="0.00" max="10.00" step="0.1" value="4.50" class="mini-range">
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- COLUNA DA DIREITA: PAINEL DE EQUAÇÕES LIVE & MENTOR IA -->
+        <aside class="panel-card right-sidebar" id="garage-right-panel">
+            <div class="panel-header">
+                <h2 class="panel-title">
+                    <span>📊</span> Equações & Telemetria
+                </h2>
+                <button class="btn-icon-zoom" onclick="openTelemetryModal()" title="Ampliar Gráfico e Ver Histórico de Diagnósticos do Mentor IA">🔍</button>
+            </div>
+
+            <!-- PAINEL DE EQUAÇÕES EM TEMPO REAL -->
+            <div class="control-section">
+                <div class="section-label">
+                    <span>🧮</span> Fórmulas & Cálculo em Tempo Real
+                </div>
+
+                <div class="equations-card">
+                    <div class="equation-row">
+                        <span>Erro = Sen_L - Sen_R</span>
+                        <span class="equation-val" id="eq-error">0.00</span>
+                    </div>
+                    <div class="equation-row purple" id="row-eq-p">
+                        <span>P = Kp × Erro</span>
+                        <span class="equation-val" id="eq-p">0.00</span>
+                    </div>
+                    <div class="equation-row green" id="row-eq-i">
+                        <span>I = Ki × ∑Erro</span>
+                        <span class="equation-val" id="eq-i">0.00</span>
+                    </div>
+                    <div class="equation-row yellow" id="row-eq-d">
+                        <span>D = Kd × ΔErro</span>
+                        <span class="equation-val" id="eq-d">0.00</span>
+                    </div>
+                    <div class="equation-row">
+                        <span>Turn = P + I + D</span>
+                        <span class="equation-val" id="eq-turn" style="color: var(--color-cyan);">0.00</span>
+                    </div>
+                    <div class="equation-row">
+                        <span>Mot_L / Mot_R</span>
+                        <span class="equation-val" id="eq-motors" style="font-size: 0.75rem;">60% / 60%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRÁFICO DINÂMICO DE ERRO vs CORREÇÃO -->
+            <div class="control-section">
+                <div class="section-label">
+                    <span>📈</span> Gráfico de Erro (Vermelho) & Correção (Ciano)
+                </div>
+                <canvas id="graph-canvas" width="300" height="120"></canvas>
+            </div>
+
+            <!-- DIAGNÓSTICO E MENTOR DIDÁTICO AUTOMÁTICO -->
+            <div class="control-section">
+                <div class="section-label">
+                    <span>💡</span> Mentor Didático Automático
+                </div>
+                <div class="diagnostic-box">
+                    <div class="diagnostic-icon" id="diag-icon">🤖</div>
+                    <div>
+                        <div class="diagnostic-title" id="diag-title">Pronto para a Garagem!</div>
+                        <div class="diagnostic-text" id="diag-text">
+                            Configure o chassi na oficina e clique em <strong>INICIAR CORRIDA</strong> para expandir a pista.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- MODAL DE TELEMETRIA EXPANDIDA PANORAMA -->
+    <div class="modal-backdrop" id="telemetry-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📈 Telemetria Expandida & Onda de Controle</h3>
+                <button class="btn-close-modal" onclick="closeTelemetryModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <!-- Canvas Grande de Forma de Onda Panorâmica com Zoom & Navegação -->
+                <div class="large-graph-section">
+                    <div class="graph-header-bar">
+                        <span>Forma de Onda: Erro (Vermelho) vs Correção Turn (Ciano)</span>
+                        <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;">
+                            <span id="history-scrub-label" style="font-size: 0.72rem; color: var(--color-text-dim); margin-right: 0.3rem;">Tempo Real</span>
+                            <span id="zoom-level-label" style="font-size: 0.72rem; font-weight: 700; color: var(--color-cyan); background: rgba(6,182,212,0.15); padding: 0.15rem 0.45rem; border-radius: 4px; border: 1px solid rgba(6,182,212,0.3);">Ampl: 1.0x</span>
+                            <span id="time-window-label" style="font-size: 0.72rem; font-weight: 700; color: var(--color-yellow); background: rgba(234,179,8,0.15); padding: 0.15rem 0.45rem; border-radius: 4px; border: 1px solid rgba(234,179,8,0.3);">Janela: 200 pts</span>
+                            
+                            <button class="btn-action btn-secondary btn-sm" onclick="adjustGraphZoom(1.4)" title="Aumentar Amplitude / Zoom Vertical">↕️ Ampl +</button>
+                            <button class="btn-action btn-secondary btn-sm" onclick="adjustGraphZoom(0.71)" title="Diminuir Amplitude / Zoom Vertical">↕️ Ampl -</button>
+                            <button class="btn-action btn-secondary btn-sm" onclick="adjustTimeWindow(0.5)" title="Zoom no Tempo (Ver menos amostras, ondas espaçadas)">🔍+ Zoom Tempo</button>
+                            <button class="btn-action btn-secondary btn-sm" onclick="adjustTimeWindow(2.0)" title="Visão Geral do Tempo (Ver mais amostras)">🔍- Zoom Tempo</button>
+                            <button class="btn-action btn-secondary btn-sm" onclick="resetGraphZoom()" title="Resetar Escala e Tempo">🔄 Reset</button>
+                            <button class="btn-action btn-secondary btn-sm" id="btn-pause-graph" onclick="toggleGraphPause()">
+                                <span id="graph-pause-icon">⏸️</span> Pausar Onda
+                            </button>
+                        </div>
+                    </div>
+                    <div class="graph-stats-bar" id="graph-stats-bar" style="display: flex; gap: 1rem; align-items: center; font-size: 0.75rem; color: var(--color-text-dim); background: rgba(0,0,0,0.3); padding: 0.25rem 0.6rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 0.35rem; flex-wrap: wrap;">
+                        <span>🔴 Pico Erro: <strong id="stat-peak-error" style="color: #ef4444;">0.00</strong></span>
+                        <span>🔷 Pico Turn: <strong id="stat-peak-turn" style="color: #06b6d4;">0.00</strong></span>
+                        <span>🏎️ Vel Média: <strong id="stat-avg-speed" style="color: var(--color-yellow);">0 cm/s</strong></span>
+                        <span style="margin-left: auto; color: var(--color-cyan); font-size: 0.7rem;">💡 Passe o mouse na onda para inspecionar</span>
+                    </div>
+                    <div class="large-graph-canvas-container">
+                        <canvas id="large-graph-canvas" width="1000" height="380"></canvas>
+                        <div id="graph-tooltip" class="graph-tooltip-box" style="display: none; position: absolute;"></div>
+                    </div>
+                    <div class="graph-scrub-bar">
+                        <span>◄ Histórico (0s)</span>
+                        <input type="range" id="graph-scrub-range" min="0" max="100" value="100" oninput="handleGraphScrub(this.value)">
+                        <span>Tempo Real (Agora) ►</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST DE NOTIFICAÇÃO -->
+    <div class="toast-notification" id="toast-msg">Variáveis copiadas em Python!</div>
+
+    <!-- SCRIPT DA APLICAÇÃO -->
+    <script src="script.js"></script>
+</body>
+</html>
