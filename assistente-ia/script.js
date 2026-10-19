@@ -538,7 +538,7 @@ function selectSubselector(subId) {
     const btnSend = document.getElementById('btn-send');
 
     if (isEnabled) {
-        if (statusText) statusText.textContent = 'Pronto para Gemini 1.5 Flash';
+        if (statusText) statusText.textContent = 'Pronto para Gemini 3.8 Flash';
         if (statusDot) {
             statusDot.style.backgroundColor = 'var(--color-green)';
             statusDot.style.boxShadow = '0 0 8px rgba(16, 185, 129, 0.6)';
@@ -771,7 +771,7 @@ function checkApiKeyStatus() {
         if (btnLabel) btnLabel.textContent = 'API Customizada ✓';
         if (btnKey) btnKey.classList.add('active');
         if (statusDot) statusDot.style.background = 'var(--color-green)';
-        if (statusText) statusText.textContent = 'Gemini 3.7 Flash (Chave Própria)';
+        if (statusText) statusText.textContent = 'Gemini 3.8 Flash (Chave Própria)';
     } else if (DEFAULT_TEACHER_PROXY_URL || DEFAULT_TEACHER_API_KEY) {
         if (btnLabel) btnLabel.textContent = 'API da Escola (Ativa) ✓';
         if (btnKey) btnKey.classList.add('active');
@@ -912,8 +912,8 @@ async function callGeminiApi(userPrompt, retryCount = 0) {
     const proxyUrl = DEFAULT_TEACHER_PROXY_URL;
 
     // Modelos oficiais do Google Gemini (Atualizado para Gemini 3.7 Flash v1)
-    const preferredModel = 'gemini-3.7-flash';
-    const fallbackModel = 'gemini-3.6-flash';
+    const preferredModel = 'gemini-3.8-flash';
+    const fallbackModel = 'gemini-3.7-flash';
 
     let endpoint = "";
     if (userKey) {
