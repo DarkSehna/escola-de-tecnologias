@@ -118,7 +118,7 @@
                     </button>
                     <div class="status-indicator">
                         <span class="status-dot" id="status-dot"></span>
-                        <span id="status-text">Pronto para Gemini 1.5 Flash</span>
+                        <span id="status-text">Pronto para Gemini 3.8 Flash</span>
                     </div>
                 </div>
             </div>
@@ -147,6 +147,16 @@
 
             <!-- CONTAINER DO INPUT FIXO -->
             <div class="chat-input-container">
+                <!-- BANNER DE BLOQUEIO TEMPORÁRIO DE COTA (HTTP 429 / RATE LIMIT) -->
+                <div id="quota-cooldown-banner" class="quota-cooldown-banner" style="display: none;">
+                    <span class="quota-banner-icon">⏳</span>
+                    <div class="quota-banner-content">
+                        <strong>Limite temporário de requisições atingido (HTTP 429)</strong>
+                        <span>A cota por minuto/dia foi atingida. Aguarde de 1 a 2 minutos antes de enviar uma nova pergunta.</span>
+                    </div>
+                    <span class="quota-countdown-pill" id="quota-countdown-timer">60s</span>
+                </div>
+
                 <!-- BARRA DE EXIBIÇÃO DE ARQUIVO ANEXADO (.MD, .TXT, .JSON, .C3P, .ZIP) -->
                 <div id="file-attachment-bar" class="file-attachment-bar" style="display: none;">
                     <svg class="file-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -223,6 +233,6 @@
     <!-- Scripts JavaScript Globais e Específicos -->
     <script src="../theme-toggle.js"></script>
     <script src="jszip.min.js"></script>
-    <script src="script.js?v=1.1.0"></script>
+    <script src="script.js?v=1.2.0"></script>
 </body>
 </html>

@@ -1,0 +1,11 @@
+# Configuração do Cloudflare Worker - Assistente Virtual IA (Escola de Tecnologias)
+name = "assistente-virtual-laboratorio-tecnologias"
+main = "worker_assistente_ia.js"
+compatibility_date = "2026-01-01"
+
+[observability]
+enabled = true
+
+[vars]
+DEFAULT_MODEL = "gemini-3.8-flash"
+

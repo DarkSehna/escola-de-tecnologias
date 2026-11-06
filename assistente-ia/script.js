@@ -554,6 +554,9 @@ function selectSubselector(subId) {
             btnSend.style.opacity = '1';
             btnSend.style.cursor = 'pointer';
         }
+        if (typeof quotaCooldownRemaining !== 'undefined' && quotaCooldownRemaining > 0) {
+            updateQuotaCooldownUI();
+        }
     } else {
         if (statusText) statusText.textContent = '🔒 Indisponível no Momento (Em Breve)';
         if (statusDot) {
@@ -911,9 +914,9 @@ async function callGeminiApi(userPrompt, retryCount = 0) {
     const effectiveKey = getEffectiveApiKey();
     const proxyUrl = DEFAULT_TEACHER_PROXY_URL;
 
-    // Modelos oficiais do Google Gemini (Atualizado para Gemini 3.7 Flash v1)
+    // Modelos oficiais do Google Gemini (Sincronizados com Cloudflare Worker: gemini-3.8-flash / gemini-3.8-lite)
     const preferredModel = 'gemini-3.8-flash';
-    const fallbackModel = 'gemini-3.7-flash';
+    const fallbackModel = 'gemini-3.8-lite';
 
     let endpoint = "";
     if (userKey) {
@@ -980,13 +983,31 @@ async function callGeminiApi(userPrompt, retryCount = 0) {
     // Se o HTTP retornar erro ou se a resposta contiver um objeto 'error' do Gemini/Worker
     if (!response.ok || data.error) {
         const errMsg = data.error?.message || `Erro na API HTTP ${response.status}`;
+
+        // 1. Tratamento dedicado para Erro de Cota / Rate Limit (HTTP 429 / QUOTA_EXCEEDED)
+        const isQuotaExceeded =
+            response.status === 429 ||
+            data.error?.code === 429 ||
+            data.error?.type === 'QUOTA_EXCEEDED' ||
+            errMsg.toLowerCase().includes('resource_exhausted') ||
+            errMsg.toLowerCase().includes('quota') ||
+            errMsg.includes('429');
+
+        if (isQuotaExceeded) {
+            const quotaErr = new Error(
+                data.error?.message ||
+                "A cota de uso da IA foi temporariamente atingida. Por favor, aguarde alguns instantes antes de enviar uma nova pergunta."
+            );
+            quotaErr.isQuotaExceeded = true;
+            quotaErr.code = 429;
+            quotaErr.type = 'QUOTA_EXCEEDED';
+            throw quotaErr;
+        }
         
-        // Auto-retry transparente em erros de alta demanda / rate limit (até 2 re-tentativas)
+        // 2. Auto-retry transparente apenas para instabilidade momentânea (503 / High Demand)
         const isHighDemand = errMsg.toLowerCase().includes("high demand") ||
-                             errMsg.toLowerCase().includes("resource_exhausted") ||
-                             errMsg.includes("429") ||
                              errMsg.includes("503") ||
-                             errMsg.toLowerCase().includes("temporarily");
+                             errMsg.toLowerCase().includes("temporarily unavailable");
 
         if (isHighDemand && retryCount < 2) {
             const delaySec = (retryCount + 1) * 2.5;
@@ -1254,9 +1275,156 @@ function removeAttachedFile() {
     if (fileShelf) fileShelf.style.display = "none";
 }
 
+// CONTROLE DE BLOQUEIO TEMPORÁRIO E CONTAGEM REGRESSIVA PARA ERROS DE COTA (HTTP 429)
+let quotaCooldownRemaining = 0;
+let quotaCooldownInterval = null;
+
+function startQuotaCooldown(durationSeconds = 60) {
+    quotaCooldownRemaining = durationSeconds;
+    if (quotaCooldownInterval) {
+        clearInterval(quotaCooldownInterval);
+    }
+
+    updateQuotaCooldownUI();
+
+    quotaCooldownInterval = setInterval(() => {
+        quotaCooldownRemaining = Math.max(0, quotaCooldownRemaining - 1);
+        updateQuotaCooldownUI();
+
+        if (quotaCooldownRemaining <= 0) {
+            clearInterval(quotaCooldownInterval);
+            quotaCooldownInterval = null;
+            showStatusToast('Cota liberada! Você já pode enviar sua pergunta. ✨');
+        }
+    }, 1000);
+}
+
+function updateQuotaCooldownUI() {
+    const banner = document.getElementById('quota-cooldown-banner');
+    const timerPill = document.getElementById('quota-countdown-timer');
+    const btnSend = document.getElementById('btn-send');
+    const btnRetry = document.getElementById('btn-retry-quota');
+    const statusDot = document.getElementById('status-dot');
+    const statusText = document.getElementById('status-text');
+
+    if (quotaCooldownRemaining > 0) {
+        if (banner) banner.style.display = 'flex';
+        if (timerPill) timerPill.textContent = `⏳ ${quotaCooldownRemaining}s`;
+
+        if (btnSend) {
+            btnSend.disabled = true;
+            btnSend.style.opacity = '0.45';
+            btnSend.style.cursor = 'not-allowed';
+            btnSend.title = `Aguarde ${quotaCooldownRemaining}s (limite temporário de cota)`;
+        }
+
+        if (btnRetry) {
+            btnRetry.disabled = true;
+            btnRetry.innerHTML = `<span>⏳</span> Aguarde ${quotaCooldownRemaining}s para reenviar`;
+        }
+
+        if (statusDot) {
+            statusDot.style.backgroundColor = 'var(--color-yellow)';
+            statusDot.style.boxShadow = '0 0 8px rgba(234, 179, 8, 0.6)';
+        }
+        if (statusText) {
+            statusText.textContent = `⏳ Pausa de Cota (${quotaCooldownRemaining}s)`;
+        }
+    } else {
+        if (banner) banner.style.display = 'none';
+
+        const isEnabled = ENABLED_SUBSELECTORS[appState.subSeletor] === true;
+        if (btnSend && isEnabled) {
+            btnSend.disabled = false;
+            btnSend.style.opacity = '1';
+            btnSend.style.cursor = 'pointer';
+            btnSend.title = 'Enviar mensagem';
+        }
+
+        if (btnRetry) {
+            btnRetry.disabled = false;
+            btnRetry.innerHTML = `<span class="spin-icon">🔄</span> Tentar Novamente Agora`;
+        }
+
+        checkApiKeyStatus();
+    }
+}
+
+function buildErrorBubbleCard(err) {
+    const errMsg = document.createElement('div');
+    errMsg.className = 'chat-message assistant';
+    errMsg.id = 'error-bubble-card';
+
+    const isQuota = Boolean(
+        err && (
+            err.isQuotaExceeded ||
+            err.code === 429 ||
+            err.type === 'QUOTA_EXCEEDED' ||
+            String(err.message || '').includes('429') ||
+            String(err.message || '').toLowerCase().includes('cota')
+        )
+    );
+
+    if (isQuota) {
+        startQuotaCooldown(60);
+        showStatusToast('⏳ Limite temporário de requisições atingido. Aguarde ~1 minuto.');
+
+        errMsg.innerHTML = `
+            <div class="message-avatar" style="background: linear-gradient(135deg, #f97316, #eab308); color: #000;">⏳</div>
+            <div class="message-bubble quota-alert-bubble">
+                <div class="quota-alert-title">
+                    <span>⏳ Limite Temporário de Uso Atingido (HTTP 429)</span>
+                </div>
+                <div>${escapeHtml(err.message)}</div>
+                <div class="quota-alert-hint">
+                    💡 <strong>O que fazer?</strong> O limite de perguntas por minuto/dia foi atingido. Aguarde cerca de <strong>1 a 2 minutos</strong> antes de enviar uma nova pergunta para não acumular bloqueios.
+                </div>
+                <button class="btn-retry-chat" id="btn-retry-quota" onclick="retryLastFailedMessage()" disabled title="Re-enviar a pergunta após a pausa de cota">
+                    <span>⏳</span> Aguarde ${quotaCooldownRemaining}s para reenviar
+                </button>
+            </div>
+        `;
+    } else {
+        errMsg.innerHTML = `
+            <div class="message-avatar" style="background: var(--color-red)">⚠️</div>
+            <div class="message-bubble" style="border-color: rgba(239, 68, 68, 0.4)">
+                <strong>Erro na API do Gemini:</strong> ${escapeHtml(err.message)}<br><br>
+                <small>Clique no botão <strong>🔑 API Key</strong> no topo para conferir sua chave ou tente novamente abaixo.</small><br>
+                <button class="btn-retry-chat" onclick="retryLastFailedMessage()" title="Re-enviar a pergunta para a IA">
+                    <span class="spin-icon">🔄</span> Tentar Novamente
+                </button>
+            </div>
+        `;
+    }
+
+    return errMsg;
+}
+
+// Função utilitária de teste não-destrutivo para validar o comportamento visual do erro HTTP 429
+window.simulateQuotaExceededTest = function () {
+    const chatHistory = document.getElementById('chat-history');
+    if (!chatHistory) return;
+    const oldErrCard = document.getElementById('error-bubble-card');
+    if (oldErrCard) oldErrCard.remove();
+
+    const simulatedErr = new Error("A cota de uso da IA foi temporariamente atingida. Por favor, aguarde alguns instantes antes de enviar uma nova pergunta.");
+    simulatedErr.isQuotaExceeded = true;
+    simulatedErr.code = 429;
+    simulatedErr.type = "QUOTA_EXCEEDED";
+
+    const errCard = buildErrorBubbleCard(simulatedErr);
+    chatHistory.appendChild(errCard);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+};
+
 // 12. ENVIO DE MENSAGENS NO CHAT (COM SUPORTE A GEMINI REAL OU SIMULAÇÃO)
 async function sendMessage() {
     if (!ENABLED_SUBSELECTORS[appState.subSeletor]) return;
+
+    if (quotaCooldownRemaining > 0) {
+        showStatusToast(`⏳ Aguarde ${quotaCooldownRemaining}s antes de enviar uma nova pergunta.`);
+        return;
+    }
 
     const textarea = document.getElementById('chat-textarea');
     const text = textarea.value.trim();
@@ -1354,19 +1522,7 @@ async function sendMessage() {
             saveChatToStorage();
         } catch (err) {
             loadingMsg.remove();
-            const errMsg = document.createElement('div');
-            errMsg.className = 'chat-message assistant';
-            errMsg.id = 'error-bubble-card';
-            errMsg.innerHTML = `
-                <div class="message-avatar" style="background: var(--color-red)">⚠️</div>
-                <div class="message-bubble" style="border-color: rgba(239, 68, 68, 0.4)">
-                    <strong>Erro na API do Gemini:</strong> ${escapeHtml(err.message)}<br><br>
-                    <small>Clique no botão <strong>🔑 API Key</strong> no topo para conferir sua chave ou tente novamente abaixo.</small><br>
-                    <button class="btn-retry-chat" onclick="retryLastFailedMessage()" title="Re-enviar a pergunta para a IA">
-                        <span class="spin-icon">🔄</span> Tentar Novamente
-                    </button>
-                </div>
-            `;
+            const errMsg = buildErrorBubbleCard(err);
             chatHistory.appendChild(errMsg);
             saveChatToStorage();
         }
@@ -1405,6 +1561,11 @@ function handleKeyDown(event) {
 
 // RE-EXECUTAR A ÚLTIMA MENSAGEM QUE FALHOU AO APERTAR 'TENTAR NOVAMENTE'
 async function retryLastFailedMessage() {
+    if (quotaCooldownRemaining > 0) {
+        showStatusToast(`⏳ Aguarde ${quotaCooldownRemaining}s antes de tentar novamente.`);
+        return;
+    }
+
     if (!appState.lastFailedRequest || !appState.lastFailedRequest.promptForApi) {
         showStatusToast('Nenhuma requisição pendente para tentar novamente.');
         return;
@@ -1447,19 +1608,7 @@ async function retryLastFailedMessage() {
         showStatusToast('Resposta gerada com sucesso! ✓');
     } catch (err) {
         loadingMsg.remove();
-        const errMsg = document.createElement('div');
-        errMsg.className = 'chat-message assistant';
-        errMsg.id = 'error-bubble-card';
-        errMsg.innerHTML = `
-            <div class="message-avatar" style="background: var(--color-red)">⚠️</div>
-            <div class="message-bubble" style="border-color: rgba(239, 68, 68, 0.4)">
-                <strong>Erro na API do Gemini:</strong> ${escapeHtml(err.message)}<br><br>
-                <small>Clique no botão <strong>🔑 API Key</strong> no topo para conferir sua chave ou tente novamente abaixo.</small><br>
-                <button class="btn-retry-chat" onclick="retryLastFailedMessage()" title="Re-enviar a pergunta para a IA">
-                    <span class="spin-icon">🔄</span> Tentar Novamente
-                </button>
-            </div>
-        `;
+        const errMsg = buildErrorBubbleCard(err);
         chatHistory.appendChild(errMsg);
         saveChatToStorage();
     }

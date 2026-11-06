@@ -1109,3 +1109,88 @@ body {
     transform: rotate(180deg);
 }
 
+.btn-retry-chat:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* BANNER E BALÃO DE ALERTA DE COTA / RATE LIMIT (HTTP 429) */
+.quota-cooldown-banner {
+    max-width: 820px;
+    margin: 0 auto 0.55rem auto;
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.16), rgba(234, 179, 8, 0.14));
+    border: 1px solid rgba(249, 115, 22, 0.45);
+    border-radius: 12px;
+    padding: 0.55rem 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    color: var(--color-text-white);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+    animation: fadeIn 0.25s ease;
+}
+
+.quota-banner-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.quota-banner-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    flex: 1;
+}
+
+.quota-banner-content strong {
+    font-size: 0.82rem;
+    color: #fdba74;
+}
+
+.quota-banner-content span {
+    font-size: 0.76rem;
+    color: var(--color-text-normal);
+}
+
+.quota-countdown-pill {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #fde047;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(234, 179, 8, 0.45);
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+
+.quota-alert-bubble {
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.12), rgba(17, 24, 39, 0.88)) !important;
+    border: 1px solid rgba(249, 115, 22, 0.48) !important;
+    box-shadow: 0 4px 20px rgba(249, 115, 22, 0.12);
+}
+
+.quota-alert-title {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-weight: 700;
+    color: #fdba74;
+    margin-bottom: 0.4rem;
+    font-size: 0.95rem;
+}
+
+.quota-alert-hint {
+    margin-top: 0.55rem;
+    padding: 0.45rem 0.65rem;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    border-left: 3px solid var(--color-yellow);
+    font-size: 0.82rem;
+    color: var(--color-text-normal);
+}
+
+
