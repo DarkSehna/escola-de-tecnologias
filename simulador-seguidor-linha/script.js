@@ -201,24 +201,34 @@ function setupEventListeners() {
     });
 
     // Sliders & Number Inputs de PID (Oficina/Garagem)
-    bindSyncInput('base-speed-input', 'num-base-speed', 'baseSpeed', (v) => parseInt(v, 10));
+    bindSyncInput('base-speed-input', 'num-base-speed', 'baseSpeed', (v) => parseFloat(v), 'race-base-speed-input', 'race-num-base-speed');
     bindSyncInput('kp-input', 'num-kp', 'kp', (v) => parseFloat(v), 'race-kp-input', 'race-num-kp');
     bindSyncInput('ki-input', 'num-ki', 'ki', (v) => parseFloat(v), 'race-ki-input', 'race-num-ki');
     bindSyncInput('kd-input', 'num-kd', 'kd', (v) => parseFloat(v), 'race-kd-input', 'race-num-kd');
 
     // Sliders & Number Inputs de PID (Ao Vivo no Cockpit de Corrida)
+    bindSyncInput('race-base-speed-input', 'race-num-base-speed', 'baseSpeed', (v) => parseFloat(v), 'base-speed-input', 'num-base-speed');
     bindSyncInput('race-kp-input', 'race-num-kp', 'kp', (v) => parseFloat(v), 'kp-input', 'num-kp');
     bindSyncInput('race-ki-input', 'race-num-ki', 'ki', (v) => parseFloat(v), 'ki-input', 'num-ki');
     bindSyncInput('race-kd-input', 'race-num-kd', 'kd', (v) => parseFloat(v), 'kd-input', 'num-kd');
 
-    // Fechar modal com Escape ou clique fora (backdrop)
+    // Fechar modais com Escape ou clique fora (backdrop)
     window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeTelemetryModal();
+        if (e.key === 'Escape') {
+            closeTelemetryModal();
+            closeLegoCodeModal();
+        }
     });
     const modalEl = document.getElementById('telemetry-modal');
     if (modalEl) {
         modalEl.addEventListener('click', (e) => {
             if (e.target === modalEl) closeTelemetryModal();
+        });
+    }
+    const legoModalEl = document.getElementById('lego-code-modal');
+    if (legoModalEl) {
+        legoModalEl.addEventListener('click', (e) => {
+            if (e.target === legoModalEl) closeLegoCodeModal();
         });
     }
 }
@@ -234,7 +244,11 @@ function bindSyncInput(rangeId, numId, stateKey, parser, mirrorRangeId, mirrorNu
             simState[stateKey] = val;
             numEl.value = e.target.value;
             syncMirrorInput(mirrorRangeId, mirrorNumId, e.target.value);
-            if (!simState.isRunning) drawScene();
+            if (!simState.isRunning) {
+                drawScene();
+                updateEquationsDisplay();
+            }
+            renderLegoCodeDisplay();
         });
 
         numEl.addEventListener('input', (e) => {
@@ -243,7 +257,11 @@ function bindSyncInput(rangeId, numId, stateKey, parser, mirrorRangeId, mirrorNu
                 simState[stateKey] = val;
                 rangeEl.value = val; // Atualiza slider dentro dos seus limites
                 syncMirrorInput(mirrorRangeId, mirrorNumId, e.target.value);
-                if (!simState.isRunning) drawScene();
+                if (!simState.isRunning) {
+                    drawScene();
+                    updateEquationsDisplay();
+                }
+                renderLegoCodeDisplay();
             }
         });
     }
@@ -274,25 +292,174 @@ function exitRaceModeToGarage() {
     resetSimulation();
 }
 
-// 4. BOTÃO 'COPIAR VARIÁVEIS PARA O ROBÔ' (MICROPYTHON / EV3DEV)
+// 4. BOTÃO 'COPIAR' (EXCLUSIVAMENTE PARÂMETROS REAIS DE CONTROLE DO LEGO)
 function copyPythonVariables() {
-    const pyCode = `# Configuração de PID e Mecânica - Seguidor de Linha LEGO
-# Gerado por Escola de Tecnologias
-
-VELOCIDADE_BASE = ${simState.baseSpeed}
+    const pyCode = `# --- PARÂMETROS CALIBRADOS NO SIMULADOR ---
+V_BASE = ${simState.baseSpeed}
 KP = ${simState.kp}
 KD = ${simState.kd}
-KI = ${simState.ki}
-DISTANCIA_SENSOR_CM = ${simState.sensorDist}
-ESPACAMENTO_SENSORES_CM = ${simState.sensorGap}
-RELACAO_ENGRENAGEM = ${simState.gearRatio}
-DIAMETRO_RODA_MM = ${simState.wheelDiam}
-MODO_SENSORES = "${simState.sensorMode}"
-`;
+KI = ${simState.ki}`;
 
     if (navigator.clipboard) {
         navigator.clipboard.writeText(pyCode).then(() => {
-            showToast('Variáveis copiadas em Python para a área de transferência!');
+            showToast('Parâmetros (V_BASE, KP, KD, KI) copiados para a área de transferência!');
+        });
+    }
+}
+
+// MODAL DIDÁTICO ("COMO PASSAR PARA O ROBÔ REAL" - PYBRICKS & EV3DEV)
+let activeLegoCodeTab = 'pybricks';
+
+function openLegoCodeModal() {
+    const modal = document.getElementById('lego-code-modal');
+    if (!modal) return;
+    renderLegoCodeDisplay();
+    modal.style.display = 'flex';
+}
+
+function closeLegoCodeModal() {
+    const modal = document.getElementById('lego-code-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function switchLegoCodeTab(tabName) {
+    activeLegoCodeTab = tabName;
+    const btnPybricks = document.getElementById('tab-btn-pybricks');
+    const btnEv3dev = document.getElementById('tab-btn-ev3dev');
+    const copyLabel = document.getElementById('copy-tab-label');
+
+    if (btnPybricks) btnPybricks.classList.toggle('active', tabName === 'pybricks');
+    if (btnEv3dev) btnEv3dev.classList.toggle('active', tabName === 'ev3dev');
+    if (copyLabel) copyLabel.textContent = tabName === 'pybricks' ? 'Pybricks' : 'EV3Dev';
+
+    renderLegoCodeDisplay();
+}
+
+function getLegoTabRawCode(tabName) {
+    const vBase = simState.baseSpeed;
+    const kp = simState.kp;
+    const kd = simState.kd;
+    const ki = simState.ki;
+
+    if (tabName === 'ev3dev') {
+        return `from ev3dev2.motor import LargeMotor, OUTPUT_A, OUTPUT_B, SpeedPercent
+from ev3dev2.sensor import INPUT_1, INPUT_2
+from ev3dev2.sensor.lego import ColorSensor
+
+motor_esq, motor_dir = LargeMotor(OUTPUT_A), LargeMotor(OUTPUT_B)
+sensor_esq, sensor_dir = ColorSensor(INPUT_1), ColorSensor(INPUT_2)
+
+# --- PARÂMETROS CALIBRADOS NO SIMULADOR ---
+V_BASE = ${vBase}
+KP = ${kp}
+KD = ${kd}
+KI = ${ki}
+
+erro_anterior, integral = 0, 0
+while True:
+    erro = sensor_esq.reflected_light_intensity - sensor_dir.reflected_light_intensity
+    integral += erro
+    derivativo = erro - erro_anterior
+    correcao = (KP * erro) + (KD * derivativo) + (KI * integral)
+    motor_esq.on(SpeedPercent(max(-100, min(100, V_BASE + correcao))))
+    motor_dir.on(SpeedPercent(max(-100, min(100, V_BASE - correcao))))
+    erro_anterior = erro`;
+    }
+
+    return `from pybricks.pupdevices import Motor, ColorSensor
+from pybricks.parameters import Port, Direction
+from pybricks.tools import wait
+
+motor_esq = Motor(Port.A, Direction.COUNTERCLOCKWISE)
+motor_dir = Motor(Port.B)
+sensor_esq, sensor_dir = ColorSensor(Port.C), ColorSensor(Port.D)
+
+# --- PARÂMETROS CALIBRADOS NO SIMULADOR ---
+V_BASE = ${vBase}
+KP = ${kp}
+KD = ${kd}
+KI = ${ki}
+
+erro_anterior, integral = 0, 0
+while True:
+    erro = sensor_esq.reflection() - sensor_dir.reflection()
+    integral += erro
+    derivativo = erro - erro_anterior
+    correcao = (KP * erro) + (KD * derivativo) + (KI * integral)
+    motor_esq.dc(V_BASE + correcao)
+    motor_dir.dc(V_BASE - correcao)
+    erro_anterior = erro
+    wait(10)`;
+}
+
+function renderLegoCodeDisplay() {
+    const codeEl = document.getElementById('lego-code-display');
+    if (!codeEl) return;
+
+    const vBase = simState.baseSpeed;
+    const kp = simState.kp;
+    const kd = simState.kd;
+    const ki = simState.ki;
+
+    if (activeLegoCodeTab === 'ev3dev') {
+        codeEl.innerHTML = `<span class="code-hl-comment"># Loop de Controle PID — LEGO EV3Dev (Python 3)</span>
+from ev3dev2.motor import LargeMotor, OUTPUT_A, OUTPUT_B, SpeedPercent
+from ev3dev2.sensor import INPUT_1, INPUT_2
+from ev3dev2.sensor.lego import ColorSensor
+
+motor_esq, motor_dir = LargeMotor(OUTPUT_A), LargeMotor(OUTPUT_B)
+sensor_esq, sensor_dir = ColorSensor(INPUT_1), ColorSensor(INPUT_2)
+
+<span class="code-hl-banner"># --- PARÂMETROS CALIBRADOS NO SIMULADOR ---</span>
+<span class="code-hl-var">V_BASE = <span class="val">${vBase}</span></span>
+<span class="code-hl-var">KP = <span class="val">${kp}</span></span>
+<span class="code-hl-var">KD = <span class="val">${kd}</span></span>
+<span class="code-hl-var">KI = <span class="val">${ki}</span></span>
+
+erro_anterior, integral = 0, 0
+while True:
+    erro = sensor_esq.reflected_light_intensity - sensor_dir.reflected_light_intensity
+    integral += erro
+    derivativo = erro - erro_anterior
+<span class="code-hl-pid">    correcao = (KP * erro) + (KD * derivativo) + (KI * integral)</span>
+<span class="code-hl-motor">    motor_esq.on(SpeedPercent(max(-100, min(100, V_BASE + correcao))))</span>
+<span class="code-hl-motor">    motor_dir.on(SpeedPercent(max(-100, min(100, V_BASE - correcao))))</span>
+    erro_anterior = erro`;
+    } else {
+        codeEl.innerHTML = `<span class="code-hl-comment"># Loop de Controle PID — LEGO Pybricks (MicroPython)</span>
+from pybricks.pupdevices import Motor, ColorSensor
+from pybricks.parameters import Port, Direction
+from pybricks.tools import wait
+
+motor_esq = Motor(Port.A, Direction.COUNTERCLOCKWISE)
+motor_dir = Motor(Port.B)
+sensor_esq, sensor_dir = ColorSensor(Port.C), ColorSensor(Port.D)
+
+<span class="code-hl-banner"># --- PARÂMETROS CALIBRADOS NO SIMULADOR ---</span>
+<span class="code-hl-var">V_BASE = <span class="val">${vBase}</span></span>
+<span class="code-hl-var">KP = <span class="val">${kp}</span></span>
+<span class="code-hl-var">KD = <span class="val">${kd}</span></span>
+<span class="code-hl-var">KI = <span class="val">${ki}</span></span>
+
+erro_anterior, integral = 0, 0
+while True:
+    erro = sensor_esq.reflection() - sensor_dir.reflection()
+    integral += erro
+    derivativo = erro - erro_anterior
+<span class="code-hl-pid">    correcao = (KP * erro) + (KD * derivativo) + (KI * integral)</span>
+<span class="code-hl-motor">    motor_esq.dc(V_BASE + correcao)</span>
+<span class="code-hl-motor">    motor_dir.dc(V_BASE - correcao)</span>
+    erro_anterior = erro
+    wait(10)`;
+    }
+}
+
+function copyActiveLegoTabCode() {
+    const rawCode = getLegoTabRawCode(activeLegoCodeTab);
+    const label = activeLegoCodeTab === 'pybricks' ? 'Pybricks (MicroPython)' : 'EV3Dev (Python 3)';
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(rawCode).then(() => {
+            showToast(`Código completo ${label} copiado para a área de transferência!`);
         });
     }
 }
@@ -1377,12 +1544,13 @@ function applyPreset(name) {
 }
 
 function setPresetValues(baseSpd, kp, ki, kd, dist, gap) {
-    setSyncInputValue('base-speed-input', 'num-base-speed', 'baseSpeed', baseSpd);
+    setSyncInputValue('base-speed-input', 'num-base-speed', 'baseSpeed', baseSpd, 'race-base-speed-input', 'race-num-base-speed');
     setSyncInputValue('kp-input', 'num-kp', 'kp', kp, 'race-kp-input', 'race-num-kp');
     setSyncInputValue('ki-input', 'num-ki', 'ki', ki, 'race-ki-input', 'race-num-ki');
     setSyncInputValue('kd-input', 'num-kd', 'kd', kd, 'race-kd-input', 'race-num-kd');
     setSyncInputValue('sensor-dist-input', 'num-sensor-dist', 'sensorDist', dist);
     setSyncInputValue('sensor-gap-input', 'num-sensor-gap', 'sensorGap', gap);
+    renderLegoCodeDisplay();
 }
 
 function setSyncInputValue(rangeId, numId, stateKey, value, mirrorRangeId, mirrorNumId) {

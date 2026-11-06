@@ -167,8 +167,11 @@
                 <button class="btn-action btn-secondary" id="btn-checkpoint" onclick="teleportToCheckpoint()" title="Reposicionar no último ponto válido da pista" style="display: none;">
                     <span>📍</span> Checkpoint
                 </button>
-                <button class="btn-action btn-secondary" onclick="copyPythonVariables()" title="Copiar variáveis formatadas em Python para EV3Dev/MicroPython">
-                    <span>📋</span> Copiar Código
+                <button class="btn-action btn-secondary" onclick="copyPythonVariables()" title="Copiar apenas variáveis calibradas (V_BASE, KP, KD, KI) para o LEGO">
+                    <span>📋</span> Copiar
+                </button>
+                <button class="btn-action btn-lego-guide" onclick="openLegoCodeModal()" title="Como passar os parâmetros calibrados para o Robô LEGO Real">
+                    <span>📖</span> Ver Código LEGO
                 </button>
                 <button class="btn-action btn-secondary" id="btn-speed-toggle" onclick="toggleTurboSpeed()">
                     <span>⚡</span> Velocidade: <strong id="speed-multiplier-label">1x</strong>
@@ -215,11 +218,11 @@
                         <div class="slider-header">
                             <label for="base-speed-input">Velocidade Base (V_base)</label>
                             <div class="slider-input-box">
-                                <input type="number" id="num-base-speed" class="num-input" value="50" step="5">
+                                <input type="number" id="num-base-speed" class="num-input" value="50" min="20" max="100" step="1">
                                 <span class="unit-tag">%</span>
                             </div>
                         </div>
-                        <input type="range" id="base-speed-input" min="10" max="100" step="5" value="50">
+                        <input type="range" id="base-speed-input" min="20" max="100" step="1" value="50">
                     </div>
 
                     <!-- Kp (Proporcional) -->
@@ -284,13 +287,24 @@
                     <button class="btn-action btn-checkpoint" id="btn-race-checkpoint" onclick="teleportToCheckpoint()" style="display: none;">
                         <span>📍</span> Checkpoint
                     </button>
+                    <button class="btn-action btn-secondary" onclick="copyPythonVariables()" title="Copiar apenas variáveis calibradas (V_BASE, KP, KD, KI) para o LEGO">
+                        <span>📋</span> Copiar
+                    </button>
+                    <button class="btn-action btn-lego-guide" onclick="openLegoCodeModal()" title="Como passar os parâmetros calibrados para o Robô LEGO Real">
+                        <span>📖</span> Ver Código LEGO
+                    </button>
                     <button class="btn-action btn-secondary" onclick="exitRaceModeToGarage()">
                         <span>🛠️</span> Voltar à Garagem
                     </button>
                 </div>
 
-                <!-- LIVE PID TUNING COM KP, KI E KD NO COCKPIT DE CORRIDA -->
+                <!-- LIVE PID TUNING COM V_BASE, KP, KI E KD NO COCKPIT DE CORRIDA -->
                 <div class="cockpit-section live-tuning">
+                    <div class="mini-pid-box">
+                        <span class="pid-tag" title="Velocidade Base (20 a 100%)">V_base</span>
+                        <input type="number" id="race-num-base-speed" class="num-input-sm" value="50" min="20" max="100" step="1">
+                        <input type="range" id="race-base-speed-input" min="20" max="100" step="1" value="50" class="mini-range">
+                    </div>
                     <div class="mini-pid-box">
                         <span class="pid-tag">Kp</span>
                         <input type="number" id="race-num-kp" class="num-input-sm" value="2.20" step="0.05">
@@ -422,6 +436,79 @@
                         <span>◄ Histórico (0s)</span>
                         <input type="range" id="graph-scrub-range" min="0" max="100" value="100" oninput="handleGraphScrub(this.value)">
                         <span>Tempo Real (Agora) ►</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DIDÁTICO: COMO PASSAR PARA O ROBÔ REAL (LEGO PYBRICKS / EV3DEV) -->
+    <div class="modal-backdrop" id="lego-code-modal" style="display: none;">
+        <div class="modal-content lego-modal-content">
+            <div class="modal-header">
+                <h3>🤖 Como passar para o Robô Real (LEGO)</h3>
+                <button class="btn-close-modal" onclick="closeLegoCodeModal()" title="Fechar modal">✕</button>
+            </div>
+            <div class="modal-body lego-modal-body">
+                <!-- a) Cabeçalho explicativo resumindo o conceito -->
+                <div class="lego-concept-grid">
+                    <div class="lego-concept-card">
+                        <span class="concept-badge badge-cyan">Erro</span>
+                        <p>Diferença entre os sensores de luz (<strong>Esquerdo - Direito</strong>).</p>
+                    </div>
+                    <div class="lego-concept-card">
+                        <span class="concept-badge badge-blue">V_base</span>
+                        <p>Velocidade de cruzeiro nas retas.</p>
+                    </div>
+                    <div class="lego-concept-card">
+                        <span class="concept-badge badge-purple">Kp</span>
+                        <p>Força de correção proporcional (<strong>presente/curvas</strong>).</p>
+                    </div>
+                    <div class="lego-concept-card">
+                        <span class="concept-badge badge-yellow">Kd</span>
+                        <p>Amortecimento derivativo (<strong>futuro/estabilidade nas retas</strong>).</p>
+                    </div>
+                    <div class="lego-concept-card">
+                        <span class="concept-badge badge-green">Ki</span>
+                        <p>Geralmente <strong>0.00</strong> para evitar saturação em alta velocidade.</p>
+                    </div>
+                </div>
+
+                <!-- b) Duas abas de código selecionáveis no topo do bloco de código -->
+                <div class="lego-tabs-bar">
+                    <div class="lego-tab-buttons">
+                        <button class="lego-tab-btn active" id="tab-btn-pybricks" onclick="switchLegoCodeTab('pybricks')">
+                            <span>🐍</span> Pybricks (MicroPython)
+                        </button>
+                        <button class="lego-tab-btn" id="tab-btn-ev3dev" onclick="switchLegoCodeTab('ev3dev')">
+                            <span>🧱</span> EV3Dev (Python 3)
+                        </button>
+                    </div>
+                    <div class="lego-tab-actions">
+                        <button class="btn-action btn-secondary btn-sm" onclick="copyPythonVariables()" title="Copiar apenas as 4 variáveis calibradas">
+                            <span>📋</span> Copiar Só Variáveis
+                        </button>
+                        <button class="btn-action btn-primary btn-sm" onclick="copyActiveLegoTabCode()" title="Copiar código completo desta aba">
+                            <span>📋</span> Copiar Código da Aba
+                        </button>
+                    </div>
+                </div>
+
+                <!-- c) Esqueleto do loop enxuto com destaque visual -->
+                <div class="lego-code-container">
+                    <pre class="lego-code-pre" id="lego-code-display"></pre>
+                </div>
+
+                <!-- d) Rodapé com botão de copiar e fechar -->
+                <div class="lego-modal-footer">
+                    <span class="lego-footer-hint">💡 Os valores destacados em <strong style="color: var(--color-cyan);">ciano</strong> refletem sua calibração atual no simulador.</span>
+                    <div style="display: flex; gap: 0.6rem;">
+                        <button class="btn-action btn-primary" onclick="copyActiveLegoTabCode()">
+                            <span>📋</span> Copiar Código (<span id="copy-tab-label">Pybricks</span>)
+                        </button>
+                        <button class="btn-action btn-secondary" onclick="closeLegoCodeModal()">
+                            Fechar
+                        </button>
                     </div>
                 </div>
             </div>
