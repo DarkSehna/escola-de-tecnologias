@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Montador de Tilesets | Escola de Tecnologias</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Ambient Glow Effects -->
+    <div class="ambient-glow bg-left"></div>
+    <div class="ambient-glow bg-right"></div>
+
+    <div class="app-container">
+        <!-- Navegação Superior -->
+        <div class="back-nav">
+            <a href="../" class="back-link">← Voltar ao Portal</a>
+            <button class="theme-toggle-btn" aria-label="Alternar Tema">🌙 <span class="theme-btn-text">Modo Escuro</span></button>
+        </div>
+
+        <!-- Cabeçalho -->
+        <header class="app-header panel-glass">
+            <div class="brand">
+                <span class="logo">🧩</span>
+                <div>
+                    <h1>Montador de Tilesets &amp; Spritesheets</h1>
+                    <span class="subtitle">Empacotador Visual de Blocos 2D para Construct 3, GameMaker e Scratch</span>
+                </div>
+            </div>
+            <div class="header-badges">
+                <span class="header-pill" id="badge-sheet-size">Folha: 0 × 0 px</span>
+                <span class="header-pill pill-cyan" id="badge-tile-count">0 blocos</span>
+            </div>
+        </header>
+
+        <!-- Conteúdo Principal em 2 Colunas -->
+        <main class="main-grid">
+            <!-- COLUNA ESQUERDA: Configurações da Grade + Upload e Lista de Blocos -->
+            <aside class="left-column">
+                <!-- 1. Painel de Configuração da Grade -->
+                <section class="panel-glass config-panel">
+                    <div class="panel-header">
+                        <h2>⚙️ 1. CONFIGURAÇÃO DA GRADE</h2>
+                    </div>
+
+                    <!-- Tamanho da Célula / Tile -->
+                    <div class="form-group">
+                        <label class="group-label">Tamanho do Bloco (Tile Size)</label>
+                        <div class="preset-btn-group" role="group" aria-label="Tamanho do Tile">
+                            <button type="button" class="preset-btn" data-size="16">16×16</button>
+                            <button type="button" class="preset-btn active" data-size="32">32×32 (Padrão)</button>
+                            <button type="button" class="preset-btn" data-size="64">64×64</button>
+                        </div>
+                        <div class="custom-size-row">
+                            <div class="mini-field">
+                                <span>Largura (px)</span>
+                                <input type="number" id="input-tile-w" min="8" max="512" step="1" value="32" class="cyber-input">
+                            </div>
+                            <div class="mini-field">
+                                <span>Altura (px)</span>
+                                <input type="number" id="input-tile-h" min="8" max="512" step="1" value="32" class="cyber-input">
+                            </div>
+                            <div class="mini-field">
+                                <span>Espaçamento</span>
+                                <select id="select-padding" class="cyber-input">
+                                    <option value="0" selected>0 px</option>
+                                    <option value="1">1 px</option>
+                                    <option value="2">2 px</option>
+                                    <option value="4">4 px</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Colunas Máximas -->
+                    <div class="form-group">
+                        <label class="group-label">Colunas na Folha (Layout)</label>
+                        <div class="preset-btn-group cols-group" role="group" aria-label="Colunas Máximas">
+                            <button type="button" class="col-btn active" data-cols="auto">Automático</button>
+                            <button type="button" class="col-btn" data-cols="4">4 Col</button>
+                            <button type="button" class="col-btn" data-cols="8">8 Col</button>
+                            <button type="button" class="col-btn" data-cols="16">16 Col</button>
+                        </div>
+                    </div>
+
+                    <!-- Opções Didáticas para Sala de Aula -->
+                    <div class="options-box">
+                        <label class="check-row" title="No GameMaker, o primeiro bloco (índice 0, canto superior esquerdo) é sempre reservado como borracha/vazio.">
+                            <input type="checkbox" id="check-gm-empty-first">
+                            <span class="check-text">
+                                <strong>Reservar 1º Bloco Vazio (Índice 0)</strong>
+                                <small>Recomendado para GameMaker (evita perder o 1º tile)</small>
+                            </span>
+                        </label>
+
+                        <label class="check-row" title="Desativa o filtro borrado do navegador e mantém os pixels quadrados e nítidos.">
+                            <input type="checkbox" id="check-pixel-art" checked>
+                            <span class="check-text">
+                                <strong>Modo Pixel Art Nítido</strong>
+                                <small>Mantém pixels perfeitos sem embaçar ao redimensionar</small>
+                            </span>
+                        </label>
+
+                        <div class="fit-mode-row">
+                            <label for="select-fit-mode">Encaixe de imagens fora de medida:</label>
+                            <select id="select-fit-mode" class="cyber-input">
+                                <option value="contain" selected>Manter Proporção (Centralizar)</option>
+                                <option value="stretch">Esticar para Preencher (100%)</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. Área de Mídia (Drag & Drop + Lista de Blocos) -->
+                <section class="panel-glass media-panel">
+                    <div class="panel-header">
+                        <h2>🖼️ 2. BLOCOS CARREGADOS</h2>
+                        <div class="header-mini-actions">
+                            <button type="button" id="btn-load-demo" class="mini-action-btn" title="Gerar blocos de exemplo para testar na lousa">🎲 Exemplo</button>
+                            <button type="button" id="btn-magic-all" class="mini-action-btn magic-btn" title="Remove o fundo branco/sólido de todos os blocos de uma vez">🪄 Limpar Fundos</button>
+                            <button type="button" id="btn-clear-all" class="mini-action-btn danger-mini-btn" title="Remover todos os blocos">🗑️ Limpar</button>
+                        </div>
+                    </div>
+
+                    <!-- Dropzone -->
+                    <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="Arraste imagens PNG ou clique para selecionar">
+                        <input type="file" id="file-input" accept="image/png,image/webp,image/jpeg,image/gif" multiple hidden>
+                        <div class="drop-icon">📥</div>
+                        <p class="drop-title">Arraste seus blocos (.PNG) aqui ou <span>clique para escolher</span></p>
+                        <p class="drop-hint">Aceita vários arquivos soltos de uma vez ou tiras para fatiar</p>
+                    </div>
+
+                    <!-- Lista de Miniaturas Reordenável -->
+                    <div id="tiles-list" class="tiles-list">
+                        <div class="empty-list-state">
+                            Nenhum bloco adicionado ainda. Arraste arquivos PNG acima ou clique em <strong>"🎲 Exemplo"</strong> para testar!
+                        </div>
+                    </div>
+                </section>
+            </aside>
+
+            <!-- COLUNA DIREITA: Prévia do Spritesheet + Cola Rápida + Exportação -->
+            <section class="right-column">
+                <div class="panel-glass preview-panel">
+                    <div class="preview-header">
+                        <div class="preview-title-group">
+                            <h2>👁️ 3. PRÉVIA DO SPRITESHEET EM TEMPO REAL</h2>
+                            <span class="preview-sub">O fundo xadrez indica transparência e não sai no arquivo PNG baixado</span>
+                        </div>
+
+                        <div class="preview-controls">
+                            <label class="inline-toggle" title="Mostrar linhas tracejadas dividindo cada célula">
+                                <input type="checkbox" id="check-show-grid" checked>
+                                <span>📐 Grade</span>
+                            </label>
+                            <label class="inline-toggle" title="Mostrar o número do índice de cada tile">
+                                <input type="checkbox" id="check-show-ids" checked>
+                                <span>🔢 Índices</span>
+                            </label>
+                            <div class="zoom-select-wrap">
+                                <label for="select-preview-zoom">🔍 Zoom:</label>
+                                <select id="select-preview-zoom" class="cyber-input compact-select">
+                                    <option value="fit">Ajustar</option>
+                                    <option value="1">1x (100%)</option>
+                                    <option value="2" selected>2x (200%)</option>
+                                    <option value="3">3x (300%)</option>
+                                    <option value="4">4x (400%)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Container do Canvas com Fundo Xadrez -->
+                    <div class="canvas-stage" id="canvas-stage">
+                        <div class="checkerboard-frame" id="checkerboard-frame">
+                            <canvas id="spritesheet-canvas" width="256" height="64"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Card Didático: Cola Rápida para Construct 3 & GameMaker -->
+                    <div class="engine-helper-card">
+                        <div class="helper-title">
+                            <span>📋 COLA RÁPIDA DE IMPORTAÇÃO (CONSTRUCT 3 &amp; GAMEMAKER)</span>
+                            <span class="helper-hint">Use estes valores ao importar o PNG na sua Engine:</span>
+                        </div>
+                        <div class="helper-metrics" id="engine-helper-metrics">
+                            <div class="metric-chip">Largura do Tile: <strong id="info-tile-w">32px</strong></div>
+                            <div class="metric-chip">Altura do Tile: <strong id="info-tile-h">32px</strong></div>
+                            <div class="metric-chip">Espaçamento: <strong id="info-padding">0px</strong></div>
+                            <div class="metric-chip">Grade: <strong id="info-grid-dims">0 col × 0 lin</strong></div>
+                            <div class="metric-chip">Imagem Final: <strong id="info-img-dims">0 × 0 px</strong></div>
+                        </div>
+                    </div>
+
+                    <!-- Barra de Exportação -->
+                    <div class="export-bar">
+                        <div class="filename-box">
+                            <label for="input-export-name">Nome do arquivo:</label>
+                            <input type="text" id="input-export-name" class="cyber-input" value="meu_tileset" placeholder="meu_tileset">
+                        </div>
+                        <div class="export-buttons">
+                            <button type="button" id="btn-export-json" class="export-btn secondary-export-btn">
+                                📄 Exportar Mapeamento (JSON)
+                            </button>
+                            <button type="button" id="btn-export-png" class="export-btn primary-export-btn">
+                                💾 Baixar Spritesheet (PNG)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal Visual de Fatiamento Inteligente (Slicer) -->
+    <div id="slicer-modal-overlay" class="slicer-modal-overlay" style="display: none;">
+        <div class="slicer-modal panel-glass">
+            <div class="slicer-modal-header">
+                <div>
+                    <h3>✂️ Fatiador Visual de Folha / Imagem da Internet</h3>
+                    <p id="slicer-subtitle">Ajuste as linhas de corte até encaixarem nos blocos do desenho. Cada fatia será convertida para o tamanho do seu tile!</p>
+                </div>
+                <button type="button" id="btn-close-slicer" class="slicer-close-btn" aria-label="Fechar">✕</button>
+            </div>
+
+            <div class="slicer-controls-bar">
+                <div class="slicer-field">
+                    <label for="select-slicer-mode">Modo de Corte:</label>
+                    <select id="select-slicer-mode" class="cyber-input">
+                        <option value="grid" selected>📐 Por Colunas × Linhas (Recomendado p/ Internet)</option>
+                        <option value="pixels">📏 Por Tamanho Original do Corte (px)</option>
+                    </select>
+                </div>
+
+                <!-- Controles por Colunas x Linhas -->
+                <div id="slicer-grid-inputs" class="slicer-inline-inputs">
+                    <div class="slicer-field">
+                        <label for="input-slice-cols">Colunas no Desenho:</label>
+                        <input type="number" id="input-slice-cols" class="cyber-input" min="1" max="64" value="8">
+                    </div>
+                    <div class="slicer-field">
+                        <label for="input-slice-rows">Linhas no Desenho:</label>
+                        <input type="number" id="input-slice-rows" class="cyber-input" min="1" max="64" value="4">
+                    </div>
+                </div>
+
+                <!-- Controles por Pixels -->
+                <div id="slicer-pixel-inputs" class="slicer-inline-inputs" style="display: none;">
+                    <div class="slicer-field">
+                        <label for="input-slice-pw">Largura do Corte (px):</label>
+                        <input type="number" id="input-slice-pw" class="cyber-input" min="8" max="1024" step="8" value="64">
+                    </div>
+                    <div class="slicer-field">
+                        <label for="input-slice-ph">Altura do Corte (px):</label>
+                        <input type="number" id="input-slice-ph" class="cyber-input" min="8" max="1024" step="8" value="64">
+                    </div>
+                </div>
+
+                <!-- Sugestões Automáticas de Grades Exatas (GCD) -->
+                <div class="slicer-field" style="flex: 1; min-width: 220px;">
+                    <label>✨ Grades Quadradas Exatas Detectadas para esta Imagem:</label>
+                    <div id="slicer-suggestions" class="slicer-suggestions-row"></div>
+                </div>
+            </div>
+
+            <div class="slicer-options-bar">
+                <label class="inline-toggle" title="Se desmarcado, preserva a posição exata de cada parte do desenho (ideal para ilhas/terrenos 2D). Se marcado, remove os buracos vazios e junta tudo.">
+                    <input type="checkbox" id="check-slice-skip-empty">
+                    <span>🚫 Compactar (remover espaços vazios)</span>
+                </label>
+                <label class="inline-toggle">
+                    <input type="checkbox" id="check-slice-remove-bg">
+                    <span>🪄 Remover fundo branco/sólido antes de fatiar</span>
+                </label>
+                <label class="inline-toggle">
+                    <input type="checkbox" id="check-slice-sync-cols" checked>
+                    <span>📐 Manter mesmo nº de colunas na folha final</span>
+                </label>
+                <span class="slicer-Result-badge" id="slicer-info-badge">Corte: 64×64px ➔ Salvará em 32×32px</span>
+            </div>
+
+            <div class="slicer-canvas-wrap">
+                <div class="checkerboard-frame">
+                    <canvas id="slicer-preview-canvas"></canvas>
+                </div>
+            </div>
+
+            <div class="slicer-modal-footer">
+                <button type="button" id="btn-cancel-slicer" class="export-btn secondary-export-btn">Cancelar</button>
+                <button type="button" id="btn-confirm-slicer" class="export-btn primary-export-btn">✂️ Fatiar e Gerar Blocos</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="tt-toast" class="tt-toast" aria-live="polite"></div>
+
+    <!-- Scripts Padrão do Ecossistema -->
+    <script src="../theme-toggle.js"></script>
+    <script src="script.js"></script>
+    <script src="../lock-listener.js"></script>
+</body>
+</html>

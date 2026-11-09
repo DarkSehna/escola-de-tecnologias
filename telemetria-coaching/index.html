@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telemetria &amp; Coaching IA | Escola de Tecnologias</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="../lock-listener.js"></script>
+</head>
+<body>
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+
+    <!-- Cabeçalho com botão Voltar ao Portal -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="../" class="back-btn" title="Voltar ao Portal Principal">
+                <span>←</span> Voltar ao Portal
+            </a>
+            <div class="brand-title">
+                <h1>Telemetria &amp; Coaching</h1>
+                <span class="badge-multimodal">🎥 IA Multimodal</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="../simulador-seguidor-linha/" class="btn-header-tool" title="Abrir Simulador PID">
+                <span>🏎️</span> Simulador PID
+            </a>
+            <button type="button" id="btnOpenApiKeyModal" class="btn-header-tool" title="Configurar Chave API opcional">
+                <span>🔑</span> <span id="apiKeyStatusLabel">Cloudflare Worker</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="page-wrapper">
+        <!-- Banner Explicativo -->
+        <section class="intro-banner">
+            <div class="intro-text">
+                <h2>Diagnóstico de Voltas por Vídeo com Inteligência Artificial</h2>
+                <p>Envie ou grave um vídeo do seu robô seguidor de linha em pista. O engenheiro de telemetria IA analisa oscilações, perda de fita e sugere ajustes diretos de <strong>Kp</strong>, <strong>Kd</strong> e <strong>Velocidade Base</strong>.</p>
+            </div>
+            <div class="intro-pills">
+                <span class="mini-pill">📹 .MP4 / .WEBM / .MOV (até 50 MB)</span>
+                <span class="mini-pill">⚡ Gemini 3.8 Flash Multimodal</span>
+            </div>
+        </section>
+
+        <!-- Alerta amigável para erro HTTP 429 (Rate Limit / Quota Exceeded) -->
+        <div id="quotaAlertBanner" class="quota-alert-banner" role="alert">
+            <div class="quota-alert-left">
+                <span style="font-size: 1.4rem;">⏳</span>
+                <div>
+                    <strong>Limite Temporário de Cota da IA Atingido (HTTP 429)</strong>
+                    <div id="quotaAlertText" style="font-size: 0.83rem; opacity: 0.92;">
+                        A cota de requisições por minuto foi atingida. Aguarde cerca de 1 minuto antes de enviar uma nova análise.
+                    </div>
+                </div>
+            </div>
+            <span id="quotaCountdownBadge" class="quota-countdown-pill">Aguarde 60s</span>
+        </div>
+
+        <div class="telemetry-grid">
+            <!-- COLUNA ESQUERDA: Upload/Preview + Configuração + Botão de Ação -->
+            <section class="glass-panel" aria-label="Envio de Vídeo e Parâmetros">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <span class="step-badge">1</span>
+                        <span>Mídia da Volta &amp; Parâmetros do Teste</span>
+                    </div>
+                    <span id="videoFormatBadge" class="optional-tag">Até 50 MB</span>
+                </div>
+
+                <!-- a) Zona Drag & Drop e Captura de Câmera -->
+                <div id="dropZone" class="drop-zone" tabindex="0" role="button" aria-label="Área de upload de vídeo">
+                    <div class="drop-icon">🎬</div>
+                    <h3>Arraste e solte o vídeo da volta do robô aqui</h3>
+                    <p>Formatos suportados: <strong>.mp4</strong>, <strong>.webm</strong> ou <strong>.mov</strong> (máx. 50 MB)</p>
+                    <div class="media-btn-row">
+                        <button type="button" id="btnSelectFile" class="btn-media-select">
+                            📁 Selecionar Arquivo de Vídeo
+                        </button>
+                        <button type="button" id="btnToggleCamera" class="btn-media-camera">
+                            📷 Gravar Direto da Câmera
+                        </button>
+                    </div>
+                    <input type="file" id="videoFileInput" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" hidden>
+                    <input type="file" id="mobileCameraInput" accept="video/*" capture="environment" hidden>
+                </div>
+
+                <!-- Gravador de Câmera WebRTC integrado -->
+                <div id="cameraRecorderBox" class="camera-recorder-box">
+                    <video id="cameraLiveVideo" class="camera-live-video" autoplay muted playsinline></video>
+                    <div class="camera-controls-bar">
+                        <div class="rec-indicator">
+                            <span id="recDot" class="rec-dot" style="display:none;"></span>
+                            <span id="recTimerText">Câmera pronta</span>
+                        </div>
+                        <div style="display:flex; gap:0.5rem;">
+                            <button type="button" id="btnStartStopRec" class="btn-media-select">🔴 Iniciar Gravação</button>
+                            <button type="button" id="btnCloseCamera" class="btn-remove-video">Fechar Câmera</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Player HTML5 de Preview da Volta -->
+                <div id="videoPreviewContainer" class="video-preview-container">
+                    <video id="videoPreview" class="video-preview-player" controls playsinline preload="metadata"></video>
+                    <div class="video-meta-bar">
+                        <div class="video-meta-info">
+                            <span>🎞️</span>
+                            <span id="videoFileName">volta_robo.mp4</span>
+                            <span>•</span>
+                            <span id="videoFileSize">0.0 MB</span>
+                            <span>•</span>
+                            <span id="videoDurationLabel">00:00</span>
+                        </div>
+                        <button type="button" id="btnRemoveVideo" class="btn-remove-video">✕ Trocar Vídeo</button>
+                    </div>
+                </div>
+
+                <!-- b) Painel de Configuração Pré-Análise (Opcional) -->
+                <div class="config-section">
+                    <div class="config-section-title">
+                        <span>⚙️ Configuração Pré-Análise</span>
+                        <span class="optional-tag">Opcional</span>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="field-group">
+                            <label for="robotTypeSelect">Tipo de Robô</label>
+                            <select id="robotTypeSelect" class="field-select">
+                                <option value="LEGO Spike Prime / Mindstorms">LEGO Spike Prime / Mindstorms</option>
+                                <option value="LEGO Mindstorms EV3">LEGO Mindstorms EV3</option>
+                                <option value="Arduino / ESP32 (Maker)">Arduino / ESP32 (Maker)</option>
+                                <option value="Outro Seguidor de Linha">Outro Seguidor de Linha</option>
+                            </select>
+                        </div>
+                        <div class="field-group">
+                            <label for="trackNotesInput">Trecho / Observação da Pista</label>
+                            <input type="text" id="trackNotesInput" class="field-input" placeholder="Ex: Curva de 90°, gangorra, cruzamento...">
+                        </div>
+                    </div>
+
+                    <div class="field-group" style="margin-bottom: 0.45rem;">
+                        <label>Calibração Atual testada no robô</label>
+                    </div>
+                    <div class="form-grid-3">
+                        <div class="field-group">
+                            <label for="inputKp">Ganho Proporcional <code>Kp</code></label>
+                            <input type="number" id="inputKp" class="field-input mono" step="0.05" placeholder="Ex: 1.40">
+                        </div>
+                        <div class="field-group">
+                            <label for="inputKd">Ganho Derivativo <code>Kd</code></label>
+                            <input type="number" id="inputKd" class="field-input mono" step="0.5" placeholder="Ex: 12.0">
+                        </div>
+                        <div class="field-group">
+                            <label for="inputVbase">Velocidade Base <code>V_base</code></label>
+                            <input type="number" id="inputVbase" class="field-input mono" step="1" placeholder="Ex: 60">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- c) Botão de Ação e Status -->
+                <div class="action-area">
+                    <button type="button" id="btnAnalyzeLap" class="btn-analyze-ai">
+                        <span class="spinner" id="analyzeSpinner"></span>
+                        <span id="analyzeBtnIcon">✨</span>
+                        <span id="analyzeBtnText">Analisar Volta com IA</span>
+                    </button>
+
+                    <div id="analysisProgressBox" class="analysis-progress-box">
+                        <div class="progress-status-row">
+                            <span id="progressStatusText" class="progress-status-text">Preparando vídeo para análise...</span>
+                            <span id="progressPercentText" class="progress-percent">0%</span>
+                        </div>
+                        <div class="progress-bar-track">
+                            <div id="progressBarFill" class="progress-bar-fill"></div>
+                        </div>
+                    </div>
+
+                    <div id="errorAlertBox" class="error-alert-box" role="alert"></div>
+                </div>
+            </section>
+
+            <!-- COLUNA DIREITA: Painel de Resultados (Dashboard de Telemetria) -->
+            <section class="glass-panel" aria-label="Dashboard de Telemetria">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <span class="step-badge">2</span>
+                        <span>Dashboard de Telemetria &amp; Coaching</span>
+                    </div>
+                    <span id="analysisModelBadge" class="optional-tag">Aguardando vídeo</span>
+                </div>
+
+                <!-- Estado Inicial Vazio -->
+                <div id="dashboardEmptyState" class="dashboard-empty-state">
+                    <div class="empty-state-icon">📊</div>
+                    <h3>Nenhum diagnóstico gerado ainda</h3>
+                    <p>Selecione ou grave o vídeo da volta do robô ao lado e clique em <strong>"Analisar Volta com IA"</strong> para receber a timeline de eventos e o ajuste fino de PID.</p>
+                    <button type="button" id="btnLoadDemoReport" class="btn-demo-load">
+                        🧪 Visualizar Exemplo de Diagnóstico
+                    </button>
+                </div>
+
+                <!-- Conteúdo do Dashboard Preenchido -->
+                <div id="dashboardContent" class="dashboard-content">
+                    <!-- Cards de Resumo: Estabilidade Geral & Tempo da Volta -->
+                    <div class="summary-cards-row">
+                        <div class="summary-card">
+                            <span class="summary-card-label">Estabilidade Geral</span>
+                            <div class="summary-card-value">
+                                <span id="cardStabilityPill" class="stability-pill oscilando">⚠️ Oscilando</span>
+                            </div>
+                            <span id="cardStabilitySub" class="summary-card-sub">Serpenteio moderado após saída de curvas</span>
+                        </div>
+
+                        <div class="summary-card">
+                            <span class="summary-card-label">Tempo da Volta</span>
+                            <div class="summary-card-value">
+                                <span>⏱️</span>
+                                <span id="cardLapTime" class="lap-time-value">00:14.2</span>
+                            </div>
+                            <span id="cardSpeedSub" class="summary-card-sub">Ritmo constante nas retas, perda em curvas</span>
+                        </div>
+                    </div>
+
+                    <!-- Timeline de Eventos Críticos -->
+                    <div class="telemetry-box">
+                        <div class="telemetry-box-header">
+                            <h4>📍 Timeline de Eventos Críticos</h4>
+                            <span class="timeline-hint">Clique no tempo para ir ao ponto do vídeo</span>
+                        </div>
+                        <ul id="timelineList" class="timeline-list"></ul>
+                    </div>
+
+                    <!-- Recomendações de Engenharia -->
+                    <div class="engineering-box">
+                        <div class="telemetry-box-header">
+                            <h4>🛠️ Recomendações de Engenharia &amp; Tuning PID</h4>
+                            <span class="optional-tag" style="color: var(--neon-cyan); border-color: rgba(0,229,255,0.35);">Coaching Direto</span>
+                        </div>
+
+                        <div id="engineeringHeadline" class="engineering-headline">
+                            Reduzir Kp em 15% e aumentar Kd para frear o serpenteio nas retas.
+                        </div>
+
+                        <div class="pid-tuning-grid">
+                            <div class="pid-tune-card">
+                                <div class="pid-tune-param">KP SUGERIDO</div>
+                                <div id="tuneKpVal" class="pid-tune-val">1.20</div>
+                                <div id="tuneKpAction" class="pid-tune-action">Reduzir ~15%</div>
+                            </div>
+                            <div class="pid-tune-card">
+                                <div class="pid-tune-param">KD SUGERIDO</div>
+                                <div id="tuneKdVal" class="pid-tune-val">15.5</div>
+                                <div id="tuneKdAction" class="pid-tune-action">Aumentar ~25%</div>
+                            </div>
+                            <div class="pid-tune-card">
+                                <div class="pid-tune-param">V_BASE SUGERIDA</div>
+                                <div id="tuneVbaseVal" class="pid-tune-val">55</div>
+                                <div id="tuneVbaseAction" class="pid-tune-action">Manter cruzeiro</div>
+                            </div>
+                        </div>
+
+                        <ul id="coachingStepsList" class="coaching-steps-list"></ul>
+                    </div>
+
+                    <!-- Botão Copiar Diagnóstico -->
+                    <div class="dashboard-footer-actions">
+                        <button type="button" id="btnCopyDiagnosis" class="btn-copy-diagnosis">
+                            <span>📋</span>
+                            <span id="copyDiagnosisText">Copiar Diagnóstico para Diário de Bordo</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Modal de Configuração de Chave API (Opcional, usa Cloudflare Worker por padrão) -->
+    <div id="apiKeyModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="apiKeyModalTitle">
+        <div class="modal-card">
+            <h3 id="apiKeyModalTitle">🔑 Configuração de Conexão IA</h3>
+            <p>Por padrão, a ferramenta utiliza o <strong>Cloudflare Worker oficial da Escola de Tecnologias</strong> (<code>gemini-3.8-flash</code>). Se desejar, você pode informar uma chave própria do Google AI Studio.</p>
+            <div class="field-group">
+                <label for="customApiKeyInput">Chave API Gemini (Opcional)</label>
+                <input type="password" id="customApiKeyInput" class="field-input mono" placeholder="AIzaSy... (deixe em branco para usar o Worker)">
+            </div>
+            <div class="modal-actions">
+                <button type="button" id="btnClearApiKey" class="btn-remove-video">Usar Worker Padrão</button>
+                <button type="button" id="btnSaveApiKey" class="btn-media-select">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="../theme-toggle.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
