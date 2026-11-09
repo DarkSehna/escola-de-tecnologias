@@ -945,3 +945,69 @@ body {
     border-color: #cbd5e1;
     color: #0f172a;
 }
+
+/* 7. CONTROLES MODULARES DE PAREDE (WALL SLIDE & WALL JUMP) */
+.wall-subcontrols {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin-top: 0.45rem;
+    padding: 0.65rem 0.75rem;
+    background: rgba(0, 210, 255, 0.04);
+    border-left: 2px solid var(--color-neon-blue);
+    border-radius: 0 10px 10px 0;
+}
+
+.slider-number-group {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.cyber-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    outline: none;
+    cursor: pointer;
+}
+
+.cyber-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: var(--color-neon-blue);
+    box-shadow: 0 0 8px var(--color-neon-blue-glow);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+
+.cyber-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+}
+
+.cyber-slider::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+    border: none;
+    border-radius: 50%;
+    background: var(--color-neon-blue);
+    box-shadow: 0 0 8px var(--color-neon-blue-glow);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+
+.physics-input-compact {
+    width: 76px;
+    text-align: center;
+    padding: 0.35rem 0.45rem;
+}
+
+.physics-checkbox {
+    accent-color: var(--color-neon-blue);
+}

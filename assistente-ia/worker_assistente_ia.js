@@ -13,6 +13,8 @@ const ALLOWED_MODELS = [
   "gemini-3.8-lite"
 ];
 
+const MAX_PAYLOAD_BYTES = 512 * 1024; // 512 KB
+
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -74,9 +76,36 @@ export default {
       );
     }
 
+    const contentLength = Number(request.headers.get("content-length") || 0);
+    if (contentLength > MAX_PAYLOAD_BYTES) {
+      return jsonResponse(
+        {
+          error: {
+            code: 413,
+            type: "PAYLOAD_TOO_LARGE",
+            message: "O tamanho da requisição excede o limite máximo de 512 KB."
+          }
+        },
+        413
+      );
+    }
+
     let body;
     try {
-      body = await request.json();
+      const rawText = await request.text();
+      if (new TextEncoder().encode(rawText).byteLength > MAX_PAYLOAD_BYTES) {
+        return jsonResponse(
+          {
+            error: {
+              code: 413,
+              type: "PAYLOAD_TOO_LARGE",
+              message: "O tamanho da requisição excede o limite máximo de 512 KB."
+            }
+          },
+          413
+        );
+      }
+      body = JSON.parse(rawText);
     } catch {
       return jsonResponse(
         {

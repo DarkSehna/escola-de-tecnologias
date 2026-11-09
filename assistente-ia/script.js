@@ -735,8 +735,37 @@ const MEMORY_INDEX = {
         "SB3_scripts.md"
     ],
     "lego": ["exemplo_memoria.txt"],
-    "arduino": ["exemplo_memoria.txt"],
-    "python": ["exemplo_memoria.txt"],
+    "arduino": [
+        "LCD_Bnt.ino",
+        "LCD_Clock.ino",
+        "LCD_POT.ino",
+        "LCD_Toggle.ino",
+        "LCD_Verify.ino",
+        "LockPick.ino",
+        "ProjetoFeiraCinencias.ino",
+        "RFID.ino",
+        "RFIDLeitura.ino",
+        "Som.ino",
+        "Temperatura3N.ino",
+        "Temperatura3N_V2.ino",
+        "Temperatura3N_V3.ino",
+        "Temperatura3N_V4.ino",
+        "Temperatura3N_V5.ino",
+        "testeUltrassonico.ino"
+    ],
+    "python": [
+        "calculadora_console.py",
+        "calculadora_gui_tkinter.py",
+        "obr_calibracao_sensores_bosio.py",
+        "obr_ev3dev2_seguidor_linha_thales.py",
+        "obr_pd_ev3dev2_isabella.py",
+        "obr_pd_ev3dev2_obstaculo_isabella.py",
+        "obr_pid_ev3_linha_bosio.py",
+        "obr_pid_ev3_obstaculo_bosio.py",
+        "obr_pybricks_seguidor_linha_thales.py",
+        "obr_seguidor_linha_enzo.py",
+        "obr_seguidor_obstaculo_enzo.py"
+    ],
     "montagem": ["exemplo_memoria.txt"],
     "obr": ["exemplo_memoria.txt"]
 };

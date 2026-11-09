@@ -167,6 +167,12 @@ class PlayerPhysics {
         this.lastJumpLandX = null;
         this.lastArcPoints = [];
         this.lastMidAirJumpPoints = [];
+
+        // Estado Modular de Parede (Wall Slide & Wall Jump)
+        this.isWallSliding = false;
+        this.wallSlideDir = 0;
+        this.wallJumpLockTimer = 0;
+        this.wallJumpCount = 0;
     }
 
     reset(startX, startY) {
@@ -186,10 +192,15 @@ class PlayerPhysics {
         this.lastJumpLandX = null;
         this.lastArcPoints = [];
         this.lastMidAirJumpPoints = [];
+
+        this.isWallSliding = false;
+        this.wallSlideDir = 0;
+        this.wallJumpLockTimer = 0;
+        this.wallJumpCount = 0;
     }
 
     update(keys, grv_int, jump_int, speed_int, accel_ground_int, fric_ground_int,
-           accel_air_int, fric_air_int, max_fall_int, obstacles, maxJumpsAllowed = 1) {
+           accel_air_int, fric_air_int, max_fall_int, obstacles, maxJumpsAllowed = 1, wallConfig = null) {
         
         // Garante que o jogador não caia fora do chão principal
         if (this.y + GRID_SIZE > GROUND_Y) {
@@ -197,6 +208,7 @@ class PlayerPhysics {
             this.vsp = 0.0;
             this.isGrounded = true;
             this.jumpCount = 0;
+            this.wallJumpCount = 0;
 
             if (this.isJumping) {
                 this.isJumping = false;
@@ -222,23 +234,33 @@ class PlayerPhysics {
         if (keys.right) move += 1;
         if (keys.left) move -= 1;
 
-        if (move !== 0) {
-            this.hsp += move * accel;
-        } else {
-            // Freia por fricção gradativamente
+        if (this.wallJumpLockTimer > 0) {
+            this.wallJumpLockTimer--;
             if (Math.abs(this.hsp) < fric) {
                 this.hsp = 0.0;
             } else {
                 this.hsp -= Math.sign(this.hsp) * fric;
             }
-        }
+        } else {
+            if (move !== 0) {
+                this.hsp += move * accel;
+            } else {
+                // Freia por fricção gradativamente
+                if (Math.abs(this.hsp) < fric) {
+                    this.hsp = 0.0;
+                } else {
+                    this.hsp -= Math.sign(this.hsp) * fric;
+                }
+            }
 
-        // Clampa velocidade
-        this.hsp = Math.max(-speed_int, Math.min(this.hsp, speed_int));
+            // Clampa velocidade
+            this.hsp = Math.max(-speed_int, Math.min(this.hsp, speed_int));
+        }
 
         // Reseta contador de pulos no chão
         if (this.isGrounded) {
             this.jumpCount = 0;
+            this.wallJumpCount = 0;
         }
 
         // 3. Movimento Vertical e Pulo / Pulo Duplo
@@ -249,27 +271,86 @@ class PlayerPhysics {
             this.vsp = 0.0;
         }
 
+        // 3.1 Mecânica Modular: Wall Slide (Deslizar na Parede)
+        this.isWallSliding = false;
+        this.wallSlideDir = 0;
+        const touchingLeftWall = !this.isGrounded && (this.x <= 0.5 || this.placeMeeting(this.x - 1.0, this.y, obstacles));
+        const touchingRightWall = !this.isGrounded && (this.x + GRID_SIZE >= SCREEN_WIDTH - 0.5 || this.placeMeeting(this.x + 1.0, this.y, obstacles));
+
+        if (wallConfig && wallConfig.wallSlideEnabled && !this.isGrounded) {
+            if ((keys.left && touchingLeftWall) || (keys.right && touchingRightWall)) {
+                this.isWallSliding = true;
+                this.wallSlideDir = (keys.left && touchingLeftWall) ? -1 : 1;
+                if (this.vsp > wallConfig.wallSlideMaxSpeed) {
+                    this.vsp = wallConfig.wallSlideMaxSpeed;
+                }
+            }
+        }
+
         if (keys.jump) {
             if (!this.jumpKeyWasDown) {
-                const maxAllowed = typeof maxJumpsAllowed === "number" ? maxJumpsAllowed : (maxJumpsAllowed ? 2 : 1);
-                if (this.isGrounded || this.jumpCount < maxAllowed) {
-                    this.vsp = jump_int; // Impulso para cima
-                    this.isGrounded = false;
-                    this.jumpCount++;
-                    
-                    if (!this.isJumping) {
-                        // Primeiro salto a partir do solo ou no ar
-                        this.isJumping = true;
-                        this.jumpStartX = this.x + GRID_SIZE / 2.0;
-                        this.jumpPeakY = this.y;
-                        this.arcPoints = [[this.jumpStartX, this.y + GRID_SIZE / 2.0]];
-                        this.midAirJumpPoints = [];
-                    } else {
-                        // Salto adicional no ar (pulo duplo / múltiplo):
-                        // NÃO apaga o arco anterior! Mantém a curva contínua e marca o ponto do impulso aéreo
-                        const boostPt = [this.x + GRID_SIZE / 2.0, this.y + GRID_SIZE / 2.0];
-                        this.arcPoints.push(boostPt);
-                        this.midAirJumpPoints.push(boostPt);
+                let didWallJump = false;
+
+                // 3.2 Mecânica Modular: Wall Jump (Salto na Parede)
+                const maxWallJumpsAllowed = (wallConfig && typeof wallConfig.maxWallJumps === "number") ? wallConfig.maxWallJumps : 3;
+                if (wallConfig && wallConfig.wallJumpEnabled && !this.isGrounded && this.wallJumpCount < maxWallJumpsAllowed) {
+                    let wallDir = 0;
+                    if (this.isWallSliding && this.wallSlideDir !== 0) {
+                        wallDir = this.wallSlideDir;
+                    } else if (keys.left && touchingLeftWall) {
+                        wallDir = -1;
+                    } else if (keys.right && touchingRightWall) {
+                        wallDir = 1;
+                    } else if (touchingLeftWall && !touchingRightWall) {
+                        wallDir = -1;
+                    } else if (touchingRightWall && !touchingLeftWall) {
+                        wallDir = 1;
+                    }
+
+                    if (wallDir !== 0) {
+                        this.vsp = wallConfig.wallJumpForceY;
+                        this.hsp = -wallDir * wallConfig.wallJumpPushX;
+                        this.wallJumpLockTimer = 10;
+                        this.wallJumpCount++;
+                        this.isGrounded = false;
+                        this.isWallSliding = false;
+                        didWallJump = true;
+
+                        if (!this.isJumping) {
+                            this.isJumping = true;
+                            this.jumpStartX = this.x + GRID_SIZE / 2.0;
+                            this.jumpPeakY = this.y;
+                            this.arcPoints = [[this.jumpStartX, this.y + GRID_SIZE / 2.0]];
+                            this.midAirJumpPoints = [];
+                        } else {
+                            const boostPt = [this.x + GRID_SIZE / 2.0, this.y + GRID_SIZE / 2.0];
+                            this.arcPoints.push(boostPt);
+                            this.midAirJumpPoints.push(boostPt);
+                        }
+                    }
+                }
+
+                if (!didWallJump) {
+                    const maxAllowed = typeof maxJumpsAllowed === "number" ? maxJumpsAllowed : (maxJumpsAllowed ? 2 : 1);
+                    if (this.isGrounded || this.jumpCount < maxAllowed) {
+                        this.vsp = jump_int; // Impulso para cima
+                        this.isGrounded = false;
+                        this.jumpCount++;
+                        
+                        if (!this.isJumping) {
+                            // Primeiro salto a partir do solo ou no ar
+                            this.isJumping = true;
+                            this.jumpStartX = this.x + GRID_SIZE / 2.0;
+                            this.jumpPeakY = this.y;
+                            this.arcPoints = [[this.jumpStartX, this.y + GRID_SIZE / 2.0]];
+                            this.midAirJumpPoints = [];
+                        } else {
+                            // Salto adicional no ar (pulo duplo / múltiplo):
+                            // NÃO apaga o arco anterior! Mantém a curva contínua e marca o ponto do impulso aéreo
+                            const boostPt = [this.x + GRID_SIZE / 2.0, this.y + GRID_SIZE / 2.0];
+                            this.arcPoints.push(boostPt);
+                            this.midAirJumpPoints.push(boostPt);
+                        }
                     }
                 }
             }
@@ -317,6 +398,7 @@ class PlayerPhysics {
             if (this.vsp > 0) {
                 this.isGrounded = true;
                 this.jumpCount = 0;
+                this.wallJumpCount = 0;
                 
                 if (this.isJumping) {
                     this.isJumping = false;
@@ -502,6 +584,50 @@ document.addEventListener('DOMContentLoaded', () => {
         inputDoubleJump.addEventListener('change', updateCodeTemplate);
     }
 
+    // 6.1 Binds Modulares de Wall Slide & Wall Jump
+    const inputWallSlide = document.getElementById('input-wallSlide');
+    const wallSlideControls = document.getElementById('wall-slide-controls');
+    if (inputWallSlide) {
+        inputWallSlide.addEventListener('change', () => {
+            if (wallSlideControls) {
+                wallSlideControls.style.display = inputWallSlide.checked ? 'flex' : 'none';
+            }
+            updateCodeTemplate();
+        });
+    }
+
+    const inputWallJump = document.getElementById('input-wallJump');
+    const wallJumpControls = document.getElementById('wall-jump-controls');
+    if (inputWallJump) {
+        inputWallJump.addEventListener('change', () => {
+            if (wallJumpControls) {
+                wallJumpControls.style.display = inputWallJump.checked ? 'flex' : 'none';
+            }
+            updateCodeTemplate();
+        });
+    }
+
+    const wallParamKeys = ['wallSlideMaxSpeed', 'maxWallJumps', 'wallJumpForceY', 'wallJumpPushX'];
+    wallParamKeys.forEach(wKey => {
+        const sliderEl = document.getElementById(`slider-${wKey}`);
+        const numEl = document.getElementById(`input-${wKey}`);
+        if (sliderEl && numEl) {
+            sliderEl.addEventListener('input', () => {
+                numEl.value = sliderEl.value;
+                numEl.classList.remove('error');
+                updateCodeTemplate();
+            });
+            numEl.addEventListener('input', () => {
+                const parsed = parseFloat(numEl.value);
+                if (!isNaN(parsed)) {
+                    sliderEl.value = parsed;
+                    numEl.classList.remove('error');
+                }
+                updateCodeTemplate();
+            });
+        }
+    });
+
     // 7. Modal Flutuante de Código de Integração
     const codeModal = document.getElementById("code-modal-overlay");
     const btnOpenModal = document.getElementById("btn-open-code-modal");
@@ -628,6 +754,18 @@ function resetToDefault(key) {
         if (input) {
             input.classList.remove('error');
             input.value = defaultVal;
+        }
+    } else if (key === "wallSlideMaxSpeed" || key === "maxWallJumps" || key === "wallJumpForceY" || key === "wallJumpPushX") {
+        const wallDefaults = { wallSlideMaxSpeed: 2, maxWallJumps: 3, wallJumpForceY: -12, wallJumpPushX: 8 };
+        const defVal = wallDefaults[key];
+        const numEl = document.getElementById(`input-${key}`);
+        const sliderEl = document.getElementById(`slider-${key}`);
+        if (numEl) {
+            numEl.classList.remove('error');
+            numEl.value = defVal;
+        }
+        if (sliderEl) {
+            sliderEl.value = defVal;
         }
     } else if (preset[key]) {
         const defaultVal = preset[key].default;
@@ -790,6 +928,32 @@ function getConvertedPhysicsValues() {
     return [0.3, -7.0, 4.0, 0.35, 0.15, 0.20, 0.05, 12.0, 1];
 }
 
+function getWallMechanicsConfig() {
+    const inputWallSlide = document.getElementById('input-wallSlide');
+    const inputWallJump = document.getElementById('input-wallJump');
+    const inputSlideSpd = document.getElementById('input-wallSlideMaxSpeed');
+    const inputMaxWallJumps = document.getElementById('input-maxWallJumps');
+    const inputJumpY = document.getElementById('input-wallJumpForceY');
+    const inputPushX = document.getElementById('input-wallJumpPushX');
+
+    const wallSlideEnabled = Boolean(inputWallSlide && inputWallSlide.checked);
+    const wallJumpEnabled = Boolean(inputWallJump && inputWallJump.checked);
+
+    const rawSlide = inputSlideSpd ? parseFloat(inputSlideSpd.value) : 2;
+    const rawMaxWJ = inputMaxWallJumps ? parseInt(inputMaxWallJumps.value, 10) : 3;
+    const rawJumpY = inputJumpY ? parseFloat(inputJumpY.value) : -12;
+    const rawPushX = inputPushX ? parseFloat(inputPushX.value) : 8;
+
+    return {
+        wallSlideEnabled,
+        wallJumpEnabled,
+        wallSlideMaxSpeed: isNaN(rawSlide) ? 2 : Math.max(0.1, rawSlide),
+        maxWallJumps: isNaN(rawMaxWJ) ? 3 : Math.max(1, rawMaxWJ),
+        wallJumpForceY: isNaN(rawJumpY) ? -12 : rawJumpY,
+        wallJumpPushX: isNaN(rawPushX) ? 8 : Math.abs(rawPushX)
+    };
+}
+
 function updateCodeTemplate() {
     const engine = comboEngine.value;
     const preset = ENGINE_PRESETS[engine];
@@ -824,6 +988,12 @@ function updateCodeTemplate() {
             }
         }
         code = code.replace(`{${key}}`, replacement);
+    }
+
+    // Exportação Modular das Constantes de Wall Slide / Wall Jump (se ativas)
+    const wallCfg = getWallMechanicsConfig();
+    if (wallCfg.wallSlideEnabled || wallCfg.wallJumpEnabled) {
+        code += `\n\n// --- MECÂNICAS DE PAREDE (WALL JUMP & SLIDE) ---\nwall_slide_spd = ${wallCfg.wallSlideMaxSpeed};\nmaxWallJumps = ${wallCfg.maxWallJumps};\nwall_jump_v = ${wallCfg.wallJumpForceY};\nwall_jump_h = ${wallCfg.wallJumpPushX};`;
     }
 
     codeTemplateDisplay.textContent = code;
@@ -1002,6 +1172,7 @@ function gameLoop() {
     }
 
     if (runPhysics) {
+        const wallConfig = getWallMechanicsConfig();
         player.update(
             keys,
             grv_int,
@@ -1013,7 +1184,8 @@ function gameLoop() {
             fric_a_int,
             max_fall_int,
             obstacles,
-            maxJumpsAllowed
+            maxJumpsAllowed,
+            wallConfig
         );
     }
 
@@ -1262,6 +1434,19 @@ function drawFrame(playerPhysics, obstaclesSet) {
     } else {
         ctx.fillRect(playerPhysics.x + 6, eyeY, 4, 6);
         ctx.fillRect(playerPhysics.x + 12, eyeY, 4, 6);
+    }
+
+    // 5.1 Feedback Visual Modular de Wall Slide (Atrito na Parede)
+    if (playerPhysics.isWallSliding) {
+        ctx.save();
+        const wallEdgeX = playerPhysics.wallSlideDir < 0 ? playerPhysics.x : playerPhysics.x + GRID_SIZE;
+        ctx.strokeStyle = "#00ff66";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(wallEdgeX, playerPhysics.y);
+        ctx.lineTo(wallEdgeX, playerPhysics.y + GRID_SIZE);
+        ctx.stroke();
+        ctx.restore();
     }
 
     // 6. Texto explicativo fixo
