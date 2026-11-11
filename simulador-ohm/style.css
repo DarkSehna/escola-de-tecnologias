@@ -1,9 +1,8 @@
 /* ==========================================================================
-   STYLE SHEET - SIMULADOR LEI DE OHM
-   Estilo Cyberpunk, HUD Amperímetro LCD & Visualizador de Fórmulas Dinâmico
+   STYLE SHEET - LEI DE OHM & KIT ARDUINO (V2.1 - WIDESCREEN ZERO-SCROLL 3 COLUNAS)
+   Inspirado no layout 98vw / 100vh do Gerador de Mapas 2D e Simulador PID
    ========================================================================== */
 
-/* 1. RESET E DEFINIÇÕES DO DESIGN SYSTEM */
 * {
     margin: 0;
     padding: 0;
@@ -13,204 +12,169 @@
 }
 
 :root {
-    /* Cores de Fundo */
     --color-bg-dark: #07090d;
-    --color-bg-deep: #0b0f18;
-    --color-bg-panel: rgba(12, 15, 24, 0.7);
-    --color-border-glass: rgba(27, 34, 52, 0.4);
+    --color-bg-panel: rgba(12, 15, 24, 0.84);
+    --color-bg-card: rgba(17, 23, 38, 0.85);
+    --color-border-glass: rgba(148, 163, 184, 0.14);
 
-    /* Cores do Circuito (Conforme config.py) */
-    --color-wire-high: #ff9d00;      /* Laranja Neon - Alto Potencial */
+    --color-wire-high: #ff9d00;
     --color-wire-high-glow: rgba(255, 157, 0, 0.3);
-    
-    --color-wire-low: #00bfff;       /* Ciano Neon - Baixo Potencial */
+
+    --color-wire-low: #00bfff;
     --color-wire-low-glow: rgba(0, 191, 255, 0.3);
-    
-    --color-battery: #00ff66;        /* Verde Neon - Bateria */
-    --color-battery-glow: rgba(0, 255, 102, 0.3);
-    
-    --color-resistor: #ff3344;       /* Vermelho Neon - Resistor */
+
+    --color-battery: #00ff66;
+    --color-resistor: #ff3344;
     --color-resistor-glow: rgba(255, 51, 68, 0.3);
-    
-    --color-electron: #ffffff;
     --color-electron-glow: #ffff33;
-    
-    --color-text-primary: #ffffff;
-    --color-text-muted: #6f7d95;
-    --color-border: #1b2234;
+
+    --color-text-primary: #f8fafc;
+    --color-text-muted: #94a3b8;
+    --color-border: #1e293b;
 
     --glass-blur: blur(14px);
-    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-body {
+html, body {
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
     background-color: var(--color-bg-dark);
     color: var(--color-text-primary);
-    min-height: 100vh;
-    overflow-y: auto;
     position: relative;
-    padding: 1.25rem;
 }
 
-/* Ambient glow effects */
+/* Brilhos ambientais */
 .ambient-glow {
     position: fixed;
-    width: 600px;
-    height: 600px;
+    width: 520px;
+    height: 520px;
     border-radius: 50%;
     filter: blur(150px);
-    opacity: 0.07;
+    opacity: 0.08;
     pointer-events: none;
-    z-index: -1;
+    z-index: 0;
 }
-
 .bg-left {
     background: radial-gradient(circle, var(--color-wire-high) 0%, transparent 70%);
-    top: -200px;
-    left: -200px;
+    top: -180px;
+    left: -180px;
 }
-
 .bg-right {
     background: radial-gradient(circle, var(--color-wire-low) 0%, transparent 70%);
-    bottom: -200px;
-    right: -200px;
+    bottom: -180px;
+    right: -180px;
 }
 
-/* 2. LAYOUT MASTER */
+/* CONTAINER MASTER 98VW / 100VH (ZERO-SCROLL DESKTOP) */
 .app-container {
-    max-width: 1550px;
-    margin: 0 auto;
-    width: 100%;
-    min-height: calc(100vh - 2.5rem);
+    position: relative;
+    z-index: 1;
+    width: 98vw;
+    max-width: 98vw;
+    height: calc(100vh - 1rem);
+    margin: 0.5rem auto;
     display: flex;
     flex-direction: column;
-    gap: 1.15rem;
+    gap: 0.65rem;
 }
 
 .panel-glass {
     background: var(--color-bg-panel);
     border: 1px solid var(--color-border-glass);
-    border-radius: 16px;
+    border-radius: 14px;
     backdrop-filter: var(--glass-blur);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.32);
 }
 
-/* 3. CABEÇALHO */
+/* CABEÇALHO COMPACTO EM 1 LINHA */
 .app-header {
-    padding: 1.15rem 1.5rem;
+    padding: 0.55rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
     flex-shrink: 0;
 }
 
-.header-main-row {
+.header-left {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 1.5rem;
-}
-
-.app-branding {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-}
-
-.back-nav {
-    margin-bottom: 0.15rem;
+    gap: 0.9rem;
 }
 
 .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
     color: var(--color-text-muted);
     text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 500;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 0.35rem 0.7rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--color-border);
     transition: var(--transition-smooth);
-    display: inline-block;
+    white-space: nowrap;
 }
 
 .back-link:hover {
     color: var(--color-wire-low);
-    transform: translateX(-4px);
-    text-shadow: 0 0 8px var(--color-wire-low-glow);
+    border-color: var(--color-wire-low);
 }
 
 .title-row {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.55rem;
 }
 
 .logo-icon {
-    font-size: 1.85rem;
+    font-size: 1.35rem;
     color: var(--color-wire-high);
-    text-shadow: 0 0 10px var(--color-wire-high-glow);
 }
 
 .title-row h1 {
-    font-size: 1.25rem;
+    font-size: 1.02rem;
     font-weight: 800;
     line-height: 1.1;
 }
 
 .subtitle {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     color: var(--color-text-muted);
-    font-weight: 500;
 }
 
-.header-badges {
-    display: flex;
-    gap: 0.65rem;
-}
-
-.badge {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.85rem;
-    font-weight: 700;
-    padding: 0.4rem 0.8rem;
-    border-radius: 6px;
-    border: 1px solid var(--color-border);
-}
-
-.badge-volt {
-    color: var(--color-wire-high);
-    border-color: var(--color-wire-high-glow);
-    background: rgba(255, 157, 0, 0.05);
-}
-
-.badge-amp {
-    color: var(--color-wire-low);
-    border-color: var(--color-wire-low-glow);
-    background: rgba(0, 191, 255, 0.05);
-}
-
-/* 4. NAVEGAÇÃO DE ABAS */
+/* ABAS NO CABEÇALHO */
 .circuit-tabs {
     display: flex;
-    background: #0d111c;
+    background: #090c14;
     border: 1px solid var(--color-border);
-    border-radius: 12px;
-    padding: 0.35rem;
-    flex-shrink: 0;
-    gap: 0.35rem;
+    border-radius: 10px;
+    padding: 3px;
+    gap: 4px;
 }
 
 .tab-trigger {
-    flex: 1;
     background: transparent;
     border: none;
-    border-radius: 8px;
-    padding: 0.75rem;
+    border-radius: 7px;
+    padding: 0.42rem 1rem;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.8rem;
+    font-size: 0.76rem;
     font-weight: 700;
     color: var(--color-text-muted);
     cursor: pointer;
     transition: var(--transition-smooth);
+    white-space: nowrap;
 }
 
 .tab-trigger:hover:not(.active) {
-    background: rgba(255, 255, 255, 0.02);
     color: #ffffff;
+    background: rgba(255, 255, 255, 0.04);
 }
 
 .tab-trigger.active {
@@ -219,118 +183,126 @@ body {
     box-shadow: 0 0 10px var(--color-wire-high-glow);
 }
 
-/* 5. GRID PRINCIPAL SPLIT */
-.workspace-split {
-    display: grid;
-    grid-template-columns: 1fr 340px;
-    gap: 1.25rem;
+.header-badges {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 0.32rem 0.65rem;
+    border-radius: 7px;
+    border: 1px solid var(--color-border);
+    white-space: nowrap;
+}
+
+.badge-volt {
+    color: var(--color-wire-high);
+    border-color: var(--color-wire-high-glow);
+    background: rgba(255, 157, 0, 0.08);
+}
+
+.badge-amp {
+    color: var(--color-wire-low);
+    border-color: var(--color-wire-low-glow);
+    background: rgba(0, 191, 255, 0.08);
+}
+
+/* WORKSPACE 3 COLUNAS ZERO-SCROLL */
+.workspace-3col {
     flex: 1;
     min-height: 0;
+    display: grid;
+    grid-template-columns: 345px minmax(0, 1fr) 310px;
+    gap: 0.75rem;
+    align-items: stretch;
 }
 
-.simulator-column {
+.left-workbench,
+.center-stage,
+.right-telemetry {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
-    height: 100%;
+    min-height: 0;
+    overflow: hidden;
 }
 
-.canvas-panel {
-    flex: 1;
+.panel-header {
+    padding: 0.55rem 0.9rem;
+    background: rgba(13, 17, 28, 0.92);
+    border-bottom: 1px solid var(--color-border-glass);
     display: flex;
-    justify-content: center;
     align-items: center;
-    padding: 0.5rem;
-    background: #05070c;
-}
-
-#circuit-canvas {
-    max-width: 100%;
-    max-height: 100%;
-    display: block;
-}
-
-.controls-panel {
-    padding: 1.25rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    justify-content: space-between;
     flex-shrink: 0;
 }
 
-.separator-line {
-    height: 1px;
-    background: #181d2c;
-    width: 100%;
-}
-
-/* Seletor de Carga */
-.load-selector-row {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.row-label {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--color-text-muted);
+.panel-title {
     font-family: 'JetBrains Mono', monospace;
-}
-
-.load-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.load-btn {
-    background: #0d121c;
-    border: 1px solid var(--color-border);
-    color: var(--color-text-muted);
-    font-size: 0.8rem;
+    font-size: 0.74rem;
     font-weight: 700;
-    padding: 0.5rem 0.9rem;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: var(--transition-smooth);
+    color: var(--color-text-muted);
+    letter-spacing: 0.04em;
 }
 
-.load-btn:hover:not(.active) {
-    border-color: var(--color-text-muted);
-    color: var(--color-text-primary);
+.panel-chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: #34d399;
+    background: rgba(16, 185, 129, 0.14);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    padding: 0.12rem 0.45rem;
+    border-radius: 999px;
 }
 
-.load-btn.active {
-    background: rgba(255, 157, 0, 0.05);
-    color: var(--color-wire-high);
-    border: 2px solid var(--color-wire-high);
-    box-shadow: 0 0 10px var(--color-wire-high-glow);
-}
-
-/* Grid de Controles */
-.controls-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-}
-
-.control-block {
+/* SCROLL INTERNO APENAS SE A TELA FOR MUITO BAIXA */
+.workbench-scroll,
+.telemetry-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0.7rem;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.65rem;
+}
+
+.workbench-scroll::-webkit-scrollbar,
+.telemetry-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+.workbench-scroll::-webkit-scrollbar-thumb,
+.telemetry-scroll::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.25);
+    border-radius: 999px;
+}
+
+/* BLOCO DA FONTE / BATERIA */
+.wb-section {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border-glass);
+    border-radius: 12px;
+    padding: 0.65rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
 }
 
 .block-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 0.4rem;
 }
 
 .block-title {
-    font-size: 0.85rem;
-    font-weight: 700;
-    font-family: 'Outfit', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.3px;
 }
 
 .digital-input-wrapper {
@@ -339,56 +311,60 @@ body {
     background: #090c12;
     border: 1px solid var(--color-border);
     border-radius: 6px;
-    padding: 0.2rem 0.5rem;
+    padding: 0.15rem 0.45rem;
 }
 
 .digital-input-wrapper input {
     background: transparent;
     border: none;
     outline: none;
-    color: #ffffff;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 700;
     text-align: center;
-    width: 60px;
+    width: 54px;
 }
 
 .digital-input-wrapper .unit {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     font-weight: 700;
     margin-left: 2px;
 }
 
-.color-voltage {
-    border-color: var(--color-wire-high-glow);
-}
-.color-voltage input, .color-voltage .unit {
-    color: var(--color-wire-high);
+.color-voltage { border-color: var(--color-wire-high-glow); }
+.color-voltage input, .color-voltage .unit { color: var(--color-wire-high); }
+
+.color-resistance { border-color: var(--color-resistor-glow); }
+.color-resistance input, .color-resistance .unit { color: var(--color-resistor); }
+
+.preset-pills {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.3rem;
 }
 
-.color-resistance {
-    border-color: var(--color-resistor-glow);
-}
-.color-resistance input, .color-resistance .unit {
-    color: var(--color-resistor);
-}
-
-.color-resistance2 {
-    border-color: var(--color-wire-low-glow);
-}
-.color-resistance2 input, .color-resistance2 .unit {
-    color: var(--color-wire-low);
-}
-
-.block-hint {
+.preset-btn {
+    background: rgba(255, 157, 0, 0.08);
+    border: 1px solid rgba(255, 157, 0, 0.3);
+    color: #fed7aa;
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.7rem;
-    color: var(--color-text-muted);
+    font-weight: 700;
+    padding: 0.25rem 0.2rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: var(--transition-smooth);
 }
 
-/* Estilização Customizada de Sliders */
+.preset-btn:hover,
+.preset-btn.active {
+    background: var(--color-wire-high);
+    color: #07090d;
+    border-color: var(--color-wire-high);
+}
+
+/* SLIDERS */
 .cyber-range {
     -webkit-appearance: none;
     appearance: none;
@@ -396,7 +372,7 @@ body {
     height: 6px;
     background: #090c12;
     border: 1px solid var(--color-border);
-    border-radius: 3px;
+    border-radius: 999px;
     outline: none;
     cursor: pointer;
 }
@@ -411,95 +387,356 @@ body {
     transition: var(--transition-smooth);
 }
 
-.range-voltage::-webkit-slider-thumb {
-    border: 2px solid var(--color-wire-high);
-    box-shadow: 0 0 8px var(--color-wire-high-glow);
+.range-voltage::-webkit-slider-thumb { border: 2px solid var(--color-wire-high); }
+.range-resistance::-webkit-slider-thumb { border: 2px solid var(--color-resistor); }
+.range-pot::-webkit-slider-thumb { border: 2px solid #a855f7; }
+.range-ldr::-webkit-slider-thumb { border: 2px solid #facc15; }
+
+/* PALETA DE COMPONENTES DO KIT ARDUINO (ESTILO PALETA DE TILES) */
+.kit-slots-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
 }
 
-.range-resistance::-webkit-slider-thumb {
-    border: 2px solid var(--color-resistor);
-    box-shadow: 0 0 8px var(--color-resistor-glow);
+.kit-slot-card {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border-glass);
+    border-radius: 12px;
+    padding: 0.65rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
-.range-resistance2::-webkit-slider-thumb {
-    border: 2px solid var(--color-wire-low);
-    box-shadow: 0 0 8px var(--color-wire-low-glow);
+.kit-slot-card.slot-1 { border-left: 3px solid var(--color-wire-high); }
+.kit-slot-card.slot-2 { border-left: 3px solid var(--color-wire-low); }
+
+.kit-slot-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
 }
 
-/* HUD do Amperímetro */
-.ammeter-hud {
-    background: #05070c;
+.kit-slot-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+}
+
+.kit-slot-telemetry-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.69rem;
+    font-weight: 700;
+    padding: 0.14rem 0.45rem;
+    border-radius: 5px;
+    background: rgba(0, 191, 255, 0.12);
+    color: #7dd3fc;
+    border: 1px solid rgba(0, 191, 255, 0.28);
+}
+
+/* Grade de botões de peças estilo Gerador de Mapas 2D */
+.kit-palette-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.32rem;
+}
+
+.kit-palette-grid.cols-4 {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.kit-tile-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.12rem;
+    padding: 0.36rem 0.2rem;
+    border-radius: 8px;
+    background: rgba(9, 12, 20, 0.78);
     border: 1px solid var(--color-border);
-    border-radius: 10px;
-    padding: 0.75rem 1.25rem;
+    color: var(--color-text-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.kit-tile-btn .tile-ico {
+    font-size: 0.95rem;
+    line-height: 1;
+}
+
+.kit-tile-btn:hover {
+    border-color: rgba(0, 191, 255, 0.5);
+    color: var(--color-text-primary);
+}
+
+.kit-tile-btn.active {
+    background: rgba(0, 191, 255, 0.16);
+    border-color: var(--color-wire-low);
+    color: #e0f2fe;
+    box-shadow: 0 0 8px rgba(0, 191, 255, 0.2);
+}
+
+.kit-quick-resistors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.kit-res-btn {
+    flex: 1;
+    padding: 0.3rem 0.35rem;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.kit-res-btn.active {
+    background: rgba(255, 51, 68, 0.18);
+    border-color: var(--color-resistor);
+    color: #fca5a5;
+}
+
+.kit-subcontrol {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.5rem 0.6rem;
+    border-radius: 8px;
+    background: rgba(5, 7, 12, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.kit-subcontrol-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    font-size: 0.73rem;
+    font-weight: 600;
+}
+
+.led-color-pills {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.3rem;
+}
+
+.led-color-btn {
+    padding: 0.32rem 0.25rem;
+    border-radius: 6px;
+    border: 1px solid var(--color-border);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--color-text-muted);
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.led-color-btn.active[data-led-color="red"] {
+    background: rgba(239, 68, 68, 0.22); border-color: #ef4444; color: #fecaca;
+}
+.led-color-btn.active[data-led-color="yellow"] {
+    background: rgba(245, 158, 11, 0.22); border-color: #f59e0b; color: #fde68a;
+}
+.led-color-btn.active[data-led-color="green"] {
+    background: rgba(16, 185, 129, 0.22); border-color: #10b981; color: #a7f3d0;
+}
+
+.kit-info-pill {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    line-height: 1.35;
+}
+
+/* COLUNA CENTRAL: CANVAS + CHAVE TÁCTIL + AMPERÍMETRO */
+.center-stage {
+    background: #05070c;
+}
+
+.canvas-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem 0.85rem;
+    background: rgba(13, 17, 28, 0.94);
+    border-bottom: 1px solid var(--color-border-glass);
+    flex-shrink: 0;
+}
+
+.switch-hud {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.btn-switch-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.34rem 0.78rem;
+    border-radius: 999px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.74rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.btn-switch-pill.is-closed {
+    background: rgba(16, 185, 129, 0.16);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.55);
+}
+
+.btn-switch-pill.is-open {
+    background: rgba(239, 68, 68, 0.16);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.55);
+}
+
+.switch-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.switch-mode-group {
+    display: inline-flex;
+    background: rgba(7, 9, 13, 0.85);
+    border: 1px solid var(--color-border);
+    border-radius: 7px;
+    padding: 2px;
+}
+
+.switch-mode-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 0.69rem;
+    font-weight: 700;
+    padding: 0.22rem 0.52rem;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.switch-mode-btn.active {
+    background: rgba(0, 191, 255, 0.2);
+    color: var(--color-wire-low);
+}
+
+.canvas-tip {
+    font-size: 0.71rem;
+    color: var(--color-text-muted);
+}
+
+.canvas-tip kbd {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 0.08rem 0.3rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+}
+
+.canvas-stage {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem;
+    background: #07090d;
+}
+
+#circuit-canvas {
+    max-width: 100%;
+    max-height: 100%;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    touch-action: manipulation;
+}
+
+.ammeter-hud {
+    background: rgba(11, 15, 26, 0.96);
+    border-top: 1px solid var(--color-border-glass);
+    padding: 0.55rem 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    flex-shrink: 0;
 }
 
 .hud-info {
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
 }
 
 .hud-title {
-    font-size: 0.85rem;
-    font-weight: 700;
+    font-size: 0.78rem;
+    font-weight: 800;
     color: var(--color-electron-glow);
-    text-shadow: 0 0 6px rgba(255, 255, 51, 0.2);
 }
 
 .hud-subtitle {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     color: var(--color-text-muted);
+}
+
+.hud-metrics-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.hud-submetric {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #93c5fd;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    background: rgba(59, 130, 246, 0.14);
+    border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
 .hud-value {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 1.8rem;
-    font-weight: 700;
+    font-size: 1.45rem;
+    font-weight: 800;
     color: var(--color-electron-glow);
-    text-shadow: 0 0 10px rgba(255, 255, 51, 0.4);
 }
 
-/* Coluna de Informações (Direita) */
-.info-column {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-    height: 100%;
-}
-
-.panel-header {
-    padding: 0.65rem 1rem;
-    background: #0d111c;
-    border-bottom: 1px solid var(--color-border-glass);
-    flex-shrink: 0;
-}
-
-.panel-title {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--color-text-muted);
-    letter-spacing: 0.05em;
-}
-
-/* Painel de Fórmulas */
-.formula-panel {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
+/* COLUNA DIREITA: FÓRMULA, MEDIÇÕES & CÓDIGO DE CORES */
 .formula-display-container {
-    flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 1.5rem;
-    position: relative;
+    padding: 0.75rem 0.5rem;
+    min-height: 110px;
+    background: rgba(7, 9, 14, 0.55);
+    border: 1px solid var(--color-border-glass);
+    border-radius: 12px;
 }
 
 .formula-canvas-wrapper {
@@ -507,90 +744,42 @@ body {
     justify-content: center;
     align-items: center;
     width: 100%;
-    height: 100%;
 }
 
-/* Caixa de Alerta de Lâmpada Queimada */
-.formula-error {
+.formula-error,
+.formula-open-state {
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 0.5rem;
-    color: #ff3344;
-    animation: pulseWarning 1.5s infinite alternate;
+    gap: 0.3rem;
 }
 
-.warning-icon {
-    font-size: 2.2rem;
-}
+.formula-error { color: #ff4455; animation: pulseWarning 1.1s infinite alternate; }
+.formula-open-state { color: #fca5a5; }
+.warning-icon, .open-icon { font-size: 1.55rem; }
+.warning-title, .open-title { font-size: 0.88rem; font-weight: 800; }
+.warning-text, .open-text { font-size: 0.72rem; line-height: 1.35; color: var(--color-text-muted); }
 
-.warning-title {
-    font-size: 1.1rem;
-    font-weight: 800;
-}
+.hidden { display: none !important; }
 
-.warning-text {
-    font-size: 0.75rem;
-    line-height: 1.45;
-    color: var(--color-text-muted);
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* Desenho matemático da fórmula */
 .formula-math {
     display: flex;
     align-items: center;
+    justify-content: center;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 1.85rem;
+    font-size: 1.38rem;
     font-weight: 700;
-    color: var(--color-text-primary);
+    flex-wrap: wrap;
+    gap: 0.15rem;
 }
 
-.formula-math.math-parallel {
-    font-size: 1.12rem;
-}
-
-.parallel-resistance-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    width: 100%;
-}
-
-.math-left {
-    display: flex;
-    align-items: center;
-}
-
-.math-var {
-    display: inline-block;
-    transition: transform 0.15s ease-out;
-    transform-origin: center;
-}
-
-.var-i {
-    color: var(--color-electron-glow);
-    text-shadow: 0 0 10px rgba(255, 255, 51, 0.3);
-}
-
-.var-v {
-    color: var(--color-wire-high);
-    text-shadow: 0 0 10px var(--color-wire-high-glow);
-}
-
-.var-r {
-    color: var(--color-resistor);
-    text-shadow: 0 0 10px var(--color-resistor-glow);
-}
-
-.math-equal {
-    margin: 0 0.75rem;
-    color: var(--color-text-primary);
-}
+.math-var { display: inline-block; transition: transform 0.15s ease-out; }
+.var-i { color: var(--color-electron-glow); }
+.var-v { color: var(--color-wire-high); }
+.var-r { color: var(--color-resistor); }
+.var-low { color: var(--color-wire-low); }
+.math-equal { margin: 0 0.35rem; }
 
 .math-fraction {
     display: flex;
@@ -599,192 +788,285 @@ body {
 }
 
 .fraction-line {
-    width: 110%;
-    height: 2.5px;
+    width: 112%;
+    height: 2px;
     background: var(--color-border);
-    margin: 0.35rem 0;
+    margin: 0.22rem 0;
 }
 
 .formula-labels {
-    display: flex;
-    justify-content: space-around;
-    padding: 0 1.5rem 0.5rem 1.5rem;
-    font-size: 0.7rem;
-    font-family: 'Outfit', sans-serif;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    text-align: center;
+    gap: 0.25rem;
+    font-size: 0.68rem;
     color: var(--color-text-muted);
     font-weight: 600;
 }
 
-.lbl-desc {
-    min-width: 80px;
+.telemetry-mini-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+}
+
+.tele-mini-card {
+    background: rgba(5, 7, 12, 0.78);
+    border: 1px solid var(--color-border);
+    border-radius: 9px;
+    padding: 0.45rem 0.3rem;
     text-align: center;
 }
 
+.tele-mini-lbl {
+    display: block;
+    font-size: 0.64rem;
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+.tele-mini-val {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    font-weight: 800;
+    margin-top: 0.1rem;
+}
+
 .formula-footer-calc {
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 0.65rem;
     background: #05070c;
-    border-top: 1px solid var(--color-border-glass);
+    border: 1px solid var(--color-border-glass);
+    border-radius: 9px;
     text-align: center;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 700;
     color: var(--color-text-muted);
 }
 
-/* Painel de Cores do Resistor */
-.resistor-bands-panel {
-    flex-shrink: 0;
+.resistor-bands-section {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border-glass);
+    border-radius: 12px;
+    padding: 0.65rem;
     display: flex;
     flex-direction: column;
-    padding-bottom: 0.85rem;
+    gap: 0.55rem;
+}
+
+.resistor-section-header {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    text-align: center;
 }
 
 .bands-widget-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 1.15rem 1rem 0.65rem 1rem;
+    gap: 0.35rem;
+}
+
+.bands-widget-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--color-wire-high);
 }
 
 .bands-widget-header {
     width: 100%;
-    border-top: 1px dashed rgba(27, 34, 52, 0.5);
-    padding-top: 0.65rem;
-    margin-bottom: 0.5rem;
+    border-top: 1px dashed rgba(148, 163, 184, 0.25);
+    padding-top: 0.45rem;
+    text-align: center;
 }
 
 .widget-subtitle {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.68rem;
     font-weight: 700;
-    color: var(--color-text-muted);
+    color: var(--color-wire-low);
 }
 
 .graphic-resistor {
     display: flex;
     align-items: center;
-    position: relative;
-    width: 130px;
-    height: 24px;
+    width: 136px;
+    height: 22px;
 }
 
-.wire-lead {
-    height: 2px;
-    background: #4f5e75;
-    flex: 1;
-}
-
+.wire-lead { height: 2.5px; background: #64748b; flex: 1; }
 .resistor-body {
-    width: 58px;
-    height: 14px;
+    width: 64px;
+    height: 15px;
     background: #ded4c5;
     border: 1px solid var(--color-border);
-    border-radius: 3px;
+    border-radius: 4px;
     position: relative;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.band {
-    position: absolute;
-    top: 0;
-    width: 4px;
-    height: 100%;
-    transition: var(--transition-smooth);
-}
-
+.band { position: absolute; top: 0; width: 5px; height: 100%; }
 .band-1 { left: 8px; }
-.band-2 { left: 17px; }
-.band-3 { left: 26px; }
-.band-4 { left: 42px; }
+.band-2 { left: 18px; }
+.band-3 { left: 28px; }
+.band-4 { left: 46px; }
 
 .resistor-colors-text {
     text-align: center;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 700;
     color: var(--color-text-muted);
-    font-family: 'Outfit', sans-serif;
-    padding: 0 0.5rem;
 }
 
-/* 6. BARRA DE STATUS */
+.bands-empty-note {
+    text-align: center;
+    font-size: 0.73rem;
+    color: var(--color-text-muted);
+    padding: 0.4rem;
+}
+
+/* RODAPÉ FINO */
 .app-status-bar {
-    padding: 0.45rem 1.5rem;
-    background: rgba(11, 15, 25, 0.8);
+    padding: 0.38rem 0.9rem;
+    background: rgba(11, 15, 25, 0.88);
     border: 1px solid var(--color-border-glass);
-    border-radius: 12px;
+    border-radius: 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
     flex-shrink: 0;
 }
 
 #lbl-status-message {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     color: var(--color-text-muted);
 }
 
 .sound-enable-cb {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
     cursor: pointer;
-    user-select: none;
-    font-size: 0.75rem;
+    font-size: 0.73rem;
     color: var(--color-text-muted);
 }
 
-.sound-enable-cb input {
-    width: 12px;
-    height: 12px;
-    accent-color: var(--color-wire-low);
-}
-
 @keyframes pulseWarning {
-    from { opacity: 0.65; }
+    from { opacity: 0.7; }
     to { opacity: 1; }
 }
 
-/* MODO CLARO [data-theme="light"] NO SIMULADOR LEI DE OHM */
+/* MODO CLARO */
 [data-theme="light"] {
-    --color-bg-dark: #f8fafc;
-    --color-bg-deep: #e2e8f0;
-    --color-bg-panel: rgba(255, 255, 255, 0.95);
-    --color-border-glass: rgba(0, 0, 0, 0.12);
-    --color-text-white: #0f172a;
-    --color-text-normal: #334155;
+    --color-bg-dark: #f1f5f9;
+    --color-bg-panel: rgba(255, 255, 255, 0.96);
+    --color-bg-card: rgba(248, 250, 252, 0.96);
+    --color-border-glass: rgba(15, 23, 42, 0.12);
     --color-text-primary: #0f172a;
     --color-text-muted: #475569;
+    --color-border: #cbd5e1;
 }
 
 [data-theme="light"] .panel-glass,
-[data-theme="light"] .app-header,
-[data-theme="light"] .circuit-viewport,
-[data-theme="light"] .control-card,
-[data-theme="light"] .formula-card,
-[data-theme="light"] .multimeter-card,
-[data-theme="light"] .app-status-bar {
+[data-theme="light"] .app-status-bar,
+[data-theme="light"] .kit-slot-card,
+[data-theme="light"] .wb-section,
+[data-theme="light"] .resistor-bands-section {
     background: #ffffff !important;
     border-color: #cbd5e1 !important;
     color: #0f172a !important;
-    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06) !important;
 }
 
-[data-theme="light"] .tab-trigger {
-    color: #475569 !important;
+[data-theme="light"] .panel-header,
+[data-theme="light"] .canvas-toolbar,
+[data-theme="light"] .circuit-tabs,
+[data-theme="light"] .kit-subcontrol,
+[data-theme="light"] .formula-display-container {
     background: #f1f5f9 !important;
     border-color: #cbd5e1 !important;
 }
 
-[data-theme="light"] .tab-trigger.active {
-    color: #0f172a !important;
-    background: #ffffff !important;
-    border-color: #3b82f6 !important;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15) !important;
+[data-theme="light"] .kit-tile-btn {
+    background: #f8fafc;
+    color: #475569;
 }
 
-[data-theme="light"] .formula-math,
-[data-theme="light"] .math-equal,
-[data-theme="light"] .resistor-colors-text {
+[data-theme="light"] .kit-tile-btn.active {
+    background: rgba(2, 132, 199, 0.14);
+    border-color: #0284c7;
+    color: #0369a1;
+}
+
+[data-theme="light"] .digital-input-wrapper,
+[data-theme="light"] .tele-mini-card,
+[data-theme="light"] .ammeter-hud,
+[data-theme="light"] .formula-footer-calc {
+    background: #f8fafc !important;
     color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+}
+
+[data-theme="light"] .hud-value,
+[data-theme="light"] .hud-title,
+[data-theme="light"] .var-i {
+    color: #ca8a04 !important;
+}
+
+/* FALLBACK RESPONSIVO PARA TABLETS E CELULARES (< 1100px) */
+@media (max-width: 1100px) {
+    html, body {
+        height: auto;
+        overflow-y: auto;
+    }
+    .app-container {
+        height: auto;
+        width: 96vw;
+        max-width: 96vw;
+        margin: 0.5rem auto;
+    }
+    .app-header {
+        flex-wrap: wrap;
+        gap: 0.65rem;
+    }
+    .workspace-3col {
+        grid-template-columns: 1fr;
+    }
+    .center-stage {
+        order: -1; /* No celular, mostra o circuito primeiro! */
+    }
+    #circuit-canvas {
+        height: auto;
+        aspect-ratio: 780 / 430;
+    }
+    .workbench-scroll,
+    .telemetry-scroll {
+        overflow-y: visible;
+    }
+}
+
+@media (max-width: 640px) {
+    .app-container {
+        width: 100%;
+        max-width: 100%;
+        padding: 0.5rem;
+        margin: 0;
+    }
+    .circuit-tabs {
+        width: 100%;
+    }
+    .tab-trigger {
+        flex: 1;
+    }
+    .badge {
+        display: none;
+    }
+    .canvas-tip {
+        display: none;
+    }
 }

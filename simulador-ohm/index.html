@@ -3,213 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laboratório de Física: Lei de Ohm | TitanTech</title>
-    <!-- Google Fonts -->
+    <title>Laboratório de Física: Lei de Ohm &amp; Kit Arduino | Escola de Tecnologias</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=2.1">
 </head>
 <body>
 
-    <!-- Ambient Glow Effects -->
     <div class="ambient-glow bg-left"></div>
     <div class="ambient-glow bg-right"></div>
 
     <div class="app-container">
-        
-        <!-- CABEÇALHO -->
+
+        <!-- BARRA SUPERIOR COMPACTA (MODELO WIDESCREEN) -->
         <header class="app-header panel-glass">
-            <div class="header-main-row">
-                <div class="app-branding">
-                    <div class="back-nav">
-                        <a href="../" class="back-link">← Voltar ao Painel Central</a>
-                    </div>
-                    <div class="title-row">
-                        <span class="logo-icon">⚡</span>
-                        <div>
-                            <h1>LABORATÓRIO DE FÍSICA: LEI DE OHM</h1>
-                            <span class="subtitle">Ensino Prático de Tensão, Resistência e Corrente</span>
-                        </div>
+            <div class="header-left">
+                <a href="../" class="back-link" title="Voltar ao Painel Central">← Portal</a>
+                <div class="title-row">
+                    <span class="logo-icon">⚡</span>
+                    <div>
+                        <h1>LEI DE OHM &amp; KIT ARDUINO</h1>
+                        <span class="subtitle">Simulador Prático 100% Fluido</span>
                     </div>
                 </div>
-                <div class="header-badges" style="display: flex; align-items: center; gap: 0.75rem;">
-                    <button class="theme-toggle-btn" aria-label="Alternar Tema">🌙 <span class="theme-btn-text">Modo Escuro</span></button>
-                    <span class="badge badge-volt">V = R · I</span>
-                    <span class="badge badge-amp">I = V / R</span>
-                </div>
+            </div>
+
+            <!-- Abas Série / Paralelo integradas no cabeçalho -->
+            <nav class="circuit-tabs" aria-label="Abas do Simulador">
+                <button type="button" id="tab-btn-series" class="tab-trigger active">🔄 EM SÉRIE</button>
+                <button type="button" id="tab-btn-parallel" class="tab-trigger">🔀 EM PARALELO</button>
+            </nav>
+
+            <div class="header-badges">
+                <button type="button" class="theme-toggle-btn" aria-label="Alternar Tema">🌙 <span class="theme-btn-text">Modo Escuro</span></button>
+                <span class="badge badge-volt">V = R · I</span>
+                <span class="badge badge-amp">I = V / R</span>
             </div>
         </header>
 
-        <!-- NAVEGAÇÃO DE ABAS DO CIRCUITO (SÉRIE vs PARALELO) -->
-        <nav class="circuit-tabs" aria-label="Abas do Simulador">
-            <button id="tab-btn-series" class="tab-trigger active">[ 🔄 CIRCUITO EM SÉRIE ]</button>
-            <button id="tab-btn-parallel" class="tab-trigger">[ 🔀 CIRCUITO EM PARALELO ]</button>
-        </nav>
+        <!-- WORKSPACE 3 COLUNAS ZERO-SCROLL (PALETA ESQUERDA | DIAGRAMA CENTRO | TELEMETRIA DIREITA) -->
+        <div class="workspace-3col">
 
-        <!-- CONTAINER PRINCIPAL SPLIT -->
-        <div class="workspace-split">
-            
-            <!-- COLUNA ESQUERDA: SIMULADOR (CANVAS + CONTROLES) -->
-            <section class="simulator-column">
-                
-                <!-- Painel do Canvas do Circuito -->
-                <div class="canvas-panel panel-glass">
-                    <canvas id="circuit-canvas" width="680" height="380"></canvas>
+            <!-- COLUNA 1 (ESQUERDA): BANCADA DE PEÇAS DO KIT ARDUINO -->
+            <aside class="left-workbench panel-glass" aria-label="Controles e Caixa do Kit Arduino">
+                <div class="panel-header">
+                    <span class="panel-title">🧰 BANCADA &amp; KIT ARDUINO</span>
+                    <span class="panel-chip">Tempo Real</span>
                 </div>
 
-                <!-- Painel Inferior de Controles -->
-                <div class="controls-panel panel-glass">
-                    
-                    <!-- 1. Seletor de Carga (Componente) -->
-                    <div class="control-row load-selector-row">
-                        <span class="row-label">🔌 COMPONENTE DE CARGA:</span>
-                        <div class="load-buttons" id="load-selector-group">
-                            <!-- Injetado dinamicamente via script.js -->
-                        </div>
-                    </div>
-
-                    <div class="separator-line"></div>
-
-                    <!-- 2. Sliders e Entradas Digitais -->
-                    <div class="controls-grid">
-                        
-                        <!-- Bloco de Tensão (V) -->
-                        <div class="control-block block-voltage">
-                            <div class="block-header">
-                                <span class="block-title">⚡ TENSÃO (BATERIA)</span>
-                                <div class="digital-input-wrapper color-voltage">
-                                    <input type="text" id="input-voltage" value="12.0" maxlength="4" autocomplete="off">
-                                    <span class="unit">V</span>
-                                </div>
+                <div class="workbench-scroll">
+                    <!-- Fonte / Bateria -->
+                    <div class="wb-section block-voltage">
+                        <div class="block-header">
+                            <span class="block-title">⚡ FONTE / BATERIA</span>
+                            <div class="digital-input-wrapper color-voltage">
+                                <input type="text" id="input-voltage" value="5.0" maxlength="4" autocomplete="off">
+                                <span class="unit">V</span>
                             </div>
-                            <input type="range" id="slider-voltage" min="10" max="240" value="120" class="cyber-range range-voltage">
-                            <span class="block-hint">Representa a força da bateria empurrando elétrons.</span>
                         </div>
-
-                        <!-- Bloco de Resistência (R ou R1/R2) -->
-                        <div class="control-block block-resistance" id="resistance-control-container">
-                            <!-- Injetado dinamicamente para Série ou Paralelo -->
+                        <input type="range" id="slider-voltage" min="10" max="240" value="50" class="cyber-range range-voltage">
+                        <div class="preset-pills" aria-label="Tensões comuns da bancada">
+                            <button type="button" class="preset-btn" data-volt="3.3">3.3V</button>
+                            <button type="button" class="preset-btn" data-volt="5.0">5V</button>
+                            <button type="button" class="preset-btn" data-volt="9.0">9V</button>
+                            <button type="button" class="preset-btn" data-volt="12.0">12V</button>
+                            <button type="button" class="preset-btn" data-volt="24.0">24V</button>
                         </div>
-
                     </div>
 
-                    <!-- 3. HUD do Amperímetro -->
-                    <div class="ammeter-hud">
-                        <div class="hud-info">
-                            <span class="hud-title">AMPERÍMETRO (CORRENTE TOTAL)</span>
-                            <span class="hud-subtitle">Taxa de fluxo: Quantos elétrons entram/saem da bateria por segundo.</span>
-                        </div>
-                        <div class="hud-value" id="ammeter-readout">1.20 A</div>
+                    <!-- Caixa de Componentes Oficiais (Slots Dinâmicos com Paleta de Ícones) -->
+                    <div class="kit-slots-stack" id="kit-slots-container">
+                        <!-- Injetado dinamicamente via script.js -->
                     </div>
+                </div>
+            </aside>
 
+            <!-- COLUNA 2 (CENTRO): DIAGRAMA INTERATIVO + CHAVE TÁCTIL + AMPERÍMETRO -->
+            <main class="center-stage panel-glass">
+                <div class="canvas-toolbar">
+                    <div class="switch-hud">
+                        <button type="button" id="btn-toggle-switch" class="btn-switch-pill is-closed" title="Clique ou pressione Espaço para alternar a Chave Táctil">
+                            <span id="switch-status-dot" class="switch-dot"></span>
+                            <span id="switch-status-label">Chave Táctil: FECHADA</span>
+                        </button>
+                        <div class="switch-mode-group" role="group" aria-label="Modo da Chave Táctil">
+                            <button type="button" id="btn-mode-toggle" class="switch-mode-btn active" title="Um clique trava aberta ou fechada">Alternar</button>
+                            <button type="button" id="btn-mode-hold" class="switch-mode-btn" title="Mantém ligada somente enquanto pressionada">Segurar (Push)</button>
+                        </div>
+                    </div>
+                    <span class="canvas-tip">Clique no botão do fio ou <kbd>Espaço</kbd></span>
                 </div>
 
-            </section>
+                <div class="canvas-stage">
+                    <canvas id="circuit-canvas" width="780" height="430"></canvas>
+                </div>
 
-            <!-- COLUNA DIREITA: VISUALIZADOR DE FÓRMULA & CORES -->
-            <section class="info-column">
-                
-                <!-- Painel da Fórmula Dinâmica -->
-                <div class="formula-panel panel-glass">
-                    <div class="panel-header">
-                        <span class="panel-title">📊 LEI DE OHM EM SÉRIE</span>
+                <!-- HUD do Amperímetro Central fixo na base do circuito -->
+                <div class="ammeter-hud">
+                    <div class="hud-info">
+                        <span class="hud-title" id="ammeter-title">AMPERÍMETRO CENTRAL (SÉRIE)</span>
+                        <span class="hud-subtitle" id="ammeter-subtitle">Taxa de fluxo elétrico na malha principal.</span>
                     </div>
+                    <div class="hud-metrics-right">
+                        <div class="hud-submetric" id="hud-req-readout">Req = 330 Ω</div>
+                        <div class="hud-value" id="ammeter-readout">9.09 mA</div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- COLUNA 3 (DIREITA): TELEMETRIA, FÓRMULA & CÓDIGO DE CORES -->
+            <aside class="right-telemetry panel-glass" aria-label="Telemetria e Código de Cores">
+                <div class="panel-header">
+                    <span class="panel-title" id="formula-panel-title">📊 LEI DE OHM EM SÉRIE</span>
+                </div>
+
+                <div class="telemetry-scroll">
+                    <!-- Display da Fórmula / Alerta / Chave Aberta -->
                     <div class="formula-display-container">
                         <div id="formula-canvas-wrapper" class="formula-canvas-wrapper">
-                            <!-- Visualização procedural da fórmula -->
                             <div id="formula-error-msg" class="formula-error hidden">
-                                <span class="warning-icon">⚠️</span>
-                                <span class="warning-title">LÂMPADA QUEIMADA!</span>
-                                <p class="warning-text">Corrente excedeu 1.5 A.<br>Aumente a resistência para limitar a corrente e restaurar.</p>
+                                <span class="warning-icon" id="warning-icon">⚠️</span>
+                                <span class="warning-title" id="warning-title">LED DANIFICADO POR SOBRECARGA!</span>
+                                <p class="warning-text" id="warning-text">A corrente ultrapassou 30 mA. Adicione ou aumente o resistor limitador (ex: 330 Ω).</p>
                             </div>
-                            <div id="formula-math-display" class="formula-math">
-                                <div class="math-left">
-                                    <span id="math-var-i" class="math-var var-i">I</span>
-                                </div>
-                                <div class="math-equal">=</div>
-                                <div class="math-fraction">
-                                    <span id="math-var-v" class="math-var var-v">V</span>
-                                    <div class="fraction-line"></div>
-                                    <span id="math-var-r" class="math-var var-r">R</span>
-                                </div>
+                            <div id="formula-open-msg" class="formula-open-state hidden">
+                                <span class="open-icon">🔘</span>
+                                <span class="open-title">CHAVE TÁCTIL ABERTA</span>
+                                <p class="open-text">Circuito interrompido. Feche o push-button para retomar o fluxo.</p>
                             </div>
+                            <div id="formula-math-display" class="formula-math"></div>
                         </div>
                     </div>
-                    
-                    <div class="formula-labels">
-                        <span class="lbl-desc desc-i">Corrente (I)</span>
-                        <span class="lbl-desc desc-v">Tensão (V)</span>
-                        <span class="lbl-desc desc-r" id="formula-denom-lbl">Resistência (R)</span>
+
+                    <div class="formula-labels" id="formula-labels-row">
+                        <span class="lbl-desc desc-i" id="formula-lbl-left">Corrente (I)</span>
+                        <span class="lbl-desc desc-v" id="formula-num-lbl">Tensão (V)</span>
+                        <span class="lbl-desc desc-r" id="formula-denom-lbl">Resistência Eq.</span>
                     </div>
+
+                    <!-- Mini Cards de Queda de Tensão / Corrente -->
+                    <div class="telemetry-mini-grid" id="telemetry-mini-grid"></div>
 
                     <div class="formula-footer-calc" id="formula-calculation-details">
-                        Resistência Total: R (10Ω) = 10Ω
+                        V1 + V2 = 5.00 V
                     </div>
-                </div>
 
-                <!-- Painel de Bandas de Cores do Resistor -->
-                <div class="resistor-bands-panel panel-glass" id="resistor-colors-panel">
-                    <div class="panel-header">
-                        <span class="panel-title">🎨 CÓDIGO DE CORES DO RESISTOR (E24)</span>
-                    </div>
-                    
-                    <div class="bands-widget-container">
-                        <!-- Desenho vetorial do resistor -->
-                        <div class="graphic-resistor">
-                            <div class="wire-lead lead-left"></div>
-                            <div class="resistor-body">
-                                <div class="band band-1" id="band-1"></div>
-                                <div class="band band-2" id="band-2"></div>
-                                <div class="band band-3" id="band-3"></div>
-                                <div class="band band-4" id="band-4"></div>
+                    <!-- Seção de Bandas de Cores dos Resistores -->
+                    <div class="resistor-bands-section" id="resistor-colors-panel">
+                        <div class="resistor-section-header">🎨 CÓDIGO DE CORES DOS RESISTORES</div>
+
+                        <div class="bands-widget-container" id="resistor1-widget-container">
+                            <div class="bands-widget-title" id="resistor1-widget-title">Resistor 1</div>
+                            <div class="graphic-resistor">
+                                <div class="wire-lead lead-left"></div>
+                                <div class="resistor-body">
+                                    <div class="band band-1" id="band-1"></div>
+                                    <div class="band band-2" id="band-2"></div>
+                                    <div class="band band-3" id="band-3"></div>
+                                    <div class="band band-4" id="band-4"></div>
+                                </div>
+                                <div class="wire-lead lead-right"></div>
                             </div>
-                            <div class="wire-lead lead-right"></div>
+                            <div class="resistor-colors-text" id="resistor-colors-text-list">Cores: --</div>
                         </div>
-                    </div>
 
-                    <div class="resistor-colors-text" id="resistor-colors-text-list">
-                        Cores: Marrom, Preto, Preto, Ouro
-                    </div>
-
-                    <div class="bands-widget-container hidden" id="resistor2-widget-container">
-                        <div class="bands-widget-header">
-                            <span class="widget-subtitle">🎨 CÓDIGO DE CORES DO RESISTOR 2 (E24)</span>
-                        </div>
-                        <div class="graphic-resistor">
-                            <div class="wire-lead lead-left"></div>
-                            <div class="resistor-body">
-                                <div class="band band-1" id="band2-1"></div>
-                                <div class="band band-2" id="band2-2"></div>
-                                <div class="band band-3" id="band2-3"></div>
-                                <div class="band band-4" id="band2-4"></div>
+                        <div class="bands-widget-container hidden" id="resistor2-widget-container">
+                            <div class="bands-widget-header">
+                                <span class="widget-subtitle" id="resistor2-widget-title">Resistor 2</span>
                             </div>
-                            <div class="wire-lead lead-right"></div>
+                            <div class="graphic-resistor">
+                                <div class="wire-lead lead-left"></div>
+                                <div class="resistor-body">
+                                    <div class="band band-1" id="band2-1"></div>
+                                    <div class="band band-2" id="band2-2"></div>
+                                    <div class="band band-3" id="band2-3"></div>
+                                    <div class="band band-4" id="band2-4"></div>
+                                </div>
+                                <div class="wire-lead lead-right"></div>
+                            </div>
+                            <div class="resistor-colors-text" id="resistor2-colors-text-list">Cores: --</div>
                         </div>
-                        <div class="resistor-colors-text" id="resistor2-colors-text-list">
-                            Cores: Vermelho, Vermelho, Preto, Ouro
+
+                        <div class="bands-empty-note hidden" id="bands-empty-note">
+                            Nenhum resistor fixo ativo. Escolha um Resistor do Kit para visualizar as faixas de cores.
                         </div>
                     </div>
                 </div>
-
-            </section>
+            </aside>
 
         </div>
 
-        <!-- BARRA DE STATUS -->
+        <!-- BARRA DE STATUS FINA NO RODAPÉ -->
         <footer class="app-status-bar">
-            <span id="lbl-status-message">[ STATUS ] Inicializando laboratório de física...</span>
+            <span id="lbl-status-message">[ STATUS ] Bancada pronta. Monte seu circuito Arduino e teste na prática!</span>
             <label class="sound-enable-cb">
                 <input type="checkbox" id="checkbox-sound" checked>
-                <span>Habilitar Sons (Beeps)</span>
+                <span>Habilitar Sons &amp; Buzzer (Web Audio)</span>
             </label>
         </footer>
 
     </div>
 
-    <!-- Script principal -->
     <script src="../theme-toggle.js"></script>
-    <script src="script.js?v=1.0"></script>
+    <script src="script.js?v=2.1"></script>
     <script src="../lock-listener.js"></script>
 </body>
 </html>
