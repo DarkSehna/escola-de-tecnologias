@@ -380,7 +380,6 @@ Responda EXCLUSIVAMENTE com um objeto JSON válido (sem blocos markdown extras f
                     discardRecordingOnStop = false;
                     resetRecordingControlsUI();
                     setViewfinderMode(true);
-                    cameraRecorderBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 } catch (err) {
                     if (err && (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')) {
                         showError('Permissão da câmera negada. Autorize o acesso no navegador ou selecione um vídeo da galeria.');

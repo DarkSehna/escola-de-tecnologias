@@ -133,15 +133,11 @@
             font-size: 1.25rem;
             font-weight: 800;
             letter-spacing: -0.3px;
-            background: linear-gradient(90deg, #ffffff, #a5f3fc, #d8b4fe);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #f8fafc;
         }
 
         html[data-theme="light"] .brand-title h1 {
-            background: linear-gradient(90deg, #0f172a, #0284c7, #7c3aed);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #0f172a;
         }
 
         .badge-multimodal {
@@ -157,6 +153,8 @@
             background: linear-gradient(90deg, rgba(157, 78, 221, 0.22), rgba(0, 229, 255, 0.22));
             color: #e9d5ff;
             border: 1px solid rgba(157, 78, 221, 0.45);
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         html[data-theme="light"] .badge-multimodal {
@@ -313,6 +311,7 @@
             gap: 0.6rem;
             font-size: 1.08rem;
             font-weight: 700;
+            min-width: 0;
         }
 
         .step-badge {
@@ -327,6 +326,7 @@
             background: rgba(0, 229, 255, 0.16);
             color: var(--neon-cyan);
             border: 1px solid rgba(0, 229, 255, 0.35);
+            flex-shrink: 0;
         }
 
         /* a) Área de Mídia (Upload, Câmera e Preview) */
@@ -428,34 +428,41 @@
             display: none !important;
         }
 
-        body.camera-viewfinder-active .intro-banner {
-            display: none;
+        body.camera-viewfinder-active {
+            overflow: hidden;
+            background: #000;
         }
 
-        /* Gravador de Câmera WebRTC (Modo Viewfinder Imersivo) */
+        body.camera-viewfinder-active .top-header,
+        body.camera-viewfinder-active .page-wrapper,
+        body.camera-viewfinder-active .bg-orb {
+            display: none !important;
+        }
+
+        /* Gravador de Câmera WebRTC (Modo Câmera Tela Cheia Nativa) */
         .camera-recorder-box {
             display: none;
-            margin-top: 0.25rem;
-            padding: 0.85rem;
-            border-radius: 16px;
-            background: rgba(9, 13, 24, 0.92);
-            border: 1px solid rgba(157, 78, 221, 0.45);
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100dvh;
+            z-index: 90;
+            background: #000;
         }
 
         .camera-recorder-box.active {
-            display: block;
-            animation: fadeIn 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.2s ease;
         }
 
         .camera-viewport-wrapper {
             position: relative;
+            flex: 1;
+            min-height: 0;
             width: 100%;
-            aspect-ratio: 16 / 9;
-            border-radius: 14px;
             overflow: hidden;
-            background: #03050a;
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: #000;
         }
 
         .camera-live-video {
@@ -472,9 +479,9 @@
 
         .camera-hud-top {
             position: absolute;
-            top: 0.65rem;
-            left: 0.65rem;
-            right: 0.65rem;
+            top: max(0.85rem, env(safe-area-inset-top));
+            left: max(0.85rem, env(safe-area-inset-left));
+            right: max(0.85rem, env(safe-area-inset-right));
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -489,23 +496,24 @@
             display: inline-flex;
             align-items: center;
             gap: 0.45rem;
-            padding: 0.35rem 0.75rem;
+            padding: 0.38rem 0.78rem;
             border-radius: 999px;
-            background: rgba(7, 10, 19, 0.82);
+            background: rgba(7, 10, 19, 0.78);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.18);
             font-family: var(--font-mono);
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             font-weight: 700;
-            color: #e2e8f0;
+            color: #f8fafc;
+            white-space: nowrap;
         }
 
         .rec-indicator-pill.is-recording {
-            border-color: rgba(239, 68, 68, 0.75);
-            background: rgba(127, 29, 29, 0.85);
+            border-color: rgba(239, 68, 68, 0.85);
+            background: rgba(127, 29, 29, 0.88);
             color: #fecaca;
-            box-shadow: 0 0 16px rgba(239, 68, 68, 0.35);
+            box-shadow: 0 0 18px rgba(239, 68, 68, 0.4);
         }
 
         .rec-dot {
@@ -521,54 +529,80 @@
             display: inline-block;
         }
 
+        /* Dock Horizontal Nativa na Parte Inferior */
         .camera-controls-bar {
-            display: flex;
-            flex-direction: column;
-            gap: 0.65rem;
-            margin-top: 0.85rem;
+            flex-shrink: 0;
+            width: 100%;
+            background: rgba(7, 10, 19, 0.94);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 0.8rem max(0.85rem, env(safe-area-inset-right)) calc(0.85rem + env(safe-area-inset-bottom)) max(0.85rem, env(safe-area-inset-left));
         }
 
-        .camera-secondary-actions {
+        .camera-dock-inner {
+            max-width: 560px;
+            margin: 0 auto;
+            width: 100%;
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.6rem;
+            grid-template-columns: 64px 1fr 64px;
+            align-items: center;
+            gap: 0.65rem;
         }
 
         .btn-cam-action {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
-            min-height: 48px;
-            padding: 0.7rem 1rem;
-            border-radius: 12px;
+            min-height: 54px;
+            border-radius: 14px;
             font-family: var(--font-main);
-            font-size: 0.92rem;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s ease;
-            border: 1px solid var(--border-glass);
+            border: 1px solid rgba(255, 255, 255, 0.16);
             -webkit-tap-highlight-color: transparent;
         }
 
         .btn-cam-rec {
             width: 100%;
-            min-height: 52px;
-            font-size: 1rem;
-            background: linear-gradient(135deg, rgba(220, 38, 38, 0.28), rgba(157, 78, 221, 0.32));
+            min-height: 54px;
+            padding: 0.65rem 1rem;
+            gap: 0.55rem;
+            border-radius: 999px;
+            font-size: 0.96rem;
+            background: linear-gradient(135deg, #dc2626, #9333ea);
             color: #ffffff;
-            border-color: rgba(248, 113, 113, 0.55);
-            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.2);
+            border-color: rgba(248, 113, 113, 0.7);
+            box-shadow: 0 6px 22px rgba(220, 38, 38, 0.35);
         }
 
         .btn-cam-rec:hover {
-            background: linear-gradient(135deg, rgba(220, 38, 38, 0.42), rgba(157, 78, 221, 0.45));
+            filter: brightness(1.08);
         }
 
         .btn-cam-rec.is-recording {
-            background: linear-gradient(135deg, #059669, #0ea5e9);
-            border-color: rgba(52, 211, 153, 0.7);
-            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+            background: linear-gradient(135deg, #059669, #0284c7);
+            border-color: rgba(52, 211, 153, 0.8);
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.42);
+        }
+
+        .btn-cam-switch,
+        .btn-cam-cancel {
+            flex-direction: column;
+            gap: 0.18rem;
+            padding: 0.45rem 0.25rem;
+            font-size: 0.72rem;
+            line-height: 1.1;
+        }
+
+        .cam-ico {
+            font-size: 1.05rem;
+            line-height: 1;
+        }
+
+        .cam-lbl {
+            white-space: nowrap;
         }
 
         .btn-cam-switch {
@@ -582,39 +616,58 @@
         }
 
         .btn-cam-switch:disabled {
-            opacity: 0.45;
+            opacity: 0.42;
             cursor: not-allowed;
         }
 
         .btn-cam-cancel {
-            background: rgba(239, 68, 68, 0.14);
-            color: #fecaca;
-            border-color: rgba(239, 68, 68, 0.35);
+            background: rgba(255, 255, 255, 0.08);
+            color: #f1f5f9;
+            border-color: rgba(255, 255, 255, 0.2);
         }
 
         .btn-cam-cancel:hover {
-            background: rgba(239, 68, 68, 0.26);
+            background: rgba(239, 68, 68, 0.25);
+            border-color: rgba(239, 68, 68, 0.45);
+            color: #fecaca;
         }
 
-        html[data-theme="light"] .camera-recorder-box {
-            background: rgba(241, 245, 249, 0.96);
-        }
-
-        html[data-theme="light"] .btn-cam-rec {
-            background: linear-gradient(135deg, #dc2626, #9333ea);
-            color: #ffffff;
-        }
-
-        html[data-theme="light"] .btn-cam-switch {
-            background: rgba(2, 132, 199, 0.14);
-            color: #0369a1;
-            border-color: rgba(2, 132, 199, 0.4);
-        }
-
-        html[data-theme="light"] .btn-cam-cancel {
-            background: rgba(220, 38, 38, 0.12);
-            color: #b91c1c;
-            border-color: rgba(220, 38, 38, 0.35);
+        @media (max-height: 520px) and (orientation: landscape) {
+            .camera-recorder-box.active {
+                flex-direction: row;
+            }
+            .camera-controls-bar {
+                width: 152px;
+                height: 100%;
+                border-top: none;
+                border-left: 1px solid rgba(255, 255, 255, 0.12);
+                padding: 0.85rem max(0.75rem, env(safe-area-inset-right)) 0.85rem 0.75rem;
+                display: flex;
+                align-items: center;
+            }
+            .camera-dock-inner {
+                height: 100%;
+                max-height: 300px;
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr auto;
+                gap: 0.65rem;
+            }
+            .btn-cam-rec {
+                flex-direction: column;
+                border-radius: 18px;
+                min-height: 82px;
+                padding: 0.65rem 0.45rem;
+                font-size: 0.82rem;
+                text-align: center;
+                gap: 0.35rem;
+            }
+            .btn-cam-switch,
+            .btn-cam-cancel {
+                flex-direction: row;
+                gap: 0.4rem;
+                min-height: 44px;
+                font-size: 0.78rem;
+            }
         }
 
         @keyframes pulseRec {
@@ -701,10 +754,12 @@
             font-size: 0.72rem;
             font-weight: 600;
             color: var(--text-muted);
-            padding: 0.18rem 0.55rem;
+            padding: 0.22rem 0.6rem;
             border-radius: 6px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--border-glass);
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .form-grid-2 {
@@ -1276,12 +1331,6 @@
             }
         }
 
-        @media (max-width: 768px) {
-            body.camera-viewfinder-active .top-header {
-                position: relative;
-            }
-        }
-
         @media (max-width: 640px) {
             .top-header {
                 padding: 0.65rem 0.75rem;
@@ -1340,23 +1389,10 @@
                 padding: 0.9rem;
                 border-radius: 16px;
             }
-            .camera-recorder-box {
-                padding: 0.6rem;
-                border-radius: 14px;
-            }
-            .camera-secondary-actions {
-                grid-template-columns: 1fr;
-            }
             .form-grid-2,
             .form-grid-3,
             .summary-cards-row,
             .pid-tuning-grid {
                 grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 640px) and (orientation: portrait) {
-            .camera-viewport-wrapper {
-                aspect-ratio: 4 / 3;
             }
         }
