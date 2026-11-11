@@ -8,7 +8,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <script src="../lock-listener.js"></script>
 </head>
 <body>
     <div class="bg-orb orb-1"></div>
@@ -64,7 +63,7 @@
 
         <div class="telemetry-grid">
             <!-- COLUNA ESQUERDA: Upload/Preview + Configuração + Botão de Ação -->
-            <section class="glass-panel" aria-label="Envio de Vídeo e Parâmetros">
+            <section id="mediaPanel" class="glass-panel" aria-label="Envio de Vídeo e Parâmetros">
                 <div class="panel-header">
                     <div class="panel-title">
                         <span class="step-badge">1</span>
@@ -90,17 +89,32 @@
                     <input type="file" id="mobileCameraInput" accept="video/*" capture="environment" hidden>
                 </div>
 
-                <!-- Gravador de Câmera WebRTC integrado -->
-                <div id="cameraRecorderBox" class="camera-recorder-box">
-                    <video id="cameraLiveVideo" class="camera-live-video" autoplay muted playsinline></video>
-                    <div class="camera-controls-bar">
-                        <div class="rec-indicator">
-                            <span id="recDot" class="rec-dot" style="display:none;"></span>
-                            <span id="recTimerText">Câmera pronta</span>
+                <!-- Gravador de Câmera WebRTC (Modo Viewfinder Imersivo) -->
+                <div id="cameraRecorderBox" class="camera-recorder-box" aria-live="polite">
+                    <div class="camera-viewport-wrapper">
+                        <video id="cameraLiveVideo" class="camera-live-video" autoplay muted playsinline></video>
+                        <div class="camera-hud-top">
+                            <div id="recIndicatorPill" class="rec-indicator-pill">
+                                <span id="recDot" class="rec-dot"></span>
+                                <span id="recTimerText">00:00 / máx 01:00</span>
+                            </div>
+                            <span id="cameraFacingBadge" class="camera-facing-badge">📷 Câmera Traseira</span>
                         </div>
-                        <div style="display:flex; gap:0.5rem;">
-                            <button type="button" id="btnStartStopRec" class="btn-media-select">🔴 Iniciar Gravação</button>
-                            <button type="button" id="btnCloseCamera" class="btn-remove-video">Fechar Câmera</button>
+                    </div>
+                    <div class="camera-controls-bar">
+                        <button type="button" id="btnStartStopRec" class="btn-cam-action btn-cam-rec">
+                            <span id="btnStartStopRecIcon">🔴</span>
+                            <span id="btnStartStopRecLabel">Iniciar Gravação</span>
+                        </button>
+                        <div class="camera-secondary-actions">
+                            <button type="button" id="btnSwitchCamera" class="btn-cam-action btn-cam-switch" title="Alternar entre câmera frontal e traseira">
+                                <span>🔄</span>
+                                <span>Alternar Câmera</span>
+                            </button>
+                            <button type="button" id="btnCloseCamera" class="btn-cam-action btn-cam-cancel">
+                                <span>✕</span>
+                                <span>Cancelar / Voltar</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -298,6 +312,7 @@
 
 
     <script src="../theme-toggle.js"></script>
+    <script src="../lock-listener.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

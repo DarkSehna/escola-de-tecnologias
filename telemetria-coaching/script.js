@@ -50,6 +50,7 @@ Responda EXCLUSIVAMENTE com um objeto JSON válido (sem blocos markdown extras f
 }`;
 
             // Elementos da DOM
+            const mediaPanel = document.getElementById('mediaPanel');
             const dropZone = document.getElementById('dropZone');
             const btnSelectFile = document.getElementById('btnSelectFile');
             const btnToggleCamera = document.getElementById('btnToggleCamera');
@@ -58,7 +59,12 @@ Responda EXCLUSIVAMENTE com um objeto JSON válido (sem blocos markdown extras f
 
             const cameraRecorderBox = document.getElementById('cameraRecorderBox');
             const cameraLiveVideo = document.getElementById('cameraLiveVideo');
+            const recIndicatorPill = document.getElementById('recIndicatorPill');
+            const cameraFacingBadge = document.getElementById('cameraFacingBadge');
             const btnStartStopRec = document.getElementById('btnStartStopRec');
+            const btnStartStopRecIcon = document.getElementById('btnStartStopRecIcon');
+            const btnStartStopRecLabel = document.getElementById('btnStartStopRecLabel');
+            const btnSwitchCamera = document.getElementById('btnSwitchCamera');
             const btnCloseCamera = document.getElementById('btnCloseCamera');
             const recDot = document.getElementById('recDot');
             const recTimerText = document.getElementById('recTimerText');
@@ -127,11 +133,15 @@ Responda EXCLUSIVAMENTE com um objeto JSON válido (sem blocos markdown extras f
             let isAnalyzing = false;
 
             // Estado da câmera WebRTC
+            const MAX_RECORD_SECONDS = 60;
             let mediaStream = null;
             let mediaRecorder = null;
             let recordedChunks = [];
             let recSeconds = 0;
             let recInterval = null;
+            let currentFacingMode = 'environment';
+            let discardRecordingOnStop = false;
+            let isSwitchingCamera = false;
 
             function updateApiKeyHeaderStatus() {
                 const key = (localStorage.getItem(STORAGE_KEY_API) || '').trim();
@@ -243,6 +253,7 @@ Responda EXCLUSIVAMENTE com um objeto JSON válido (sem blocos markdown extras f
                 videoFileSize.textContent = `${(file.size / (1024 * 1024)).toFixed(2)} MB`;
                 videoDurationLabel.textContent = 'Carregando...';
 
+                if (mediaPanel) mediaPanel.classList.add('has-video');
                 videoPreviewContainer.classList.add('active');
             }
 
@@ -265,6 +276,7 @@ Responda EXCLUSIVAMENTE com um objeto JSON válido (sem blocos markdown extras f
                 videoPreview.removeAttribute('src');
                 videoPreview.load();
                 videoPreviewContainer.classList.remove('active');
+                if (mediaPanel) mediaPanel.classList.remove('has-video');
                 videoFileInput.value = '';
                 mobileCameraInput.value = '';
             });
@@ -315,7 +327,48 @@ Responda EXCLUSIVAMENTE com um objeto JSON válido (sem blocos markdown extras f
                 }
             });
 
-            // Gravação Direta da Câmera (WebRTC com fallback para captura nativa mobile)
+            // Gravação Direta da Câmera (Modo Viewfinder Imersivo com WebRTC + alternância frontal/traseira)
+            function stopActiveMediaStream() {
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(t => t.stop());
+                    mediaStream = null;
+                }
+                cameraLiveVideo.srcObject = null;
+            }
+
+            function resetRecordingControlsUI() {
+                recSeconds = 0;
+                recTimerText.textContent = `00:00 / máx ${formatSecondsToMMSS(MAX_RECORD_SECONDS)}`;
+                recIndicatorPill.classList.remove('is-recording');
+                btnStartStopRec.classList.remove('is-recording');
+                btnStartStopRecIcon.textContent = '🔴';
+                btnStartStopRecLabel.textContent = 'Iniciar Gravação';
+                btnSwitchCamera.disabled = false;
+            }
+
+            function updateCameraFacingUI(facingMode) {
+                const isFront = facingMode === 'user';
+                cameraLiveVideo.classList.toggle('mirrored', isFront);
+                cameraFacingBadge.textContent = isFront ? '🤳 Câmera Frontal' : '📷 Câmera Traseira';
+            }
+
+            async function startCameraStream(facingMode) {
+                // Encerra tracks anteriores antes de reabrir (evita travamento em iOS/Android)
+                stopActiveMediaStream();
+                mediaStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: facingMode }, width: { ideal: 1280 }, height: { ideal: 720 } },
+                    audio: false
+                });
+                cameraLiveVideo.srcObject = mediaStream;
+                updateCameraFacingUI(facingMode);
+            }
+
+            function setViewfinderMode(active) {
+                if (mediaPanel) mediaPanel.classList.toggle('is-camera-mode', active);
+                document.body.classList.toggle('camera-viewfinder-active', active);
+                cameraRecorderBox.classList.toggle('active', active);
+            }
+
             async function openCameraRecorder() {
                 showError('');
                 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') {
@@ -323,21 +376,22 @@ Responda EXCLUSIVAMENTE com um objeto JSON válido (sem blocos markdown extras f
                     return;
                 }
                 try {
-                    mediaStream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
-                        audio: false
-                    });
-                    cameraLiveVideo.srcObject = mediaStream;
-                    cameraRecorderBox.classList.add('active');
-                    recTimerText.textContent = 'Câmera pronta para gravar';
-                    btnStartStopRec.textContent = '🔴 Iniciar Gravação';
-                    recDot.style.display = 'none';
+                    await startCameraStream(currentFacingMode);
+                    discardRecordingOnStop = false;
+                    resetRecordingControlsUI();
+                    setViewfinderMode(true);
+                    cameraRecorderBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 } catch (err) {
+                    if (err && (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')) {
+                        showError('Permissão da câmera negada. Autorize o acesso no navegador ou selecione um vídeo da galeria.');
+                        return;
+                    }
                     mobileCameraInput.click();
                 }
             }
 
-            function closeCameraRecorder() {
+            function closeCameraRecorder(discardRecording = true) {
+                discardRecordingOnStop = discardRecording;
                 if (recInterval) {
                     clearInterval(recInterval);
                     recInterval = null;
@@ -345,29 +399,50 @@ Responda EXCLUSIVAMENTE com um objeto JSON válido (sem blocos markdown extras f
                 if (mediaRecorder && mediaRecorder.state === 'recording') {
                     try { mediaRecorder.stop(); } catch (_) {}
                 }
-                if (mediaStream) {
-                    mediaStream.getTracks().forEach(t => t.stop());
-                    mediaStream = null;
-                }
-                cameraLiveVideo.srcObject = null;
-                cameraRecorderBox.classList.remove('active');
+                stopActiveMediaStream();
+                resetRecordingControlsUI();
+                setViewfinderMode(false);
             }
 
             btnToggleCamera.addEventListener('click', (e) => {
                 e.stopPropagation();
                 if (cameraRecorderBox.classList.contains('active')) {
-                    closeCameraRecorder();
+                    closeCameraRecorder(true);
                 } else {
                     openCameraRecorder();
                 }
             });
 
-            btnCloseCamera.addEventListener('click', closeCameraRecorder);
+            btnSwitchCamera.addEventListener('click', async () => {
+                if (isSwitchingCamera) return;
+                if (mediaRecorder && mediaRecorder.state === 'recording') return;
+
+                const previousFacing = currentFacingMode;
+                const nextFacing = previousFacing === 'environment' ? 'user' : 'environment';
+                isSwitchingCamera = true;
+                btnSwitchCamera.disabled = true;
+
+                try {
+                    currentFacingMode = nextFacing;
+                    await startCameraStream(nextFacing);
+                } catch (err) {
+                    currentFacingMode = previousFacing;
+                    try { await startCameraStream(previousFacing); } catch (_) {}
+                    showError('Não foi possível alternar a câmera neste dispositivo.');
+                } finally {
+                    isSwitchingCamera = false;
+                    btnSwitchCamera.disabled = false;
+                }
+            });
+
+            btnCloseCamera.addEventListener('click', () => closeCameraRecorder(true));
 
             btnStartStopRec.addEventListener('click', () => {
                 if (!mediaStream) return;
 
                 if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                    showError('');
+                    discardRecordingOnStop = false;
                     recordedChunks = [];
                     const mimeTypes = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm', 'video/mp4'];
                     const supportedMime = mimeTypes.find(m => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) || '';
@@ -381,23 +456,42 @@ Responda EXCLUSIVAMENTE com um objeto JSON válido (sem blocos markdown extras f
                     };
 
                     mediaRecorder.onstop = () => {
-                        const blobType = mediaRecorder.mimeType || 'video/webm';
-                        const ext = blobType.includes('mp4') ? 'mp4' : 'webm';
-                        const blob = new Blob(recordedChunks, { type: blobType });
-                        const recordedFile = new File([blob], `volta_camera_${Date.now()}.${ext}`, { type: blobType });
+                        if (recInterval) {
+                            clearInterval(recInterval);
+                            recInterval = null;
+                        }
+                        const shouldDiscard = discardRecordingOnStop;
+                        const chunksSnapshot = recordedChunks.slice();
+                        const recMime = (mediaRecorder && mediaRecorder.mimeType) || 'video/webm';
+                        recordedChunks = [];
+                        mediaRecorder = null;
+
+                        if (shouldDiscard || chunksSnapshot.length === 0) {
+                            return;
+                        }
+
+                        const ext = recMime.includes('mp4') ? 'mp4' : 'webm';
+                        const blob = new Blob(chunksSnapshot, { type: recMime });
+                        const recordedFile = new File([blob], `volta_camera_${Date.now()}.${ext}`, { type: recMime });
                         handleVideoFileSelected(recordedFile);
-                        closeCameraRecorder();
+                        closeCameraRecorder(false);
                     };
 
                     mediaRecorder.start(250);
                     recSeconds = 0;
-                    recDot.style.display = 'inline-block';
-                    recTimerText.textContent = 'Gravando 00:00';
-                    btnStartStopRec.textContent = '⏹️ Finalizar e Usar Vídeo';
+                    recIndicatorPill.classList.add('is-recording');
+                    recTimerText.textContent = `00:00 / máx ${formatSecondsToMMSS(MAX_RECORD_SECONDS)}`;
+                    btnStartStopRec.classList.add('is-recording');
+                    btnStartStopRecIcon.textContent = '⏹️';
+                    btnStartStopRecLabel.textContent = 'Parar & Usar Vídeo';
+                    btnSwitchCamera.disabled = true;
 
                     recInterval = setInterval(() => {
                         recSeconds += 1;
-                        recTimerText.textContent = `Gravando ${formatSecondsToMMSS(recSeconds)}`;
+                        recTimerText.textContent = `${formatSecondsToMMSS(recSeconds)} / máx ${formatSecondsToMMSS(MAX_RECORD_SECONDS)}`;
+                        if (recSeconds >= MAX_RECORD_SECONDS && mediaRecorder && mediaRecorder.state === 'recording') {
+                            mediaRecorder.stop();
+                        }
                     }, 1000);
                 } else if (mediaRecorder.state === 'recording') {
                     mediaRecorder.stop();
