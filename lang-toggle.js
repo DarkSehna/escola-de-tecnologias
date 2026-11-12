@@ -82,6 +82,7 @@
             "action_start_scoreboard": "Iniciar Placar",
             "action_open_board": "Abrir Prancheta",
             "action_analyze_lap": "Analisar Volta",
+            "action_open_studio": "Abrir Estúdio",
             "status_in_maintenance": "🔒 Em Manutenção",
 
             // Cards de Ferramentas - Detalhes
@@ -108,6 +109,10 @@
             "card_feedback_tag": "Design • Avaliação / UX",
             "card_feedback_title": "Feedback de Jogos",
             "card_feedback_desc": "Envie avaliações rápidas e anônimas sobre os jogos de seus colegas ou acompanhe estatísticas consolidadas live.",
+
+            "card_prompts_tag": "Design • IA & ComfyUI",
+            "card_prompts_title": "Estúdio de Prompts & ComfyUI ✨",
+            "card_prompts_desc": "Monte prompts visuais em português com tradução automática para SDXL, trava SFW e launcher do ComfyUI local.",
 
             "card_fisica_tag": "Programação • Canvas 2D",
             "card_fisica_title": "Lab de Física 2D",
@@ -231,6 +236,7 @@
             "action_start_scoreboard": "Start Scoreboard",
             "action_open_board": "Open Board",
             "action_analyze_lap": "Analyze Lap",
+            "action_open_studio": "Open Studio",
             "status_in_maintenance": "🔒 Under Maintenance",
 
             // Tool Cards - Details
@@ -257,6 +263,10 @@
             "card_feedback_tag": "Design • Playtesting / UX",
             "card_feedback_title": "Game Playtest Feedback",
             "card_feedback_desc": "Submit quick anonymous reviews for your classmates' games or follow live consolidated feedback dashboards.",
+
+            "card_prompts_tag": "Design • AI & ComfyUI",
+            "card_prompts_title": "Prompt Studio & ComfyUI ✨",
+            "card_prompts_desc": "Build visual prompts in Portuguese with automatic SDXL translation, SFW shield and local ComfyUI launcher.",
 
             "card_fisica_tag": "Programming • 2D Canvas",
             "card_fisica_title": "2D Physics Lab",

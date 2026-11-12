@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estúdio de Prompts &amp; Launcher ComfyUI | Escola de Tecnologias</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='18'>🎨</text></svg>">
+    <!-- Fontes Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- CONTAINER DE BRILHO DE FUNDO -->
+    <div class="bg-glow"></div>
+
+    <!-- CABEÇALHO DA FERRAMENTA -->
+    <header class="app-header">
+        <div class="header-left">
+            <a href="../" class="back-btn" title="Voltar ao Portal Principal">
+                <span>←</span> Voltar ao Portal
+            </a>
+            <div class="brand-block">
+                <h1>Estúdio de Prompts &amp; Launcher</h1>
+                <span class="badge-pill">Game Lab: Design • SDXL &amp; ComfyUI</span>
+            </div>
+        </div>
+
+        <!-- BARRA DO LAUNCHER LOCAL (COMFYUI) -->
+        <div class="launcher-bar" aria-label="Status e inicialização do ComfyUI local">
+            <div id="comfyStatus" class="status-badge status-offline" title="Verificando servidor ComfyUI em 127.0.0.1:8188">
+                <span class="status-dot"></span>
+                <span id="statusText">🔴 ComfyUI Offline</span>
+            </div>
+            <a href="comfyui://start" id="btnLaunchComfy" class="btn-launcher btn-launch" title="Dispara o launcher do ComfyUI registrado no Windows">
+                <span>🚀</span> Ligar ComfyUI
+            </a>
+            <a href="http://127.0.0.1:8188" target="_blank" id="btnOpenComfy" class="btn-launcher btn-open" title="Abre a interface Web do ComfyUI em nova aba">
+                <span>🎨</span> Abrir ComfyUI ↗
+            </a>
+            <button type="button" class="theme-toggle-btn" aria-label="Alternar Tema"></button>
+        </div>
+    </header>
+
+    <!-- BANCADA PRINCIPAL: CHIPS (ESQUERDA) + SAÍDA PROMPTS (DIREITA) -->
+    <main class="workbench">
+
+        <!-- PAINEL ESQUERDO: SELETORES DE CHIPS EM PORTUGUÊS -->
+        <section class="panel panel-chips" aria-label="Construtor visual de prompts">
+            <div class="panel-header">
+                <div>
+                    <h2>Blocos Criativos em Português</h2>
+                    <p>Clique nas opções abaixo. O prompt é traduzido e balanceado automaticamente para o modelo SDXL.</p>
+                </div>
+                <button type="button" id="btnResetAll" class="btn-reset" title="Limpar todas as seleções">
+                    <span>🔄</span> Limpar Seleções
+                </button>
+            </div>
+
+            <div class="categories-container" id="categoriesContainer">
+                <!-- As categorias e chips serão gerados dinamicamente via script.js -->
+            </div>
+        </section>
+
+        <!-- PAINEL DIREITO: PROMPT FINAL + BLINDAGEM SFW + GUIA -->
+        <aside class="panel panel-output" aria-label="Prompts finais e blindagem SFW">
+            <div class="output-header">
+                <h2>Prompts Prontos para o ComfyUI</h2>
+                <span class="badge-sdxl">SDXL Base 1.0</span>
+            </div>
+
+            <!-- PROMPT POSITIVO -->
+            <div class="prompt-card positive-card">
+                <div class="card-header-row">
+                    <div class="title-with-pill">
+                        <span class="tag-status tag-positive">POSITIVO</span>
+                        <h3>Prompt Positivo (Inglês)</h3>
+                    </div>
+                    <button type="button" id="btnCopyPositive" class="btn-copy btn-copy-positive">
+                        <span class="icon-copy">📋</span> Copiar Positivo
+                    </button>
+                </div>
+                <p class="prompt-hint">Cole este texto no nó verde <strong>CLIP Text Encode (Positive)</strong> no ComfyUI.</p>
+                <div class="prompt-box" id="positiveBox" readonly tabindex="0">
+                    <!-- Texto do prompt gerado em tempo real -->
+                </div>
+            </div>
+
+            <!-- PROMPT NEGATIVO COM TRAVA SFW -->
+            <div class="prompt-card negative-card">
+                <div class="card-header-row">
+                    <div class="title-with-pill">
+                        <span class="tag-status tag-negative">TRAVA SFW ATIVA</span>
+                        <h3>Prompt Negativo (Proteção Automática)</h3>
+                    </div>
+                    <button type="button" id="btnCopyNegative" class="btn-copy btn-copy-negative">
+                        <span class="icon-copy">📋</span> Copiar Negativo
+                    </button>
+                </div>
+                <p class="prompt-hint">Bloqueia conteúdo impróprio, pessoas extras e fundos indesejados. Cole no nó vermelho <strong>CLIP Text Encode (Negative)</strong>.</p>
+                <div class="prompt-box prompt-box-locked" id="negativeBox" tabindex="0">
+                    <!-- Texto do prompt negativo seguro gerado automaticamente -->
+                </div>
+            </div>
+
+            <!-- GUIA RÁPIDO DO LABORATÓRIO (ESPECIFICAÇÕES ANCHIETA) -->
+            <div class="lab-specs-card">
+                <div class="specs-title">
+                    <span>💡</span> <strong>Guia Rápido dos PCs do Lab (RTX 4060 • 8 GB VRAM)</strong>
+                </div>
+                <ul class="specs-list">
+                    <li><strong>Resolução SDXL recomendada:</strong> <code>1024×1024</code> (quadrado) ou <code>896×1152</code> (retrato).</li>
+                    <li><strong>Passos (Steps):</strong> <code>20 a 30 passos</code> no KSampler com Sampler <code>dpmpp_2m</code> / <code>karras</code>.</li>
+                    <li><strong>CFG Scale:</strong> <code>6.5 a 8.0</code> para equilíbrio entre fidelidade e estilo.</li>
+                    <li><strong>Dica para Sprites:</strong> Use o fundo <em>Fundo Branco Liso</em> para recortar facilmente no <strong>Montador de Tilesets</strong> ou <strong>Piskel</strong>!</li>
+                </ul>
+            </div>
+        </aside>
+
+    </main>
+
+    <!-- NOTIFICAÇÃO TOAST VISUAL -->
+    <div id="toastFeedback" class="toast-feedback" role="status" aria-live="polite"></div>
+
+    <!-- SCRIPTS GLOBAIS -->
+    <script src="../theme-toggle.js"></script>
+    <script src="../lock-listener.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
