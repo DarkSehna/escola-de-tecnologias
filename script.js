@@ -52,15 +52,17 @@ function selectTrack(trackName, smooth = true) {
     const badge = document.getElementById('active-track-badge');
 
     const trackMeta = {
-        todas: { label: 'Todas as Trilhas', badgeClass: 'teacher-badge color-prog' },
-        design: { label: 'Game Lab: Design', badgeClass: 'teacher-badge color-gabriel' },
-        programacao: { label: 'Game Lab: Programação', badgeClass: 'teacher-badge color-prog' },
-        robotica: { label: 'Robótica', badgeClass: 'teacher-badge color-sandro' },
-        treinamento: { label: 'Treinamento Robótica', badgeClass: 'teacher-badge color-yellow' }
+        todas: { key: 'badge_all_tracks', defaultLabel: 'Todas as Trilhas', badgeClass: 'teacher-badge color-prog' },
+        design: { key: 'badge_design', defaultLabel: 'Game Lab: Design', badgeClass: 'teacher-badge color-gabriel' },
+        programacao: { key: 'badge_prog', defaultLabel: 'Game Lab: Programação', badgeClass: 'teacher-badge color-prog' },
+        robotica: { key: 'badge_robot', defaultLabel: 'Robótica', badgeClass: 'teacher-badge color-sandro' },
+        treinamento: { key: 'badge_train', defaultLabel: 'Treinamento Robótica', badgeClass: 'teacher-badge color-yellow' }
     };
 
     const meta = trackMeta[resolvedTrack] || trackMeta.todas;
-    badgeName.textContent = meta.label;
+    const label = window.titanT ? window.titanT(meta.key) : meta.defaultLabel;
+    badgeName.textContent = label;
+    badgeName.setAttribute('data-i18n', meta.key);
     badge.className = meta.badgeClass;
 
     if (smooth) {
@@ -232,3 +234,10 @@ function initDeviceProtection() {
         }
     });
 }
+
+// Atualiza elementos dependentes de estado ao alternar idioma
+window.addEventListener('titanLanguageChanged', () => {
+    if (state.selectedTrack) {
+        selectTrack(state.selectedTrack, false);
+    }
+});
