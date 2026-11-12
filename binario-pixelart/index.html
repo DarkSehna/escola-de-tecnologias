@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratório de Imagens Binárias &amp; Matriz de Cores | Escola de Tecnologias</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <canvas id="confettiCanvas" class="confetti-canvas" aria-hidden="true"></canvas>
+
+    <!-- Cabeçalho Unificado -->
+    <header class="app-header">
+        <div class="header-left">
+            <a href="../" class="back-btn" title="Voltar ao Portal Principal">
+                <span>←</span> Voltar ao Portal
+            </a>
+            <div class="brand-block">
+                <h1>Laboratório de Imagens Binárias</h1>
+                <span class="badge-pill badge-sub">Fund. 1 • Pixel Art &amp; Piskel</span>
+            </div>
+        </div>
+
+        <nav class="mode-switcher" aria-label="Modos do laboratório">
+            <button type="button" id="btnModeFree" class="mode-tab active" data-mode="free">
+                <span>🎨</span> <span>Grid Livre</span>
+            </button>
+            <button type="button" id="btnModePuzzle" class="mode-tab" data-mode="puzzle">
+                <span>🧩</span> <span>Desafio Enigma</span>
+            </button>
+            <button type="button" id="btnMode2Bit" class="mode-tab" data-mode="twobit">
+                <span>🌈</span> <span>Modo 2-Bits</span>
+            </button>
+        </nav>
+
+        <div class="header-right">
+            <div class="size-toggle" role="group" aria-label="Tamanho da grade">
+                <button type="button" id="btnSize8" class="size-btn active" data-size="8">8×8</button>
+                <button type="button" id="btnSize16" class="size-btn" data-size="16">16×16</button>
+            </div>
+            <span id="statusBadge" class="status-badge">8×8 • 1-Bit Livre</span>
+            <button type="button" class="theme-toggle-btn"></button>
+        </div>
+    </header>
+
+    <!-- Bancada Principal 2 Colunas Fluidas -->
+    <main class="workbench">
+        <!-- COLUNA ESQUERDA: Grade Interativa de Pixels -->
+        <section class="panel pixel-stage-panel" aria-label="Grade de pixels interativa">
+            <!-- Barra de contexto dinâmica por modo -->
+            <div class="stage-context-bar">
+                <!-- Contexto Modo 1: Grid Livre -->
+                <div id="ctxFree" class="ctx-group active">
+                    <div class="ctx-hint">
+                        <span class="dot-legend dot-one"></span> <strong>1</strong> = Ligado (Branco)
+                        <span class="dot-sep">|</span>
+                        <span class="dot-legend dot-zero"></span> <strong>0</strong> = Apagado (Preto)
+                        <span class="ctx-tip">• Clique ou arraste para pintar</span>
+                    </div>
+                </div>
+
+                <!-- Contexto Modo 2: Desafio Enigma -->
+                <div id="ctxPuzzle" class="ctx-group">
+                    <div class="puzzle-presets" id="puzzlePresetBar" role="group" aria-label="Escolha um enigma"></div>
+                    <div class="puzzle-progress-row">
+                        <div class="puzzle-progress-wrap">
+                            <div class="puzzle-progress-bar">
+                                <div id="puzzleProgressFill" class="puzzle-progress-fill"></div>
+                            </div>
+                            <span id="puzzleProgressText" class="puzzle-progress-text">0 / 0 pixels</span>
+                        </div>
+                        <button type="button" id="btnPuzzleHint" class="btn-mini-accent" title="Mostrar um quadrado que ainda falta">
+                            💡 Dica
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Contexto Modo 3: Modo 2-Bits -->
+                <div id="ctx2Bit" class="ctx-group">
+                    <div class="palette-2bit-bar" id="palette2BitBar" role="group" aria-label="Paleta 2-Bits">
+                        <button type="button" class="pal-btn active" data-brush="cycle" title="Cada clique cicla 00 → 01 → 10 → 11">
+                            <span>↻</span> Ciclar Clique
+                        </button>
+                        <button type="button" class="pal-btn" data-brush="0" title="Pintar com 00 (Preto)">
+                            <span class="swatch swatch-00"></span> <code>00</code> Preto
+                        </button>
+                        <button type="button" class="pal-btn" data-brush="1" title="Pintar com 01 (Branco)">
+                            <span class="swatch swatch-01"></span> <code>01</code> Branco
+                        </button>
+                        <button type="button" class="pal-btn" data-brush="2" title="Pintar com 10 (Vermelho)">
+                            <span class="swatch swatch-10"></span> <code>10</code> Vermelho
+                        </button>
+                        <button type="button" class="pal-btn" data-brush="3" title="Pintar com 11 (Amarelo/Dourado)">
+                            <span class="swatch swatch-11"></span> <code>11</code> Dourado
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Banner de Vitória do Enigma -->
+            <div id="puzzleVictoryBanner" class="puzzle-victory-banner" role="status" aria-live="polite">
+                <div class="victory-content">
+                    <span class="victory-emoji" id="victoryEmoji">🏆</span>
+                    <div>
+                        <strong>Enigma Decodificado!</strong>
+                        <p id="victoryItemName">Você revelou: Espada de Pixel</p>
+                    </div>
+                </div>
+                <button type="button" id="btnNextPuzzle" class="btn-next-puzzle">Próximo Enigma →</button>
+            </div>
+
+            <!-- Área Central da Grade -->
+            <div class="grid-stage-center">
+                <div class="grid-axis-wrapper">
+                    <div id="colHeaders" class="col-headers" aria-hidden="true"></div>
+                    <div class="grid-with-rows">
+                        <div id="rowHeaders" class="row-headers" aria-hidden="true"></div>
+                        <div id="pixelGrid" class="pixel-grid" role="grid" aria-label="Matriz interativa de pixels"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rodapé da Grade: Coordenada + Mini Preview Sprite Real + Desfazer -->
+            <div class="stage-footer">
+                <div class="coord-readout">
+                    <span id="hoverCoordText">Passe o mouse ou toque em um quadrado</span>
+                </div>
+                <div class="sprite-preview-group">
+                    <div class="mini-preview-box" title="Tamanho real do sprite em jogos">
+                        <canvas id="miniPreviewCanvas" width="32" height="32"></canvas>
+                        <span>Prévia Real</span>
+                    </div>
+                    <button type="button" id="btnUndo" class="btn-tool-ghost" title="Desfazer última ação">
+                        ↩️ Desfazer
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- COLUNA DIREITA: Matriz Binária ao Vivo + Ações + Exportação -->
+        <aside class="panel matrix-sidebar" aria-label="Matriz binária e exportação">
+            <div class="matrix-header">
+                <div>
+                    <h2 id="matrixPanelTitle">Matriz Binária (Código ↔ Desenho)</h2>
+                    <p id="matrixPanelSub" class="matrix-sub">Clique em qualquer dígito abaixo para alterar o pixel!</p>
+                </div>
+                <label class="decimal-toggle" title="Mostrar valor decimal de cada linha (Modo 1-Bit)">
+                    <input type="checkbox" id="chkShowDecimal">
+                    <span>Decimal</span>
+                </label>
+            </div>
+
+            <!-- Linhas Binárias ao Vivo -->
+            <div id="binaryMatrixList" class="binary-matrix-list" aria-live="off"></div>
+
+            <!-- Botões de Ação Rápida -->
+            <div class="quick-actions-grid">
+                <button type="button" id="btnClearGrid" class="btn-action btn-clear">
+                    <span>🧹</span> Limpar Tudo
+                </button>
+                <button type="button" id="btnInvertGrid" class="btn-action btn-invert">
+                    <span>🔄</span> Inverter Cores (NOT)
+                </button>
+                <button type="button" id="btnCopyText" class="btn-action btn-copy">
+                    <span>📋</span> Copiar Texto
+                </button>
+                <button type="button" id="btnCopyJson" class="btn-action btn-copy">
+                    <span>{ }</span> Copiar JSON
+                </button>
+            </div>
+
+            <!-- Caixa de Exportação (.PNG + Piskel) -->
+            <div class="export-card">
+                <div class="export-card-top">
+                    <div>
+                        <h3>Exportar Sprite para Jogos</h3>
+                        <p>Renderização pixel-perfect para Piskel, Construct 3 e GameMaker.</p>
+                    </div>
+                    <label class="transparent-check">
+                        <input type="checkbox" id="chkTransparentBg">
+                        <span>Fundo transparente (0 / 00)</span>
+                    </label>
+                </div>
+                <div class="export-buttons-row">
+                    <button type="button" id="btnExport320" class="btn-export-primary">
+                        <span>🖼️</span> Baixar Sprite (.PNG 320×320)
+                    </button>
+                    <button type="button" id="btnExport1x1" class="btn-export-secondary" title="Baixar em escala real 1:1 para editar no Piskel">
+                        <span>👾</span> 1:1 Piskel (<span id="lblExport1x1Size">8×8</span>)
+                    </button>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <div id="toastFeedback" class="toast-feedback" role="status" aria-live="polite"></div>
+
+    <script src="../theme-toggle.js"></script>
+    <script src="../lock-listener.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

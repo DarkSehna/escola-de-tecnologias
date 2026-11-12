@@ -191,12 +191,12 @@ body {
 
 /* 3. TELA DE SELEÇÃO DE PROFESSOR */
 .screen-container {
-    min-height: 100vh;
+    min-height: calc(100vh - 56px);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 2rem 1.5rem;
+    padding: 1.5rem 1.5rem 2.5rem;
     transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
@@ -251,10 +251,10 @@ body {
 
 .teacher-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 320px));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(245px, 285px));
+    gap: 1.5rem;
     width: 100%;
-    max-width: 1100px;
+    max-width: 1260px;
     justify-content: center;
     animation: fadeInUp 0.8s ease;
 }
@@ -316,6 +316,13 @@ body {
     background: var(--color-purple);
 }
 
+.teacher-card:hover:has(.color-prog) {
+    box-shadow: 0 20px 40px -15px rgba(6, 182, 212, 0.22);
+}
+.teacher-card:hover:has(.color-prog)::before {
+    background: var(--color-cyan);
+}
+
 .teacher-icon-wrapper {
     width: 80px;
     height: 80px;
@@ -354,6 +361,17 @@ body {
     box-shadow: 0 0 20px var(--color-purple-glow);
 }
 
+.color-prog {
+    background: rgba(6, 182, 212, 0.12);
+    color: var(--color-cyan);
+    border: 1px solid rgba(6, 182, 212, 0.28);
+}
+.teacher-card:hover .color-prog {
+    background: var(--color-cyan);
+    color: var(--color-bg-dark);
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+}
+
 .teacher-card h2 {
     font-size: 1.6rem;
     font-weight: 700;
@@ -389,9 +407,10 @@ body {
 /* 4. DASHBOARD PRINCIPAL */
 #screen-dashboard {
     justify-content: flex-start;
-    max-width: 1200px;
+    max-width: 1720px;
+    width: 98%;
     margin: 0 auto;
-    width: 100%;
+    padding: 0.5rem 1rem 3rem;
 }
 
 .app-header {
@@ -484,35 +503,38 @@ body {
     border-color: rgba(255, 255, 255, 0.3);
 }
 
-/* NAVEGAÇÃO DE ABAS */
+/* NAVEGAÇÃO DE ABAS / FILTROS DO HUB */
 .dashboard-tabs {
     display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
     background: rgba(17, 24, 39, 0.4);
     border: 1px solid var(--color-border-glass);
-    padding: 0.35rem;
+    padding: 0.4rem;
     border-radius: 16px;
-    margin-bottom: 2.5rem;
+    margin-bottom: 2rem;
     width: 100%;
-    max-width: 480px;
+    max-width: 100%;
     backdrop-filter: var(--glass-blur);
     animation: fadeInUp 0.6s ease;
 }
 
 .tab-trigger {
-    flex: 1;
+    flex: 1 1 auto;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: 0.45rem;
     background: transparent;
     border: none;
     color: var(--color-text-normal);
-    padding: 0.75rem 1rem;
+    padding: 0.68rem 0.9rem;
     border-radius: 12px;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
     transition: var(--transition-smooth);
+    white-space: nowrap;
 }
 
 .tab-trigger:hover {
@@ -619,14 +641,52 @@ body {
     flex-grow: 1;
 }
 
+.card-tags-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
 .card-tag {
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--color-text-muted);
-    margin-bottom: 0.5rem;
     display: inline-block;
+}
+
+.card-tags-row .card-tag {
+    margin-bottom: 0;
+}
+
+/* Badges de Compatibilidade de Dispositivo (Mobile / Desktop) */
+.device-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.18rem 0.55rem;
+    border-radius: 999px;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    line-height: 1.2;
+    transition: var(--transition-smooth);
+}
+
+.device-badge.device-mobile {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.device-badge.device-desktop {
+    background: rgba(148, 163, 184, 0.12);
+    color: #cbd5e1;
+    border: 1px solid rgba(148, 163, 184, 0.22);
 }
 
 .tool-card h3 {
@@ -763,6 +823,44 @@ footer.app-footer {
     }
 }
 
+@media (max-width: 640px) {
+    #screen-dashboard {
+        padding: 0.5rem 0.5rem 2rem;
+        width: 100%;
+    }
+    .dashboard-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        justify-content: flex-start;
+        padding: 0.35rem 0.5rem;
+        gap: 0.45rem;
+        border-radius: 14px;
+        scrollbar-width: none;
+    }
+    .dashboard-tabs::-webkit-scrollbar {
+        display: none;
+    }
+    .tab-trigger {
+        flex: 0 0 auto;
+        font-size: 0.85rem;
+        padding: 0.6rem 0.85rem;
+    }
+    .cards-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem;
+    }
+    .top-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+    .top-header .header-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
 /* ==========================================================================
    9. TEMA DE TRILHA OBR (AMARELO) E ELEMENTOS DO PORTAL DO PROFESSOR
    ========================================================================== */
@@ -785,8 +883,9 @@ footer.app-footer {
     box-shadow: 0 20px 40px -15px rgba(234, 179, 8, 0.2);
 }
 
-/* Ocultação forçada de simuladores configurados pelo professor */
-.hidden-by-teacher {
+/* Ocultação forçada de simuladores configurados pelo professor ou filtro do HUB */
+.hidden-by-teacher,
+.hidden-by-filter {
     display: none !important;
 }
 
@@ -873,6 +972,93 @@ footer.app-footer {
 @keyframes modalSlideUp {
     from { opacity: 0; transform: translateY(30px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* Modal de Aviso de Compatibilidade de Dispositivo (Mobile / Desktop) */
+.device-modal-card {
+    max-width: 440px !important;
+    padding: 2rem 1.75rem !important;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: #0f172a;
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.85), 0 0 30px rgba(6, 182, 212, 0.15);
+}
+
+.device-modal-icon {
+    font-size: 2.8rem;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+    animation: bounceSlow 2s infinite ease-in-out;
+}
+
+@keyframes bounceSlow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+.device-modal-card h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-text-white);
+    line-height: 1.3;
+    margin: 0;
+}
+
+.device-modal-card p {
+    color: var(--color-text-normal);
+    font-size: 0.92rem;
+    line-height: 1.55;
+    margin: 0;
+}
+
+.device-modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+.btn-device-modal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.85rem 1.25rem;
+    border-radius: 12px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    border: none;
+    font-family: inherit;
+}
+
+.btn-device-modal.primary {
+    background: linear-gradient(135deg, var(--color-cyan), var(--color-purple));
+    color: var(--color-bg-dark);
+    box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+}
+
+.btn-device-modal.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(6, 182, 212, 0.45);
+}
+
+.btn-device-modal.secondary {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--color-text-normal);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.btn-device-modal.secondary:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--color-text-white);
+    border-color: rgba(255, 255, 255, 0.25);
 }
 
 /* Modal Administrativo do Professor */

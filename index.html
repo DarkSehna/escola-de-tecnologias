@@ -10,439 +10,539 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Link para o CSS global -->
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2027.2">
 </head>
 <body>
 
     <!-- CONTAINER DE PARTICULAS / EFEITO DE FUNDO -->
     <div class="background-glow bg-glow-left"></div>
     <div class="app-container">
-        
+
         <!-- Barra de Navegação Superior Global -->
         <div class="global-top-bar" style="display: flex; justify-content: flex-end; align-items: center; padding: 0.75rem 1rem 0 1rem; width: 100%;">
             <button class="theme-toggle-btn" aria-label="Alternar Tema">🌙 <span class="theme-btn-text">Modo Escuro</span></button>
         </div>
 
-    <!-- TELA 1: SELEÇÃO DE TRILHA -->
-    <main id="screen-select-teacher" class="screen-container active">
-        <header class="select-header">
-            <h1 class="logo-title">
-                <span class="brand">Laboratório de</span>
-                <span class="sub-brand">Tecnologias</span>
-            </h1>
-            <p class="select-subtitle">Selecione sua Trilha de Aprendizado para acessar os simuladores</p>
-        </header>
+        <!-- TELA 1: SELEÇÃO DE TRILHA -->
+        <main id="screen-select-teacher" class="screen-container active">
+            <header class="select-header">
+                <h1 class="logo-title">
+                    <span class="brand">Laboratório de</span>
+                    <span class="sub-brand">Tecnologias</span>
+                </h1>
+                <p class="select-subtitle">Selecione sua Trilha de Aprendizado para acessar os simuladores</p>
+            </header>
 
-        <section class="teacher-grid">
-            <!-- Card Trilha de Games -->
-            <button class="teacher-card" onclick="selectTrack('games')" aria-label="Acessar Trilha de Games">
-                <div class="teacher-icon-wrapper color-gabriel">
-                    <!-- Icone de Controle / Game Design -->
-                    <svg viewBox="0 0 24 24" class="teacher-svg">
-                        <path fill="currentColor" d="M21,6H3C1.9,6,1,6.9,1,8v8c0,1.1,0.9,2,2,2h18c1.1,0,2-0.9,2-2V8C23,6.9,22.1,6,21,6z M9,13H7v2H6v-2H4v-1h2V10h1v2h2V13z M14.5,15c-0.83,0-1.5-0.67-1.5-1.5s0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5S15.33,15,14.5,15z M18.5,12c-0.83,0-1.5-0.67-1.5-1.5 s0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5S19.33,12,18.5,12z"/>
-                    </svg>
-                </div>
-                <h2>Trilha Games</h2>
-                <p>Crie histórias, mecânicas de física, lógica de estados (FSM) e projete os seus próprios jogos digitais.</p>
-                <span class="enter-btn">Entrar na Trilha</span>
-            </button>
-
-            <!-- Card Trilha de Robótica -->
-            <button class="teacher-card" onclick="selectTrack('robotica')" aria-label="Acessar Trilha de Robótica">
-                <div class="teacher-icon-wrapper color-sandro">
-                    <!-- Icone de Engrenagens / Robótica -->
-                    <svg viewBox="0 0 24 24" class="teacher-svg">
-                        <path fill="currentColor" d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
-                    </svg>
-                </div>
-                <h2>Trilha Robótica</h2>
-                <p>Estude a cinemática de motores, circuitos com potenciômetros e integre código com placas Arduino físicas.</p>
-                <span class="enter-btn">Entrar na Trilha</span>
-            </button>
-
-            <!-- Card Treinamento OBR -->
-            <button class="teacher-card" onclick="selectTrack('treinamento')" aria-label="Acessar Treinamento OBR">
-                <div class="teacher-icon-wrapper color-yellow">
-                    <!-- Icone de Trophy / Cronômetro -->
-                    <svg viewBox="0 0 24 24" class="teacher-svg">
-                        <path fill="currentColor" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M11,8H13V12H16V14H11V8Z"/>
-                    </svg>
-                </div>
-                <h2>Treinamento Robótica</h2>
-                <p>Prepare-se para a Olimpíada Brasileira de Robótica. Calibre as pontuações e penalidades do seu robô.</p>
-                <span class="enter-btn">Ir para o Treinamento</span>
-            </button>
-        </section>
-    </main>
-
-    <!-- TELA 2: PAINEL / DASHBOARD PRINCIPAL -->
-    <div id="screen-dashboard" class="screen-container hidden">
-        <header class="app-header">
-            <div class="header-logo">
-                <span class="logo-badge">LT</span>
-                <div>
-                    <h1 class="logo-main">Laboratório de</h1>
-                    <span class="logo-sub">Tecnologias</span>
-                </div>
-            </div>
-
-            <!-- Identificador da Trilha Selecionada -->
-            <div class="teacher-badge-container">
-                <div class="teacher-badge" id="active-track-badge">
-                    <span class="badge-dot"></span>
-                    <span id="active-track-name">Trilha</span>
-                </div>
-                <button class="change-teacher-btn" onclick="backToTrackSelect()" title="Mudar de Trilha">
-                    Voltar ao Início
+            <section class="teacher-grid">
+                <!-- Card Trilha Game Lab: Design -->
+                <button class="teacher-card" onclick="selectTrack('design')" aria-label="Acessar Game Lab: Design">
+                    <div class="teacher-icon-wrapper color-gabriel">
+                        <svg viewBox="0 0 24 24" class="teacher-svg">
+                            <path fill="currentColor" d="M21,6H3C1.9,6,1,6.9,1,8v8c0,1.1,0.9,2,2,2h18c1.1,0,2-0.9,2-2V8C23,6.9,22.1,6,21,6z M9,13H7v2H6v-2H4v-1h2V10h1v2h2V13z M14.5,15c-0.83,0-1.5-0.67-1.5-1.5s0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5S15.33,15,14.5,15z M18.5,12c-0.83,0-1.5-0.67-1.5-1.5 s0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5S19.33,12,18.5,12z"/>
+                        </svg>
+                    </div>
+                    <h2>Game Lab: Design</h2>
+                    <p>GDD, Level Design, Pixel Art, matrizes binárias, tilesets e avaliação UX dos seus jogos digitais.</p>
+                    <span class="enter-btn">Entrar na Trilha</span>
                 </button>
-            </div>
-        </header>
 
-        <!-- Navegação por Abas -->
-        <nav class="dashboard-tabs" aria-label="Categorias de simuladores">
-            <button class="tab-trigger active" onclick="switchTab('games')" id="tab-btn-games">
-                <span class="tab-icon">🎮</span> Games
-            </button>
-            <button class="tab-trigger" onclick="switchTab('robotica')" id="tab-btn-robotica">
-                <span class="tab-icon">🤖</span> Robótica
-            </button>
-            <button class="tab-trigger" onclick="switchTab('treinamento')" id="tab-btn-treinamento">
-                <span class="tab-icon">🏆</span> Treinamento
-            </button>
-        </nav>
+                <!-- Card Trilha Game Lab: Programação -->
+                <button class="teacher-card" onclick="selectTrack('programacao')" aria-label="Acessar Game Lab: Programação">
+                    <div class="teacher-icon-wrapper color-prog">
+                        <svg viewBox="0 0 24 24" class="teacher-svg">
+                            <path fill="currentColor" d="M8,3A2,2 0 0,0 6,5V9A2,2 0 0,1 4,11H3V13H4A2,2 0 0,1 6,15V19A2,2 0 0,0 8,21H10V19H8V14A2,2 0 0,0 6,12A2,2 0 0,0 8,10V5H10V3M16,3A2,2 0 0,1 18,5V9A2,2 0 0,0 20,11H21V13H20A2,2 0 0,0 18,15V19A2,2 0 0,1 16,21H14V19H16V14A2,2 0 0,1 18,12A2,2 0 0,1 16,10V5H14V3H16Z"/>
+                        </svg>
+                    </div>
+                    <h2>Game Lab: Programação</h2>
+                    <p>Lógica de estados (FSM), simulações de física 2D e apoio inteligente para Construct 3 e GameMaker.</p>
+                    <span class="enter-btn">Entrar na Trilha</span>
+                </button>
 
-        <!-- Paineis de Conteúdo -->
-        <main class="dashboard-panels">
-            <!-- ABA 1: GAMES -->
-            <section id="panel-games" class="tab-panel active">
-                <div class="cards-grid">
-                    <!-- Gerador de GDD -->
-                    <a href="gerador-gdd/" class="tool-card hover-glow-purple" data-tool-id="gerador-gdd">
-                        <div class="card-icon-box bg-purple">
-                            <svg viewBox="0 0 24 24" class="card-svg">
-                                <path fill="currentColor" d="M14,2H6C4.89,2 4,2.9 4,4V20C4,21.1 4.89,22 6,22H18C19.1,22 20,21.1 20,20V8L14,2M12,18.03L7,13L8.4,11.6L11,14.2V8H13V14.2L15.6,11.6L17,13L12,18.03Z"/>
-                            </svg>
-                        </div>
-                        <div class="card-info">
-                            <span class="card-tag">Documentação</span>
-                            <h3>Gerador de GDD</h3>
-                            <p>Crie e organize de forma estruturada o Game Design Document do seu jogo. Exporte em JSON ou Markdown localmente.</p>
-                        </div>
-                        <div class="card-footer">
-                            <span class="action-label">Abrir Gerador</span>
-                            <span class="action-arrow">→</span>
-                        </div>
-                    </a>
+                <!-- Card Trilha de Robótica -->
+                <button class="teacher-card" onclick="selectTrack('robotica')" aria-label="Acessar Trilha de Robótica">
+                    <div class="teacher-icon-wrapper color-sandro">
+                        <svg viewBox="0 0 24 24" class="teacher-svg">
+                            <path fill="currentColor" d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                        </svg>
+                    </div>
+                    <h2>Robótica</h2>
+                    <p>Cinemática de motores, Lei de Ohm com Kit Arduino, lógica binária e comunicação serial física.</p>
+                    <span class="enter-btn">Entrar na Trilha</span>
+                </button>
 
-                    <!-- Gerador de Mapas -->
-                    <a href="gerador-mapas/" class="tool-card hover-glow-cyan" data-tool-id="gerador-mapas">
-                        <div class="card-icon-box bg-cyan">
-                            <svg viewBox="0 0 24 24" class="card-svg">
-                                <path fill="currentColor" d="M20.5,3H3.5C2.67,3 2,3.67 2,4.5V19.5C2,20.33 2.67,21 3.5,21H20.5C21.33,21 22,20.33 22,19.5V4.5C22,3.67 21.33,3 20.5,3M20,19H4V5H20V19M8,17H6V11H8V17M13,17H11V7H13V17M18,17H16V13H18V17Z"/>
-                            </svg>
-                        </div>
-                        <div class="card-info">
-                            <span class="card-tag">Level Design</span>
-                            <h3>Gerador de Mapas 2D</h3>
-                            <p>Desenhe níveis de jogos de plataforma em grid interativo. Configure o tamanho e exporte em PNG para o seu GDD ou salve o projeto em JSON.</p>
-                        </div>
-                        <div class="card-footer">
-                            <span class="action-label">Criar Mapa</span>
-                            <span class="action-arrow">→</span>
-                        </div>
-                    </a>
-
-                    <!-- Lab de Física 2D -->
-                    <a href="lab-fisica-2d/" class="tool-card hover-glow-green" data-tool-id="lab-fisica-2d">
-                        <div class="card-icon-box bg-green">
-                            <svg viewBox="0 0 24 24" class="card-svg">
-                                <path fill="currentColor" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/>
-                            </svg>
-                        </div>
-                        <div class="card-info">
-                            <span class="card-tag">Gráficos / Canvas</span>
-                            <h3>Lab de Física 2D</h3>
-                            <p>Simulador interativo de física em tempo real rodando em 60 FPS no Canvas. Ajuste gravidade, colisão e forças físicas.</p>
-                        </div>
-                        <div class="card-footer">
-                            <span class="action-label">Entrar no Lab</span>
-                            <span class="action-arrow">→</span>
-                        </div>
-                    </a>
-
-                    <!-- Criador de Timelines -->
-                    <a href="criador-timelines/" class="tool-card hover-glow-purple" data-tool-id="criador-timelines">
-                        <div class="card-icon-box bg-purple">
-                            <svg viewBox="0 0 24 24" class="card-svg">
-                                <path fill="currentColor" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z"/>
-                            </svg>
-                        </div>
-                        <div class="card-info">
-                            <span class="card-tag">Level Design & Progressão</span>
-                            <h3>Criador de Timelines</h3>
-                            <p>Planeje a progressão de fases do seu jogo 2D com termômetro inteligente de escopo. Copie o mapa formatado diretamente para o GDD.</p>
-                        </div>
-                        <div class="card-footer">
-                            <span class="action-label">Criar Timeline</span>
-                            <span class="action-arrow">→</span>
-                        </div>
-                    </a>
-
-                    <!-- Montador de Tilesets -->
-                    <a href="montador-tilesets/" class="tool-card hover-glow-cyan" data-tool-id="montador-tilesets">
-                        <div class="card-icon-box bg-cyan">
-                            <svg viewBox="0 0 24 24" class="card-svg">
-                                <path fill="currentColor" d="M3,3H11V11H3V3M13,3H21V11H13V3M3,13H11V21H3V13M13,13H21V21H13V13M5,5V9H9V5H5M15,5V9H19V5H15M5,15V19H9V15H5M15,15V19H19V15H15Z"/>
-                            </svg>
-                        </div>
-                        <div class="card-info">
-                            <span class="card-tag">Spritesheet / Pixel Art</span>
-                            <h3>Montador de Tilesets</h3>
-                            <p>Junte blocos soltos (.PNG) em uma folha de spritesheet alinhada em grade (16x16, 32x32, 64x64). Remova fundos brancos e exporte para Construct 3 e GameMaker.</p>
-                        </div>
-                        <div class="card-footer">
-                            <span class="action-label">Montar Tileset</span>
-                            <span class="action-arrow">→</span>
-                        </div>
-                    </a>
-
-                    <!-- Assistente IA - Games -->
-                    <a href="assistente-ia/index.html?area=games" class="tool-card hover-glow-ai card-ai-featured" data-tool-id="assistente-games">
-                        <div class="card-icon-box bg-ai">
-                            <svg viewBox="0 0 24 24" class="card-svg">
-                                <path fill="currentColor" d="M12,2L14.5,9.5L22,12L14.5,14.5L12,22L9.5,14.5L2,12L9.5,9.5L12,2M5,3L6.25,7.25L10.5,8.5L6.25,9.75L5,14L3.75,9.75L-0.5,8.5L3.75,7.25L5,3M18,15L19.25,18.25L22.5,19.5L19.25,20.75L18,24L16.75,20.75L13.5,19.5L16.75,18.25L18,15Z"/>
-                            </svg>
-                        </div>
-                        <div class="card-info">
-                            <span class="card-tag tag-ai">✨ IA Ativa (Game Design, GameMaker & Construct)</span>
-                            <h3>Assistente IA - Games ✨</h3>
-                            <p>Cocrie ideias no Gerador de GDD, avalie projetos (Metacritic) e tire dúvidas de GameMaker e Construct 3 com a IA.</p>
-                        </div>
-                        <div class="card-footer">
-                            <span class="action-label">Abrir Assistente</span>
-                            <span class="action-arrow">→</span>
-                        </div>
-                    </a>
-
-                    <!-- Feedback de Jogos -->
-                    <a href="feedback-jogos/" class="tool-card hover-glow-pink" data-tool-id="feedback-jogos">
-                        <div class="card-icon-box bg-pink">
-                            <svg viewBox="0 0 24 24" class="card-svg">
-                                <path fill="currentColor" d="M20,2H4C2.9,2 2,2.9 2,4V22L6,18H20C21.1,18 22,17.1 22,16V4C22,2.9 21.1,2 20,2M20,16H5.17L4,17.17V4H20V16M12,10H14V12H12V10M12,6H14V8H12V6M16,10H18V12H16V10M16,6H18V8H16V6M8,10H10V12H8V10M8,6H10V8H8V6"/>
-                            </svg>
-                        </div>
-                        <div class="card-info">
-                            <span class="card-tag">Avaliação / UX</span>
-                            <h3>Feedback de Jogos</h3>
-                            <p>Envie avaliações rápidas e anônimas sobre os jogos de seus colegas ou acompanhe estatísticas consolidadas live.</p>
-                        </div>
-                        <div class="card-footer">
-                            <span class="action-label">Avaliar Jogo</span>
-                            <span class="action-arrow">→</span>
-                        </div>
-                    </a>
-
-                    <!-- Simulador FSM -->
-                    <a href="simulador-fsm/" class="tool-card hover-glow-blue" data-tool-id="simulador-fsm">
-                        <div class="card-icon-box bg-blue">
-                            <svg viewBox="0 0 24 24" class="card-svg">
-                                <path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                            </svg>
-                        </div>
-                        <div class="card-info">
-                            <span class="card-tag">Algoritmos</span>
-                            <h3>Simulador FSM</h3>
-                            <p>Crie editores de Máquina de Estados Finitos com nós arrastáveis e veja a transição de estados de forma dinâmica no navegador.</p>
-                        </div>
-                        <div class="card-footer">
-                            <span class="action-label">Iniciar Simulador</span>
-                            <span class="action-arrow">→</span>
-                        </div>
-                    </a>
-                </div>
-            </section>
-
-            <!-- ABA 2: ROBÓTICA -->
-            <section id="panel-robotica" class="tab-panel">
-                <div class="cards-grid">
-                    <!-- Simulador Giro de Robô -->
-                    <a href="simulador-giro-robotico/" class="tool-card hover-glow-orange" data-tool-id="simulador-giro-robotico">
-                        <div class="card-icon-box bg-orange">
-                            <svg viewBox="0 0 24 24" class="card-svg">
-                                <path fill="currentColor" d="M12 2A10 10 0 0 0 2 12A10 10 0 0 0 12 22A10 10 0 0 0 22 12A10 10 0 0 0 12 2M12 4A8 8 0 0 1 20 12A8 8 0 0 1 12 20A8 8 0 0 1 4 12A8 8 0 0 1 12 4M9 8L15 12L9 16V8Z"/>
-                            </svg>
-                        </div>
-                        <div class="card-info">
-                            <span class="card-tag">Cinemática</span>
-                            <h3>Giro de Robô 2D</h3>
-                            <p>Estude a cinemática diferencial de robôs com rodas. Simule odometria visual, raio de giro e trajetórias no plano 2D.</p>
-                        </div>
-                        <div class="card-footer">
-                            <span class="action-label">Abrir Simulador</span>
-                            <span class="action-arrow">→</span>
-                        </div>
-                    </a>
-
-                    <!-- Simulador Lei de Ohm -->
-                    <a href="simulador-ohm/" class="tool-card hover-glow-cyan" data-tool-id="simulador-ohm">
-                        <div class="card-icon-box bg-cyan">
-                            <svg viewBox="0 0 24 24" class="card-svg">
-                                <path fill="currentColor" d="M13,2.05C18.05,2.55 22,6.82 22,12C22,13.47 21.68,14.87 21.11,16.14L19.43,14.46C19.8,13.7 20,12.87 20,12C20,8.27 17.3,5.18 13.67,4.24L13.12,5.92C15.82,6.72 17.82,9.12 18,12C18.17,14.62 16.73,17.06 14.36,18.18L13.67,16.14L13,18.05V22H11V18.05L10.33,16.14L9.64,18.18C7.27,17.06 5.83,14.62 6,12C6.18,9.12 8.18,6.72 10.88,5.92L10.33,4.24C6.7,5.18 4,8.27 4,12C4,17.18 7.95,21.45 13,21.95V22H11V18.05L13,2.05Z"/>
-                            </svg>
-                        </div>
-                        <div class="card-info">
-                            <span class="card-tag">Eletrônica</span>
-                            <h3>Lei de Ohm</h3>
-                            <p>Visualize e interaja com a relação de Tensão, Corrente e Resistência. Veja o fluxo dos elétrons aumentar ou diminuir.</p>
-                        </div>
-                        <div class="card-footer">
-                            <span class="action-label">Simular Circuito</span>
-                            <span class="action-arrow">→</span>
-                        </div>
-                    </a>
-
-                    <!-- Hacker Lockpicking -->
-                    <a href="hacker-lockpicking/" class="tool-card hover-glow-red" data-tool-id="hacker-lockpicking">
-                        <div class="card-icon-box bg-red">
-                            <svg viewBox="0 0 24 24" class="card-svg">
-                                <path fill="currentColor" d="M12,17C10.89,17 10,16.1 10,15C10,13.9 10.89,13 12,13C13.11,13 14,13.9 14,15C14,16.1 13.11,17 12,17M18,20V10H6V20H18M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10A2,2 0 0,1 6,8H9V6A3,3 0 0,1 12,3A3,3 0 0,1 15,6V8H18M12,5A1,1 0 0,0 11,6V8H13V6A1,1 0 0,0 12,5Z"/>
-                            </svg>
-                        </div>
-                        <div class="card-info">
-                            <span class="card-tag">Serial / Hardware</span>
-                            <h3>Hacker Lockpicking</h3>
-                            <p>Jogo cyber-lockpick. Conecte seu hardware Arduino via Web Serial API no navegador ou treine no Simulador Integrado.</p>
-                        </div>
-                        <div class="card-footer">
-                            <span class="action-label">Hacker Mode</span>
-                            <span class="action-arrow">→</span>
-                        </div>
-                    </a>
-
-                    <!-- Assistente IA - Robótica -->
-                    <a href="assistente-ia/index.html?area=robotica" class="tool-card hover-glow-ai card-ai-featured" data-tool-id="assistente-robotica">
-                        <div class="card-icon-box bg-ai">
-                            <svg viewBox="0 0 24 24" class="card-svg">
-                                <path fill="currentColor" d="M12,2L14.5,9.5L22,12L14.5,14.5L12,22L9.5,14.5L2,12L9.5,9.5L12,2M5,3L6.25,7.25L10.5,8.5L6.25,9.75L5,14L3.75,9.75L-0.5,8.5L3.75,7.25L5,3M18,15L19.25,18.25L22.5,19.5L19.25,20.75L18,24L16.75,20.75L13.5,19.5L16.75,18.25L18,15Z"/>
-                            </svg>
-                        </div>
-                        <div class="card-info">
-                            <span class="card-tag tag-ai" style="background: rgba(255, 59, 48, 0.2); color: #ff3b30; border: 1px solid rgba(255, 59, 48, 0.4);">🔒 EM MANUTENÇÃO</span>
-                            <h3>Assistente IA - Robótica ✨</h3>
-                            <p>Tire dúvidas e receba orientação para projetos de Lego, Arduino e Robótica Educacional (Em atualização de agentes).</p>
-                        </div>
-                        <div class="card-footer">
-                            <span class="action-label" style="color: #ff7066;">🔒 Em Manutenção</span>
-                            <span class="action-arrow">→</span>
-                        </div>
-                    </a>
-                </div>
-            </section>
-
-            <!-- ABA 3: TREINAMENTO -->
-            <section id="panel-treinamento" class="tab-panel">
-                <div class="cards-grid">
-                    <!-- OBR Placar Treino -->
-                    <a href="obr-placar-treino/" class="tool-card hover-glow-yellow" data-tool-id="obr-placar-treino">
-                        <div class="card-icon-box bg-yellow">
-                            <svg viewBox="0 0 24 24" class="card-svg">
-                                <path fill="currentColor" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M11,8H13V12H16V14H11V8Z"/>
-                            </svg>
-                        </div>
-                        <div class="card-info">
-                            <span class="card-tag">Competição</span>
-                            <h3>OBR Placar Treino</h3>
-                            <p>Cronômetro e pontuador de treinos oficiais para a Olimpíada Brasileira de Robótica (OBR). Com degradação automática por tentativa.</p>
-                        </div>
-                        <div class="card-footer">
-                            <span class="action-label">Iniciar Placar</span>
-                            <span class="action-arrow">→</span>
-                        </div>
-                    </a>
-
-                    <!-- Seguidor de Linha (PID) -->
-                    <a href="simulador-seguidor-linha/" class="tool-card hover-glow-cyan" data-tool-id="simulador-seguidor-linha">
-                        <div class="card-icon-box bg-cyan">
-                            <svg viewBox="0 0 24 24" class="card-svg">
-                                <path fill="currentColor" d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.22.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.04 3H5.81l1.04-3zM19 17H5v-4h14v4zM7.5 15.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5S6 13.17 6 14s.67 1.5 1.5 1.5zm9 0c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5-1.5.67-1.5 1.5.67 1.5 1.5 1.5z"/>
-                            </svg>
-                        </div>
-                        <div class="card-info">
-                            <span class="card-tag">PID & Mecânica</span>
-                            <h3>Seguidor de Linha (PID)</h3>
-                            <p>Simulador 2D em tempo real para o Torneio de Robótica. Calibre Kp, Ki, Kd, braço do sensor (5-25cm), engrenagens e tempo de volta.</p>
-                        </div>
-                        <div class="card-footer">
-                            <span class="action-label">Abrir Simulador</span>
-                            <span class="action-arrow">→</span>
-                        </div>
-                    </a>
-
-                    <!-- Prancheta de Táticas FLL -->
-                    <a href="prancheta-fll/" class="tool-card hover-glow-yellow" data-tool-id="prancheta-fll">
-                        <div class="card-icon-box bg-yellow">
-                            <svg viewBox="0 0 24 24" class="card-svg">
-                                <path fill="currentColor" d="M19,3H14.82C14.4,1.84 13.3,1 12,1C10.7,1 9.6,1.84 9.18,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3M14,17H7V15H14V17M17,13H7V11H17V13M17,9H7V7H17V9Z"/>
-                            </svg>
-                        </div>
-                        <div class="card-info">
-                            <span class="card-tag">Estratégia</span>
-                            <h3>Prancheta de Táticas FLL</h3>
-                            <p>Carregue a imagem da pista da temporada, planeje rotas e marque o posicionamento de sensores e notas. Exporte em alta definição.</p>
-                        </div>
-                        <div class="card-footer">
-                            <span class="action-label">Abrir Prancheta</span>
-                            <span class="action-arrow">→</span>
-                        </div>
-                    </a>
-
-                    <!-- Assistente IA - Treinamento -->
-                    <a href="assistente-ia/index.html?area=treinamento" class="tool-card hover-glow-ai card-ai-featured" data-tool-id="assistente-treinamento">
-                        <div class="card-icon-box bg-ai">
-                            <svg viewBox="0 0 24 24" class="card-svg">
-                                <path fill="currentColor" d="M12,2L14.5,9.5L22,12L14.5,14.5L12,22L9.5,14.5L2,12L9.5,9.5L12,2M5,3L6.25,7.25L10.5,8.5L6.25,9.75L5,14L3.75,9.75L-0.5,8.5L3.75,7.25L5,3M18,15L19.25,18.25L22.5,19.5L19.25,20.75L18,24L16.75,20.75L13.5,19.5L16.75,18.25L18,15Z"/>
-                            </svg>
-                        </div>
-                        <div class="card-info">
-                            <span class="card-tag tag-ai" style="background: rgba(255, 59, 48, 0.2); color: #ff3b30; border: 1px solid rgba(255, 59, 48, 0.4);">🔒 EM MANUTENÇÃO</span>
-                            <h3>Assistente IA - Treinamento ✨</h3>
-                            <p>Suporte inteligente para Python, Montagem de robôs e estratégias competitivas da OBR (Em atualização de agentes).</p>
-                        </div>
-                        <div class="card-footer">
-                            <span class="action-label" style="color: #ff7066;">🔒 Em Manutenção</span>
-                            <span class="action-arrow">→</span>
-                        </div>
-                    </a>
-
-                    <!-- Telemetria & Coaching -->
-                    <a href="telemetria-coaching/" class="tool-card hover-glow-ai card-ai-featured" data-tool-id="telemetria-coaching">
-                        <div class="card-icon-box bg-ai">
-                            <svg viewBox="0 0 24 24" class="card-svg">
-                                <path fill="currentColor" d="M17,10.5V7A1,1 0 0,0 16,6H4A1,1 0 0,0 3,7V17A1,1 0 0,0 4,18H16A1,1 0 0,0 17,17V13.5L21,17.5V6.5L17,10.5M14,13H11V16H9V13H6V11H9V8H11V11H14V13Z"/>
-                            </svg>
-                        </div>
-                        <div class="card-info">
-                            <span class="card-tag tag-ai">🎥 IA Multimodal • Vídeo Análise</span>
-                            <h3>Telemetria &amp; Coaching</h3>
-                            <p>Diagnóstico automático de voltas do robô por vídeo. Detecte oscilações, perda de fita e receba recomendações diretas de ajuste de Kp, Kd e velocidade.</p>
-                        </div>
-                        <div class="card-footer">
-                            <span class="action-label">Analisar Volta</span>
-                            <span class="action-arrow">→</span>
-                        </div>
-                    </a>
-                </div>
+                <!-- Card Treinamento OBR -->
+                <button class="teacher-card" onclick="selectTrack('treinamento')" aria-label="Acessar Treinamento OBR">
+                    <div class="teacher-icon-wrapper color-yellow">
+                        <svg viewBox="0 0 24 24" class="teacher-svg">
+                            <path fill="currentColor" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M11,8H13V12H16V14H11V8Z"/>
+                        </svg>
+                    </div>
+                    <h2>Treinamento Robótica</h2>
+                    <p>Prepare-se para a OBR e FLL com placar oficial, simulador PID e telemetria multimodal por vídeo.</p>
+                    <span class="enter-btn">Ir para o Treinamento</span>
+                </button>
             </section>
         </main>
 
-        <footer class="app-footer">
-            <p>Mentores: Prof. Sandro & Prof. Gabriel</p>
-            <p>&copy; 2026 Escola de Tecnologias. <a href="portal-professor/" class="btn-portal-prof">Painel do Professor</a></p>
-        </footer>
+        <!-- TELA 2: PAINEL / DASHBOARD PRINCIPAL -->
+        <div id="screen-dashboard" class="screen-container hidden">
+            <header class="app-header">
+                <div class="header-logo">
+                    <span class="logo-badge">LT</span>
+                    <div>
+                        <h1 class="logo-main">Laboratório de</h1>
+                        <span class="logo-sub">Tecnologias</span>
+                    </div>
+                </div>
+
+                <!-- Identificador da Trilha Selecionada -->
+                <div class="teacher-badge-container">
+                    <div class="teacher-badge" id="active-track-badge">
+                        <span class="badge-dot"></span>
+                        <span id="active-track-name">Trilha</span>
+                    </div>
+                    <button class="change-teacher-btn" onclick="backToTrackSelect()" title="Mudar de Trilha">
+                        Voltar ao Início
+                    </button>
+                </div>
+            </header>
+
+            <!-- Navegação por Filtros do HUB -->
+            <nav class="dashboard-tabs" aria-label="Filtros de categorias do portal">
+                <button class="tab-trigger active" onclick="switchTab('todas')" id="tab-btn-todas">
+                    <span class="tab-icon">✨</span> Todas
+                </button>
+                <button class="tab-trigger" onclick="switchTab('design')" id="tab-btn-design">
+                    <span class="tab-icon">🎨</span> Game Lab: Design
+                </button>
+                <button class="tab-trigger" onclick="switchTab('programacao')" id="tab-btn-programacao">
+                    <span class="tab-icon">💻</span> Game Lab: Programação
+                </button>
+                <button class="tab-trigger" onclick="switchTab('robotica')" id="tab-btn-robotica">
+                    <span class="tab-icon">🤖</span> Robótica
+                </button>
+                <button class="tab-trigger" onclick="switchTab('treinamento')" id="tab-btn-treinamento">
+                    <span class="tab-icon">🏆</span> Treinamento
+                </button>
+            </nav>
+
+            <!-- Grid Unificado Filtrável por Categoria Principal & Secundária -->
+            <main class="dashboard-panels">
+                <section id="panel-hub" class="hub-panel">
+                    <div id="unified-cards-grid" class="cards-grid">
+
+                        <!-- ==================== GAME LAB: DESIGN ==================== -->
+
+                        <!-- Gerador de GDD -->
+                        <a href="gerador-gdd/" class="tool-card hover-glow-purple" data-tool-id="gerador-gdd" data-category="design" data-device="desktop">
+                            <div class="card-icon-box bg-purple">
+                                <svg viewBox="0 0 24 24" class="card-svg">
+                                    <path fill="currentColor" d="M14,2H6C4.89,2 4,2.9 4,4V20C4,21.1 4.89,22 6,22H18C19.1,22 20,21.1 20,20V8L14,2M12,18.03L7,13L8.4,11.6L11,14.2V8H13V14.2L15.6,11.6L17,13L12,18.03Z"/>
+                                </svg>
+                            </div>
+                            <div class="card-info">
+                                <div class="card-tags-row">
+                                    <span class="card-tag">Design • Documentação</span>
+                                    <span class="device-badge device-desktop" title="Desenvolvido para uso no computador">🖥️ Computador</span>
+                                </div>
+                                <h3>Gerador de GDD</h3>
+                                <p>Crie e organize de forma estruturada o Game Design Document do seu jogo. Exporte em JSON ou Markdown localmente.</p>
+                            </div>
+                            <div class="card-footer">
+                                <span class="action-label">Abrir Gerador</span>
+                                <span class="action-arrow">→</span>
+                            </div>
+                        </a>
+
+                        <!-- Gerador de Mapas -->
+                        <a href="gerador-mapas/" class="tool-card hover-glow-cyan" data-tool-id="gerador-mapas" data-category="design" data-device="desktop">
+                            <div class="card-icon-box bg-cyan">
+                                <svg viewBox="0 0 24 24" class="card-svg">
+                                    <path fill="currentColor" d="M20.5,3H3.5C2.67,3 2,3.67 2,4.5V19.5C2,20.33 2.67,21 3.5,21H20.5C21.33,21 22,20.33 22,19.5V4.5C22,3.67 21.33,3 20.5,3M20,19H4V5H20V19M8,17H6V11H8V17M13,17H11V7H13V17M18,17H16V13H18V17Z"/>
+                                </svg>
+                            </div>
+                            <div class="card-info">
+                                <div class="card-tags-row">
+                                    <span class="card-tag">Design • Level Design</span>
+                                    <span class="device-badge device-desktop" title="Desenvolvido para uso no computador">🖥️ Computador</span>
+                                </div>
+                                <h3>Gerador de Mapas 2D</h3>
+                                <p>Desenhe níveis de jogos de plataforma em grid interativo. Configure o tamanho e exporte em PNG para o seu GDD ou salve o projeto em JSON.</p>
+                            </div>
+                            <div class="card-footer">
+                                <span class="action-label">Criar Mapa</span>
+                                <span class="action-arrow">→</span>
+                            </div>
+                        </a>
+
+                        <!-- Criador de Timelines -->
+                        <a href="criador-timelines/" class="tool-card hover-glow-purple" data-tool-id="criador-timelines" data-category="design" data-device="desktop">
+                            <div class="card-icon-box bg-purple">
+                                <svg viewBox="0 0 24 24" class="card-svg">
+                                    <path fill="currentColor" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z"/>
+                                </svg>
+                            </div>
+                            <div class="card-info">
+                                <div class="card-tags-row">
+                                    <span class="card-tag">Design • Progressão</span>
+                                    <span class="device-badge device-desktop" title="Desenvolvido para uso no computador">🖥️ Computador</span>
+                                </div>
+                                <h3>Criador de Timelines</h3>
+                                <p>Planeje a progressão de fases do seu jogo 2D com termômetro inteligente de escopo. Copie o mapa formatado diretamente para o GDD.</p>
+                            </div>
+                            <div class="card-footer">
+                                <span class="action-label">Criar Timeline</span>
+                                <span class="action-arrow">→</span>
+                            </div>
+                        </a>
+
+                        <!-- Montador de Tilesets -->
+                        <a href="montador-tilesets/" class="tool-card hover-glow-cyan" data-tool-id="montador-tilesets" data-category="design" data-device="desktop">
+                            <div class="card-icon-box bg-cyan">
+                                <svg viewBox="0 0 24 24" class="card-svg">
+                                    <path fill="currentColor" d="M3,3H11V11H3V3M13,3H21V11H13V3M3,13H11V21H3V13M13,13H21V21H13V13M5,5V9H9V5H5M15,5V9H19V5H15M5,15V19H9V15H5M15,15V19H19V15H15Z"/>
+                                </svg>
+                            </div>
+                            <div class="card-info">
+                                <div class="card-tags-row">
+                                    <span class="card-tag">Design • Spritesheet</span>
+                                    <span class="device-badge device-desktop" title="Desenvolvido para uso no computador">🖥️ Computador</span>
+                                </div>
+                                <h3>Montador de Tilesets</h3>
+                                <p>Junte blocos soltos (.PNG) em uma folha de spritesheet alinhada em grade (16x16, 32x32, 64x64). Remova fundos brancos e exporte para Construct 3 e GameMaker.</p>
+                            </div>
+                            <div class="card-footer">
+                                <span class="action-label">Montar Tileset</span>
+                                <span class="action-arrow">→</span>
+                            </div>
+                        </a>
+
+                        <!-- Laboratório de Imagens Binárias & Matriz de Cores -->
+                        <a href="binario-pixelart/" class="tool-card hover-glow-purple" data-tool-id="binario-pixelart" data-category="design" data-device="desktop">
+                            <div class="card-icon-box bg-purple">
+                                <svg viewBox="0 0 24 24" class="card-svg">
+                                    <path fill="currentColor" d="M4,4H8V8H4V4M10,4H14V8H10V4M16,4H20V8H16V4M4,10H8V14H4V10M10,10H14V14H10V10M16,10H20V14H16V10M4,16H8V20H4V16M10,16H14V20H10V16M16,16H20V20H16V16Z"/>
+                                </svg>
+                            </div>
+                            <div class="card-info">
+                                <div class="card-tags-row">
+                                    <span class="card-tag">Design • Pixel Art &amp; Binário</span>
+                                    <span class="device-badge device-desktop" title="Desenvolvido para uso no computador">🖥️ Computador</span>
+                                </div>
+                                <h3>Imagens Binárias &amp; Matriz</h3>
+                                <p>Descubra como zeros e uns formam desenhos e cores (1-Bit e 2-Bits), decodifique enigmas e exporte sprites nítidos para o Piskel.</p>
+                            </div>
+                            <div class="card-footer">
+                                <span class="action-label">Abrir Laboratório</span>
+                                <span class="action-arrow">→</span>
+                            </div>
+                        </a>
+
+                        <!-- Feedback de Jogos -->
+                        <a href="feedback-jogos/" class="tool-card hover-glow-pink" data-tool-id="feedback-jogos" data-category="design" data-device="desktop">
+                            <div class="card-icon-box bg-pink">
+                                <svg viewBox="0 0 24 24" class="card-svg">
+                                    <path fill="currentColor" d="M20,2H4C2.9,2 2,2.9 2,4V22L6,18H20C21.1,18 22,17.1 22,16V4C22,2.9 21.1,2 20,2M20,16H5.17L4,17.17V4H20V16M12,10H14V12H12V10M12,6H14V8H12V6M16,10H18V12H16V10M16,6H18V8H16V6M8,10H10V12H8V10M8,6H10V8H8V6"/>
+                                </svg>
+                            </div>
+                            <div class="card-info">
+                                <div class="card-tags-row">
+                                    <span class="card-tag">Design • Avaliação / UX</span>
+                                    <span class="device-badge device-desktop" title="Desenvolvido para uso no computador">🖥️ Computador</span>
+                                </div>
+                                <h3>Feedback de Jogos</h3>
+                                <p>Envie avaliações rápidas e anônimas sobre os jogos de seus colegas ou acompanhe estatísticas consolidadas live.</p>
+                            </div>
+                            <div class="card-footer">
+                                <span class="action-label">Avaliar Jogo</span>
+                                <span class="action-arrow">→</span>
+                            </div>
+                        </a>
+
+                        <!-- ==================== GAME LAB: PROGRAMAÇÃO ==================== -->
+
+                        <!-- Lab de Física 2D -->
+                        <a href="lab-fisica-2d/" class="tool-card hover-glow-green" data-tool-id="lab-fisica-2d" data-category="programacao" data-device="desktop">
+                            <div class="card-icon-box bg-green">
+                                <svg viewBox="0 0 24 24" class="card-svg">
+                                    <path fill="currentColor" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/>
+                                </svg>
+                            </div>
+                            <div class="card-info">
+                                <div class="card-tags-row">
+                                    <span class="card-tag">Programação • Canvas 2D</span>
+                                    <span class="device-badge device-desktop" title="Desenvolvido para uso no computador">🖥️ Computador</span>
+                                </div>
+                                <h3>Lab de Física 2D</h3>
+                                <p>Simulador interativo de física em tempo real rodando em 60 FPS no Canvas. Ajuste gravidade, colisão e forças físicas.</p>
+                            </div>
+                            <div class="card-footer">
+                                <span class="action-label">Entrar no Lab</span>
+                                <span class="action-arrow">→</span>
+                            </div>
+                        </a>
+
+                        <!-- Simulador FSM -->
+                        <a href="simulador-fsm/" class="tool-card hover-glow-blue" data-tool-id="simulador-fsm" data-category="programacao" data-device="desktop">
+                            <div class="card-icon-box bg-blue">
+                                <svg viewBox="0 0 24 24" class="card-svg">
+                                    <path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                </svg>
+                            </div>
+                            <div class="card-info">
+                                <div class="card-tags-row">
+                                    <span class="card-tag">Programação • Algoritmos</span>
+                                    <span class="device-badge device-desktop" title="Desenvolvido para uso no computador">🖥️ Computador</span>
+                                </div>
+                                <h3>Simulador FSM</h3>
+                                <p>Crie editores de Máquina de Estados Finitos com nós arrastáveis e veja a transição de estados de forma dinâmica no navegador.</p>
+                            </div>
+                            <div class="card-footer">
+                                <span class="action-label">Iniciar Simulador</span>
+                                <span class="action-arrow">→</span>
+                            </div>
+                        </a>
+
+                        <!-- Assistente IA - Games -->
+                        <a href="assistente-ia/index.html?area=games" class="tool-card hover-glow-ai card-ai-featured" data-tool-id="assistente-games" data-category="programacao" data-secondary-category="design" data-device="desktop">
+                            <div class="card-icon-box bg-ai">
+                                <svg viewBox="0 0 24 24" class="card-svg">
+                                    <path fill="currentColor" d="M12,2L14.5,9.5L22,12L14.5,14.5L12,22L9.5,14.5L2,12L9.5,9.5L12,2M5,3L6.25,7.25L10.5,8.5L6.25,9.75L5,14L3.75,9.75L-0.5,8.5L3.75,7.25L5,3M18,15L19.25,18.25L22.5,19.5L19.25,20.75L18,24L16.75,20.75L13.5,19.5L16.75,18.25L18,15Z"/>
+                                </svg>
+                            </div>
+                            <div class="card-info">
+                                <div class="card-tags-row">
+                                    <span class="card-tag tag-ai">✨ IA Ativa</span>
+                                    <span class="device-badge device-desktop" title="Desenvolvido para uso no computador">🖥️ Computador</span>
+                                </div>
+                                <h3>Assistente IA - Games ✨</h3>
+                                <p>Cocrie ideias no Gerador de GDD, avalie projetos (Metacritic) e tire dúvidas de GameMaker e Construct 3 com a IA.</p>
+                            </div>
+                            <div class="card-footer">
+                                <span class="action-label">Abrir Assistente</span>
+                                <span class="action-arrow">→</span>
+                            </div>
+                        </a>
+
+                        <!-- ==================== ROBÓTICA ==================== -->
+
+                        <!-- Simulador Giro de Robô -->
+                        <a href="simulador-giro-robotico/" class="tool-card hover-glow-orange" data-tool-id="simulador-giro-robotico" data-category="robotica" data-device="desktop">
+                            <div class="card-icon-box bg-orange">
+                                <svg viewBox="0 0 24 24" class="card-svg">
+                                    <path fill="currentColor" d="M12 2A10 10 0 0 0 2 12A10 10 0 0 0 12 22A10 10 0 0 0 22 12A10 10 0 0 0 12 2M12 4A8 8 0 0 1 20 12A8 8 0 0 1 12 20A8 8 0 0 1 4 12A8 8 0 0 1 12 4M9 8L15 12L9 16V8Z"/>
+                                </svg>
+                            </div>
+                            <div class="card-info">
+                                <div class="card-tags-row">
+                                    <span class="card-tag">Cinemática</span>
+                                    <span class="device-badge device-desktop" title="Desenvolvido para uso no computador">🖥️ Computador</span>
+                                </div>
+                                <h3>Giro de Robô 2D</h3>
+                                <p>Estude a cinemática diferencial de robôs com rodas. Simule odometria visual, raio de giro e trajetórias no plano 2D.</p>
+                            </div>
+                            <div class="card-footer">
+                                <span class="action-label">Abrir Simulador</span>
+                                <span class="action-arrow">→</span>
+                            </div>
+                        </a>
+
+                        <!-- Simulador Lei de Ohm -->
+                        <a href="simulador-ohm/" class="tool-card hover-glow-cyan" data-tool-id="simulador-ohm" data-category="robotica" data-device="desktop">
+                            <div class="card-icon-box bg-cyan">
+                                <svg viewBox="0 0 24 24" class="card-svg">
+                                    <path fill="currentColor" d="M13,2.05C18.05,2.55 22,6.82 22,12C22,13.47 21.68,14.87 21.11,16.14L19.43,14.46C19.8,13.7 20,12.87 20,12C20,8.27 17.3,5.18 13.67,4.24L13.12,5.92C15.82,6.72 17.82,9.12 18,12C18.17,14.62 16.73,17.06 14.36,18.18L13.67,16.14L13,18.05V22H11V18.05L10.33,16.14L9.64,18.18C7.27,17.06 5.83,14.62 6,12C6.18,9.12 8.18,6.72 10.88,5.92L10.33,4.24C6.7,5.18 4,8.27 4,12C4,17.18 7.95,21.45 13,21.95V22H11V18.05L13,2.05Z"/>
+                                </svg>
+                            </div>
+                            <div class="card-info">
+                                <div class="card-tags-row">
+                                    <span class="card-tag">Eletrônica • Kit Arduino</span>
+                                    <span class="device-badge device-desktop" title="Desenvolvido para uso no computador">🖥️ Computador</span>
+                                </div>
+                                <h3>Lei de Ohm</h3>
+                                <p>Visualize e interaja com Tensão, Corrente e Resistência usando peças reais do Kit Arduino em circuitos série e paralelo.</p>
+                            </div>
+                            <div class="card-footer">
+                                <span class="action-label">Simular Circuito</span>
+                                <span class="action-arrow">→</span>
+                            </div>
+                        </a>
+
+                        <!-- Hacker Lockpicking -->
+                        <a href="hacker-lockpicking/" class="tool-card hover-glow-red" data-tool-id="hacker-lockpicking" data-category="robotica" data-device="desktop">
+                            <div class="card-icon-box bg-red">
+                                <svg viewBox="0 0 24 24" class="card-svg">
+                                    <path fill="currentColor" d="M12,17C10.89,17 10,16.1 10,15C10,13.9 10.89,13 12,13C13.11,13 14,13.9 14,15C14,16.1 13.11,17 12,17M18,20V10H6V20H18M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10A2,2 0 0,1 6,8H9V6A3,3 0 0,1 12,3A3,3 0 0,1 15,6V8H18M12,5A1,1 0 0,0 11,6V8H13V6A1,1 0 0,0 12,5Z"/>
+                                </svg>
+                            </div>
+                            <div class="card-info">
+                                <div class="card-tags-row">
+                                    <span class="card-tag">Serial / Hardware</span>
+                                    <span class="device-badge device-desktop" title="Desenvolvido para uso no computador">🖥️ Computador</span>
+                                </div>
+                                <h3>Hacker Lockpicking</h3>
+                                <p>Jogo cyber-lockpick. Conecte seu hardware Arduino via Web Serial API no navegador ou treine no Simulador Integrado.</p>
+                            </div>
+                            <div class="card-footer">
+                                <span class="action-label">Hacker Mode</span>
+                                <span class="action-arrow">→</span>
+                            </div>
+                        </a>
+
+                        <!-- Assistente IA - Robótica -->
+                        <a href="assistente-ia/index.html?area=robotica" class="tool-card hover-glow-ai card-ai-featured" data-tool-id="assistente-robotica" data-category="robotica" data-device="desktop">
+                            <div class="card-icon-box bg-ai">
+                                <svg viewBox="0 0 24 24" class="card-svg">
+                                    <path fill="currentColor" d="M12,2L14.5,9.5L22,12L14.5,14.5L12,22L9.5,14.5L2,12L9.5,9.5L12,2M5,3L6.25,7.25L10.5,8.5L6.25,9.75L5,14L3.75,9.75L-0.5,8.5L3.75,7.25L5,3M18,15L19.25,18.25L22.5,19.5L19.25,20.75L18,24L16.75,20.75L13.5,19.5L16.75,18.25L18,15Z"/>
+                                </svg>
+                            </div>
+                            <div class="card-info">
+                                <div class="card-tags-row">
+                                    <span class="card-tag tag-ai" style="background: rgba(255, 59, 48, 0.2); color: #ff3b30; border: 1px solid rgba(255, 59, 48, 0.4);">🔒 EM MANUTENÇÃO</span>
+                                    <span class="device-badge device-desktop" title="Desenvolvido para uso no computador">🖥️ Computador</span>
+                                </div>
+                                <h3>Assistente IA - Robótica ✨</h3>
+                                <p>Tire dúvidas e receba orientação para projetos de Lego, Arduino e Robótica Educacional (Em atualização de agentes).</p>
+                            </div>
+                            <div class="card-footer">
+                                <span class="action-label" style="color: #ff7066;">🔒 Em Manutenção</span>
+                                <span class="action-arrow">→</span>
+                            </div>
+                        </a>
+
+                        <!-- ==================== TREINAMENTO OBR / FLL ==================== -->
+
+                        <!-- OBR Placar Treino (Mobile & PC) -->
+                        <a href="obr-placar-treino/" class="tool-card hover-glow-yellow" data-tool-id="obr-placar-treino" data-category="treinamento" data-device="mobile">
+                            <div class="card-icon-box bg-yellow">
+                                <svg viewBox="0 0 24 24" class="card-svg">
+                                    <path fill="currentColor" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M11,8H13V12H16V14H11V8Z"/>
+                                </svg>
+                            </div>
+                            <div class="card-info">
+                                <div class="card-tags-row">
+                                    <span class="card-tag">Competição</span>
+                                    <span class="device-badge device-mobile" title="Compatível e otimizado para celular e computador">📱 Celular &amp; PC</span>
+                                </div>
+                                <h3>OBR Placar Treino</h3>
+                                <p>Cronômetro e pontuador de treinos oficiais para a Olimpíada Brasileira de Robótica (OBR). Com degradação automática por tentativa.</p>
+                            </div>
+                            <div class="card-footer">
+                                <span class="action-label">Iniciar Placar</span>
+                                <span class="action-arrow">→</span>
+                            </div>
+                        </a>
+
+                        <!-- Seguidor de Linha (PID) -->
+                        <a href="simulador-seguidor-linha/" class="tool-card hover-glow-cyan" data-tool-id="simulador-seguidor-linha" data-category="treinamento" data-device="desktop">
+                            <div class="card-icon-box bg-cyan">
+                                <svg viewBox="0 0 24 24" class="card-svg">
+                                    <path fill="currentColor" d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.22.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.04 3H5.81l1.04-3zM19 17H5v-4h14v4zM7.5 15.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5S6 13.17 6 14s.67 1.5 1.5 1.5zm9 0c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5-1.5.67-1.5 1.5.67 1.5 1.5 1.5z"/>
+                                </svg>
+                            </div>
+                            <div class="card-info">
+                                <div class="card-tags-row">
+                                    <span class="card-tag">PID &amp; Mecânica</span>
+                                    <span class="device-badge device-desktop" title="Desenvolvido para uso no computador">🖥️ Computador</span>
+                                </div>
+                                <h3>Seguidor de Linha (PID)</h3>
+                                <p>Simulador 2D em tempo real para o Torneio de Robótica. Calibre Kp, Ki, Kd, braço do sensor (5-25cm), engrenagens e tempo de volta.</p>
+                            </div>
+                            <div class="card-footer">
+                                <span class="action-label">Abrir Simulador</span>
+                                <span class="action-arrow">→</span>
+                            </div>
+                        </a>
+
+                        <!-- Prancheta de Táticas FLL -->
+                        <a href="prancheta-fll/" class="tool-card hover-glow-yellow" data-tool-id="prancheta-fll" data-category="treinamento" data-device="desktop">
+                            <div class="card-icon-box bg-yellow">
+                                <svg viewBox="0 0 24 24" class="card-svg">
+                                    <path fill="currentColor" d="M19,3H14.82C14.4,1.84 13.3,1 12,1C10.7,1 9.6,1.84 9.18,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3M14,17H7V15H14V17M17,13H7V11H17V13M17,9H7V7H17V9Z"/>
+                                </svg>
+                            </div>
+                            <div class="card-info">
+                                <div class="card-tags-row">
+                                    <span class="card-tag">Estratégia</span>
+                                    <span class="device-badge device-desktop" title="Desenvolvido para uso no computador">🖥️ Computador</span>
+                                </div>
+                                <h3>Prancheta de Táticas FLL</h3>
+                                <p>Carregue a imagem da pista da temporada, planeje rotas e marque o posicionamento de sensores e notas. Exporte em alta definição.</p>
+                            </div>
+                            <div class="card-footer">
+                                <span class="action-label">Abrir Prancheta</span>
+                                <span class="action-arrow">→</span>
+                            </div>
+                        </a>
+
+                        <!-- Telemetria & Coaching (Mobile & PC) -->
+                        <a href="telemetria-coaching/" class="tool-card hover-glow-ai card-ai-featured" data-tool-id="telemetria-coaching" data-category="treinamento" data-device="mobile">
+                            <div class="card-icon-box bg-ai">
+                                <svg viewBox="0 0 24 24" class="card-svg">
+                                    <path fill="currentColor" d="M17,10.5V7A1,1 0 0,0 16,6H4A1,1 0 0,0 3,7V17A1,1 0 0,0 4,18H16A1,1 0 0,0 17,17V13.5L21,17.5V6.5L17,10.5M14,13H11V16H9V13H6V11H9V8H11V11H14V13Z"/>
+                                </svg>
+                            </div>
+                            <div class="card-info">
+                                <div class="card-tags-row">
+                                    <span class="card-tag tag-ai">🎥 IA Multimodal</span>
+                                    <span class="device-badge device-mobile" title="Compatível e otimizado para celular e computador">📱 Celular &amp; PC</span>
+                                </div>
+                                <h3>Telemetria &amp; Coaching</h3>
+                                <p>Diagnóstico automático de voltas do robô por vídeo. Detecte oscilações, perda de fita e receba recomendações diretas de ajuste de Kp, Kd e velocidade.</p>
+                            </div>
+                            <div class="card-footer">
+                                <span class="action-label">Analisar Volta</span>
+                                <span class="action-arrow">→</span>
+                            </div>
+                        </a>
+
+                        <!-- Assistente IA - Treinamento -->
+                        <a href="assistente-ia/index.html?area=treinamento" class="tool-card hover-glow-ai card-ai-featured" data-tool-id="assistente-treinamento" data-category="treinamento" data-device="desktop">
+                            <div class="card-icon-box bg-ai">
+                                <svg viewBox="0 0 24 24" class="card-svg">
+                                    <path fill="currentColor" d="M12,2L14.5,9.5L22,12L14.5,14.5L12,22L9.5,14.5L2,12L9.5,9.5L12,2M5,3L6.25,7.25L10.5,8.5L6.25,9.75L5,14L3.75,9.75L-0.5,8.5L3.75,7.25L5,3M18,15L19.25,18.25L22.5,19.5L19.25,20.75L18,24L16.75,20.75L13.5,19.5L16.75,18.25L18,15Z"/>
+                                </svg>
+                            </div>
+                            <div class="card-info">
+                                <div class="card-tags-row">
+                                    <span class="card-tag tag-ai" style="background: rgba(255, 59, 48, 0.2); color: #ff3b30; border: 1px solid rgba(255, 59, 48, 0.4);">🔒 EM MANUTENÇÃO</span>
+                                    <span class="device-badge device-desktop" title="Desenvolvido para uso no computador">🖥️ Computador</span>
+                                </div>
+                                <h3>Assistente IA - Treinamento ✨</h3>
+                                <p>Suporte inteligente para Python, Montagem de robôs e estratégias competitivas da OBR (Em atualização de agentes).</p>
+                            </div>
+                            <div class="card-footer">
+                                <span class="action-label" style="color: #ff7066;">🔒 Em Manutenção</span>
+                                <span class="action-arrow">→</span>
+                            </div>
+                        </a>
+
+                    </div>
+                </section>
+            </main>
+
+            <footer class="app-footer">
+                <p>Mentores: Prof. Sandro &amp; Prof. Gabriel</p>
+                <p>&copy; 2026 Escola de Tecnologias. <a href="portal-professor/" class="btn-portal-prof">Painel do Professor</a></p>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Modal de Proteção / Aviso de Dispositivo Mobile -->
+    <div id="deviceWarningModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="deviceModalTitle" style="display: none;">
+        <div class="modal-content device-modal-card">
+            <div class="device-modal-icon">🖥️</div>
+            <h3 id="deviceModalTitle">Ferramenta projetada para Computador</h3>
+            <p>Esta atividade foi desenvolvida para uso com mouse e teclado nos computadores do laboratório. No celular, alguns controles podem ficar apertados.</p>
+            <div class="device-modal-actions">
+                <button type="button" id="btnDeviceModalStay" class="btn-device-modal primary">Voltar ao Portal</button>
+                <a href="#" id="btnDeviceModalProceed" class="btn-device-modal secondary">Abrir Mesmo Assim ↗️</a>
+            </div>
+        </div>
     </div>
 
     <!-- Scripts JavaScript globais -->
-    <script src="theme-toggle.js"></script>
-    <script src="script.js"></script>
+    <script src="theme-toggle.js?v=2027.1"></script>
+    <script src="script.js?v=2027.1"></script>
 </body>
 </html>

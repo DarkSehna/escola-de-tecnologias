@@ -1,72 +1,76 @@
 // ==========================================================================
-// LOGICA DE INTERAÇÃO DO PORTAL (DASHBOARD)
+// LÓGICA DE INTERAÇÃO DO PORTAL (HUB UNIFICADO POR TRILHAS & FILTROS)
 // Escola de Tecnologias - TitanTech
 // ==========================================================================
 
-// Estado do Portal
 const state = {
     selectedTrack: null,
-    activeTab: 'games'
+    activeTab: 'todas'
 };
 
-// Ao carregar o documento
+const VALID_TABS = new Set(['todas', 'design', 'programacao', 'robotica', 'treinamento']);
+
+function normalizeTrackName(trackName) {
+    if (trackName === 'games') return 'design';
+    return VALID_TABS.has(trackName) ? trackName : 'todas';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Restaura o estado da sessão se a trilha estiver salva na sessionStorage
     const savedTrack = sessionStorage.getItem('titanTech_selectedTrack');
     const savedTab = sessionStorage.getItem('titanTech_activeTab');
-    
-    // 2. Aplica a visibilidade das ferramentas salva pelos professores
+
+    // Aplica a visibilidade das ferramentas salva pelos professores
     applySavedToolVisibility();
 
+    // Inicializa a proteção de dispositivos para cards de desktop
+    initDeviceProtection();
+
     if (savedTrack) {
-        if (savedTab) {
-            state.activeTab = savedTab;
+        const normalizedTrack = normalizeTrackName(savedTrack);
+        const normalizedTab = savedTab ? normalizeTrackName(savedTab) : normalizedTrack;
+        state.activeTab = normalizedTab;
+        selectTrack(normalizedTrack, false);
+        if (normalizedTab !== normalizedTrack) {
+            switchTab(normalizedTab);
         }
-        selectTrack(savedTrack, false); // Seleciona trilha sem animação suave
     }
 });
 
 /**
  * Seleciona a trilha ativa e abre o dashboard correspondente
- * @param {string} trackName - 'games', 'robotica' ou 'treinamento'
- * @param {boolean} smooth - se deve rolar a transição de forma animada
+ * @param {string} trackName - 'todas', 'design', 'programacao', 'robotica' ou 'treinamento'
+ * @param {boolean} smooth - se deve animar a transição de telas
  */
 function selectTrack(trackName, smooth = true) {
-    state.selectedTrack = trackName;
-    sessionStorage.setItem('titanTech_selectedTrack', trackName);
+    const resolvedTrack = normalizeTrackName(trackName);
+    state.selectedTrack = resolvedTrack;
+    sessionStorage.setItem('titanTech_selectedTrack', resolvedTrack);
 
     const screenSelect = document.getElementById('screen-select-teacher');
     const screenDashboard = document.getElementById('screen-dashboard');
     const badgeName = document.getElementById('active-track-name');
     const badge = document.getElementById('active-track-badge');
 
-    // Mapeamento de nomes de trilhas
-    let formattedName = 'Trilha Games';
-    if (trackName === 'robotica') {
-        formattedName = 'Trilha Robótica';
-    } else if (trackName === 'treinamento') {
-        formattedName = 'Treinamento Robótica';
-    }
-    badgeName.textContent = formattedName;
+    const trackMeta = {
+        todas: { label: 'Todas as Trilhas', badgeClass: 'teacher-badge color-prog' },
+        design: { label: 'Game Lab: Design', badgeClass: 'teacher-badge color-gabriel' },
+        programacao: { label: 'Game Lab: Programação', badgeClass: 'teacher-badge color-prog' },
+        robotica: { label: 'Robótica', badgeClass: 'teacher-badge color-sandro' },
+        treinamento: { label: 'Treinamento Robótica', badgeClass: 'teacher-badge color-yellow' }
+    };
 
-    // Ajusta a cor e o estilo do badge conforme a trilha selecionada
-    if (trackName === 'games') {
-        badge.className = 'teacher-badge color-gabriel';
-    } else if (trackName === 'robotica') {
-        badge.className = 'teacher-badge color-sandro';
-    } else {
-        badge.className = 'teacher-badge color-yellow';
-    }
+    const meta = trackMeta[resolvedTrack] || trackMeta.todas;
+    badgeName.textContent = meta.label;
+    badge.className = meta.badgeClass;
 
-    // Transição de telas
     if (smooth) {
         screenSelect.style.opacity = '0';
         screenSelect.style.transform = 'translateY(-20px)';
-        
+
         setTimeout(() => {
             screenSelect.classList.remove('active');
             screenSelect.classList.add('hidden');
-            
+
             screenDashboard.classList.remove('hidden');
             screenDashboard.classList.add('active');
             screenDashboard.style.opacity = '1';
@@ -79,12 +83,11 @@ function selectTrack(trackName, smooth = true) {
         screenDashboard.classList.add('active');
     }
 
-    // Seleciona a aba correspondente à trilha
-    switchTab(trackName);
+    switchTab(resolvedTrack);
 }
 
 /**
- * Retorna para a tela de seleção de trilha
+ * Retorna para a tela inicial de seleção de trilha
  */
 function backToTrackSelect() {
     state.selectedTrack = null;
@@ -108,26 +111,35 @@ function backToTrackSelect() {
 }
 
 /**
- * Alterna entre as abas do dashboard
- * @param {string} tabName - 'games', 'robotica' ou 'treinamento'
+ * Filtra os cards do HUB por categoria principal e secundária
+ * @param {string} tabName - 'todas', 'design', 'programacao', 'robotica' ou 'treinamento'
  */
 function switchTab(tabName) {
-    state.activeTab = tabName;
-    sessionStorage.setItem('titanTech_activeTab', tabName);
+    const resolvedTab = normalizeTrackName(tabName);
+    state.activeTab = resolvedTab;
+    sessionStorage.setItem('titanTech_activeTab', resolvedTab);
 
-    // 1. Remove classe ativa de todos os botões e painéis
     const tabTriggers = document.querySelectorAll('.tab-trigger');
-    const tabPanels = document.querySelectorAll('.tab-panel');
-
     tabTriggers.forEach(btn => btn.classList.remove('active'));
-    tabPanels.forEach(panel => panel.classList.remove('active'));
 
-    // 2. Adiciona classe ativa no botão e painel selecionado
-    const selectedBtn = document.getElementById(`tab-btn-${tabName}`);
-    const selectedPanel = document.getElementById(`panel-${tabName}`);
-
+    const selectedBtn = document.getElementById(`tab-btn-${resolvedTab}`);
     if (selectedBtn) selectedBtn.classList.add('active');
-    if (selectedPanel) selectedPanel.classList.add('active');
+
+    const cards = document.querySelectorAll('#unified-cards-grid .tool-card');
+    cards.forEach(card => {
+        if (resolvedTab === 'todas') {
+            card.classList.remove('hidden-by-filter');
+            return;
+        }
+        const primary = card.dataset.category || '';
+        const secondaryList = (card.dataset.secondaryCategory || '')
+            .split(',')
+            .map(s => s.trim())
+            .filter(Boolean);
+
+        const matches = primary === resolvedTab || secondaryList.includes(resolvedTab);
+        card.classList.toggle('hidden-by-filter', !matches);
+    });
 }
 
 // A visibilidade das ferramentas é controlada a partir do painel na pasta portal-professor/
@@ -153,9 +165,70 @@ function applySavedToolVisibility() {
     });
 }
 
-// Escuta mudanças de visibilidade em tempo real vindas do Portal do Professor em outra aba
 window.addEventListener('storage', (e) => {
     if (e.key === 'titanTech_tool_visibility') {
         applySavedToolVisibility();
     }
 });
+
+/**
+ * Detecta se o usuário está acessando em dispositivo móvel ou tela estreita
+ */
+function isMobileClient() {
+    return window.innerWidth <= 768 || ('ontouchstart' in window && window.innerWidth <= 1024);
+}
+
+/**
+ * Inicializa a interceptação de cliques em ferramentas desenhadas para Desktop
+ */
+function initDeviceProtection() {
+    const modal = document.getElementById('deviceWarningModal');
+    const btnStay = document.getElementById('btnDeviceModalStay');
+    const btnProceed = document.getElementById('btnDeviceModalProceed');
+
+    if (!modal) return;
+
+    function closeModal() {
+        modal.classList.remove('open');
+        modal.style.display = 'none';
+    }
+
+    if (btnStay) {
+        btnStay.addEventListener('click', closeModal);
+    }
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('open')) {
+            closeModal();
+        }
+    });
+
+    // Intercepta o clique em cards exclusivos para Computador quando acessados pelo celular
+    document.addEventListener('click', (e) => {
+        const card = e.target.closest('a.tool-card');
+        if (!card) return;
+
+        // Se estiver oculto ou desativado pelo professor, não faz nada
+        if (card.classList.contains('hidden-by-teacher') || card.classList.contains('hidden-by-filter')) return;
+
+        // Se for card em manutenção, não abre o modal de aviso
+        const footerText = card.querySelector('.action-label')?.textContent || '';
+        if (footerText.includes('Em Manutenção')) return;
+
+        const deviceReq = card.getAttribute('data-device');
+        if (deviceReq === 'desktop' && isMobileClient()) {
+            e.preventDefault();
+            if (btnProceed) {
+                btnProceed.href = card.href;
+            }
+            modal.style.display = 'flex';
+            modal.classList.add('open');
+        }
+    });
+}

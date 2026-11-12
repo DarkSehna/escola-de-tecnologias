@@ -6,7 +6,8 @@
             const DEFAULT_MODEL = 'gemini-3.8-flash';
             const STORAGE_KEY_API = 'titan_gemini_api_key';
             const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
-            const DIRECT_VIDEO_BASE64_LIMIT = 9 * 1024 * 1024; // Até 9 MB envia vídeo inline direto; acima extrai frames cronológicos HD
+            const DIRECT_VIDEO_BASE64_LIMIT = 18 * 1024 * 1024; // Aceita até 18 MB para vídeo bruto quando usando Chave Própria
+            const WORKER_SAFE_TOTAL_BYTES = 52 * 1024; // Limite de 52 KB útil para compatibilidade total com o Worker gratuito
 
             // Prompt de Sistema embutido para Engenheiro de Telemetria de Robótica
             const TELEMETRY_SYSTEM_PROMPT = `Você é um Engenheiro Sênior de Telemetria e Controle PID de Robótica Competitiva (OBR / FLL / Seguidor de Linha).
@@ -511,8 +512,8 @@ Responda EXCLUSIVAMENTE com um objeto JSON válido (sem blocos markdown extras f
                 });
             }
 
-            // Extração de Quadros Cronológicos para vídeos grandes (até 50 MB) ou fallback de codec
-            async function extractChronologicalFrames(file, numFrames = 12) {
+            // Extração de Quadros Cronológicos para vídeos (otimizando peso para o Worker gratuito ou Chave Própria)
+            async function extractChronologicalFrames(file, numFrames = 10, isWorkerTarget = false) {
                 return new Promise((resolve, reject) => {
                     const tempVideo = document.createElement('video');
                     const tempUrl = URL.createObjectURL(file);
@@ -536,7 +537,13 @@ Responda EXCLUSIVAMENTE com um objeto JSON válido (sem blocos markdown extras f
 
                             const canvas = document.createElement('canvas');
                             const ctx = canvas.getContext('2d');
-                            const targetWidth = 640;
+
+                            // Para o Worker (limite 64KB), usamos resolução compacta (320px) e qualidade otimizada
+                            // Cada quadro fica em ~4 KB, totalizando ~28 KB para 6 quadros (bem abaixo dos 52 KB)
+                            const targetWidth = isWorkerTarget ? 320 : 640;
+                            const jpegQuality = isWorkerTarget ? 0.62 : 0.78;
+                            const count = isWorkerTarget ? Math.min(numFrames, 6) : numFrames;
+
                             const ratio = (tempVideo.videoHeight && tempVideo.videoWidth)
                                 ? (tempVideo.videoHeight / tempVideo.videoWidth)
                                 : (9 / 16);
@@ -544,8 +551,8 @@ Responda EXCLUSIVAMENTE com um objeto JSON válido (sem blocos markdown extras f
                             canvas.height = Math.round(targetWidth * ratio);
 
                             const frames = [];
-                            for (let i = 0; i < numFrames; i++) {
-                                const t = Math.min(duration - 0.05, Math.max(0, (duration * i) / Math.max(1, numFrames - 1)));
+                            for (let i = 0; i < count; i++) {
+                                const t = Math.min(duration - 0.05, Math.max(0, (duration * i) / Math.max(1, count - 1)));
                                 await new Promise((resSeek) => {
                                     const onSeeked = () => {
                                         tempVideo.removeEventListener('seeked', onSeeked);
@@ -558,13 +565,15 @@ Responda EXCLUSIVAMENTE com um objeto JSON válido (sem blocos markdown extras f
                                 ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
                                 // Estampa o timestamp no canto superior esquerdo do quadro para precisão da timeline
                                 const stamp = formatSecondsToMMSS(t, true);
-                                ctx.fillStyle = 'rgba(0, 0, 0, 0.72)';
-                                ctx.fillRect(8, 8, 92, 26);
+                                ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+                                const stampWidth = isWorkerTarget ? 76 : 92;
+                                const stampHeight = isWorkerTarget ? 22 : 26;
+                                ctx.fillRect(6, 6, stampWidth, stampHeight);
                                 ctx.fillStyle = '#00e5ff';
-                                ctx.font = 'bold 14px monospace';
-                                ctx.fillText(`T=${stamp}`, 14, 26);
+                                ctx.font = isWorkerTarget ? 'bold 11px monospace' : 'bold 14px monospace';
+                                ctx.fillText(`T=${stamp}`, isWorkerTarget ? 10 : 14, isWorkerTarget ? 21 : 26);
 
-                                const dataUrl = canvas.toDataURL('image/jpeg', 0.78);
+                                const dataUrl = canvas.toDataURL('image/jpeg', jpegQuality);
                                 const b64 = dataUrl.split(',')[1];
                                 frames.push({ timestamp: stamp, seconds: t, base64: b64 });
                             }
@@ -823,43 +832,45 @@ Gere o diagnóstico técnico completo em JSON estruturado com:
 
                 try {
                     let rawResponseText = '';
-                    const useDirectVideo = currentVideoFile.size <= DIRECT_VIDEO_BASE64_LIMIT;
+                    const customKey = (localStorage.getItem(STORAGE_KEY_API) || '').trim();
+                    const isUsingCustomKey = Boolean(customKey);
 
-                    if (useDirectVideo) {
-                        setProgress(20, 'Convertendo vídeo para Base64...');
+                    // Estratégia de payload:
+                    // 1. Com Chave Própria: pode enviar vídeo inline completo até 18 MB ou 12 quadros HD (640px)
+                    // 2. Com Worker Gratuito (limite de proxy 64 KB): extrai diretamente 5 a 6 quadros otimizados (320px)
+                    //    comprimidos em JPEG leve (~25 KB a ~35 KB no total), garantindo envio instantâneo e sem erro 413/limite
+                    if (isUsingCustomKey && currentVideoFile.size <= DIRECT_VIDEO_BASE64_LIMIT) {
+                        setProgress(20, 'Convertendo vídeo para Base64 (Chave Própria)...');
                         const base64Video = await fileToBase64(currentVideoFile);
                         const mimeType = currentVideoFile.type || 'video/mp4';
 
-                        setProgress(55, 'Enviando vídeo para o Engenheiro IA (Gemini Multimodal)...');
-                        try {
-                            rawResponseText = await sendTelemetryRequest([
-                                { inline_data: { mime_type: mimeType, data: base64Video } },
-                                { text: buildUserPromptText(detectedVideoDuration, 'Vídeo Completo em Base64') }
-                            ]);
-                        } catch (directErr) {
-                            if (directErr.status === 429) throw directErr;
-                            // Fallback automático para sequência de quadros caso o payload exceda limite do Worker
-                            setProgress(45, 'Otimizando quadros de telemetria HD para análise...');
-                            const extracted = await extractChronologicalFrames(currentVideoFile, 12);
-                            const frameParts = extracted.frames.map(f => ({
-                                inline_data: { mime_type: 'image/jpeg', data: f.base64 }
-                            }));
-                            frameParts.push({
-                                text: buildUserPromptText(extracted.duration, `Sequência Cronológica de ${extracted.frames.length} Quadros Estampados`)
-                            });
-                            setProgress(75, 'Analisando trajetória e oscilações no Gemini...');
-                            rawResponseText = await sendTelemetryRequest(frameParts);
-                        }
-                    } else {
-                        setProgress(25, 'Extraindo quadros cronológicos de alta definição do vídeo...');
-                        const extracted = await extractChronologicalFrames(currentVideoFile, 14);
+                        setProgress(55, 'Enviando vídeo para o Gemini Multimodal...');
+                        rawResponseText = await sendTelemetryRequest([
+                            { inline_data: { mime_type: mimeType, data: base64Video } },
+                            { text: buildUserPromptText(detectedVideoDuration, 'Vídeo Completo em Base64') }
+                        ]);
+                    } else if (isUsingCustomKey) {
+                        setProgress(25, 'Extraindo quadros cronológicos HD do vídeo...');
+                        const extracted = await extractChronologicalFrames(currentVideoFile, 12, false);
                         const frameParts = extracted.frames.map(f => ({
                             inline_data: { mime_type: 'image/jpeg', data: f.base64 }
                         }));
                         frameParts.push({
                             text: buildUserPromptText(extracted.duration, `Sequência Cronológica de ${extracted.frames.length} Quadros Estampados`)
                         });
-                        setProgress(65, 'Enviando telemetria visual para o Gemini Multimodal...');
+                        setProgress(65, 'Enviando telemetria para o Gemini Multimodal...');
+                        rawResponseText = await sendTelemetryRequest(frameParts);
+                    } else {
+                        // Modo Cloudflare Worker Padrão: otimizado para não exceder a trava de 64 KB do proxy
+                        setProgress(25, 'Otimizando quadros de telemetria para o Worker...');
+                        const extracted = await extractChronologicalFrames(currentVideoFile, 6, true);
+                        const frameParts = extracted.frames.map(f => ({
+                            inline_data: { mime_type: 'image/jpeg', data: f.base64 }
+                        }));
+                        frameParts.push({
+                            text: buildUserPromptText(extracted.duration, `Sequência Cronológica de ${extracted.frames.length} Quadros (Modo Seguro Worker)`)
+                        });
+                        setProgress(65, 'Consultando Engenheiro de Telemetria IA...');
                         rawResponseText = await sendTelemetryRequest(frameParts);
                     }
 
