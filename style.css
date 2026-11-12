@@ -228,9 +228,9 @@ body {
 }
 
 .brand {
-    background: linear-gradient(135deg, var(--color-text-white) 30%, #a5b4fc 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--color-text-white);
+    display: inline-block;
+    letter-spacing: -0.02em;
 }
 
 .sub-brand {
