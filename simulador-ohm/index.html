@@ -37,8 +37,10 @@
 
             <div class="header-badges">
                 <button type="button" class="theme-toggle-btn" aria-label="Alternar Tema">🌙 <span class="theme-btn-text">Modo Escuro</span></button>
-                <span class="badge badge-volt">V = R · I</span>
-                <span class="badge badge-amp">I = V / R</span>
+                <button type="button" class="calc-header-cta-btn" id="btn-open-calc" title="Abrir Calculadora Interativa da Lei de Ohm">
+                    <span>🧮</span>
+                    <span>Calculadora da Lei de Ohm</span>
+                </button>
             </div>
         </header>
 
@@ -192,6 +194,139 @@
                 </div>
             </aside>
 
+        </div>
+
+        <!-- MODAL CALCULADORA INTERATIVA DA LEI DE OHM -->
+        <div id="modal-ohm-calc" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="calc-modal-title">
+            <div class="modal-card calc-card">
+                <button type="button" id="btn-close-calc-modal" class="modal-close-btn" aria-label="Fechar Calculadora">✕</button>
+                
+                <div class="calc-header">
+                    <span class="calc-badge-icon">🧮</span>
+                    <div>
+                        <h2 id="calc-modal-title">Calculadora Interativa da Lei de Ohm</h2>
+                        <p class="calc-subtitle">Selecione no triângulo mnemônico qual grandeza você deseja descobrir:</p>
+                    </div>
+                </div>
+
+                <div class="calc-body-grid">
+                    <!-- COLUNA 1: TRIÂNGULO MNEMÔNICO INTERATIVO -->
+                    <div class="triangle-container">
+                        <div class="ohm-triangle" id="ohm-triangle-interactive">
+                            <!-- Topo: Tensão (V) -->
+                            <button type="button" class="triangle-sector sector-v" id="sector-btn-v" title="Clique para calcular Tensão (V = R · I)">
+                                <span class="sector-symbol">V</span>
+                                <span class="sector-name">Tensão (Volts)</span>
+                            </button>
+                            
+                            <div class="triangle-divider-h"></div>
+                            
+                            <!-- Base: R e I -->
+                            <div class="triangle-bottom-row">
+                                <button type="button" class="triangle-sector sector-r active" id="sector-btn-r" title="Clique para calcular Resistência (R = V / I)">
+                                    <span class="sector-symbol">R</span>
+                                    <span class="sector-name">Resistência (Ω)</span>
+                                </button>
+                                <div class="triangle-divider-v">·</div>
+                                <button type="button" class="triangle-sector sector-i" id="sector-btn-i" title="Clique para calcular Corrente (I = V / R)">
+                                    <span class="sector-symbol">I</span>
+                                    <span class="sector-name">Corrente (A)</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="triangle-tip">
+                            <span>💡 <strong>Dica Didática:</strong> "Tape com o dedo" a grandeza que deseja calcular para ver a fórmula exata!</span>
+                        </div>
+                    </div>
+
+                    <!-- COLUNA 2: CAMPOS DE ENTRADA E RESULTADO EM TEMPO REAL -->
+                    <div class="calc-inputs-panel">
+                        <!-- Seletor de Modo Rápido -->
+                        <div class="calc-mode-selector" role="group" aria-label="Modo de cálculo">
+                            <button type="button" class="calc-mode-btn" data-target="v">Descobrir Tensão (V)</button>
+                            <button type="button" class="calc-mode-btn" data-target="i">Descobrir Corrente (I)</button>
+                            <button type="button" class="calc-mode-btn active" data-target="r">Descobrir Resistência (R)</button>
+                        </div>
+
+                        <!-- Campos Numéricos com Conversão -->
+                        <div class="calc-fields-stack">
+                            <!-- Campo Tensão (V) -->
+                            <div class="calc-field-group" id="group-calc-v">
+                                <label for="calc-input-v">
+                                    <span class="field-dot dot-v"></span>
+                                    <strong>Tensão (V)</strong>
+                                    <span class="field-role" id="role-calc-v">(Entrada)</span>
+                                </label>
+                                <div class="calc-input-wrapper">
+                                    <input type="number" id="calc-input-v" value="5.0" step="0.1" min="0">
+                                    <span class="calc-unit">Volts (V)</span>
+                                </div>
+                            </div>
+
+                            <!-- Campo Corrente (I) com seletor mA / A -->
+                            <div class="calc-field-group" id="group-calc-i">
+                                <label for="calc-input-i">
+                                    <span class="field-dot dot-i"></span>
+                                    <strong>Corrente (I)</strong>
+                                    <span class="field-role" id="role-calc-i">(Entrada)</span>
+                                </label>
+                                <div class="calc-input-wrapper">
+                                    <input type="number" id="calc-input-i" value="20" step="any" min="0">
+                                    <div class="unit-toggle" role="group" aria-label="Unidade de corrente">
+                                        <button type="button" class="unit-btn active" data-unit="ma">mA</button>
+                                        <button type="button" class="unit-btn" data-unit="a">A</button>
+                                    </div>
+                                </div>
+                                <small class="conversion-hint" id="hint-calc-i">20.00 mA = 0.0200 A</small>
+                            </div>
+
+                            <!-- Campo Resistência (R) -->
+                            <div class="calc-field-group" id="group-calc-r">
+                                <label for="calc-input-r">
+                                    <span class="field-dot dot-r"></span>
+                                    <strong>Resistência (R)</strong>
+                                    <span class="field-role" id="role-calc-r">(Resultado)</span>
+                                </label>
+                                <div class="calc-input-wrapper">
+                                    <input type="number" id="calc-input-r" value="250" step="any" min="0" readonly class="is-result">
+                                    <div class="unit-toggle" role="group" aria-label="Unidade de resistência">
+                                        <button type="button" class="unit-btn active" data-unit="ohm">Ω</button>
+                                        <button type="button" class="unit-btn" data-unit="kohm">kΩ</button>
+                                    </div>
+                                </div>
+                                <small class="conversion-hint" id="hint-calc-r">250.0 Ω = 0.250 kΩ</small>
+                            </div>
+                        </div>
+
+                        <!-- Card de Resultado Didático & Passo a Passo -->
+                        <div class="calc-step-by-step">
+                            <span class="step-label">Passo a Passo Matemático:</span>
+                            <div class="step-formula" id="calc-step-formula">R = V / I ➔ R = 5.0 V ÷ 0.020 A = 250.0 Ω</div>
+                            <div class="power-readout" id="calc-power-readout">⚡ Potência Dissipada: P = V · I = 0.100 W (100.0 mW)</div>
+                        </div>
+
+                        <!-- Alerta Didático para Tensões Teóricas Acima de 24V -->
+                        <div class="calc-voltage-warning hidden" id="calc-voltage-warning">
+                            <span class="warn-icon">⚡</span>
+                            <div class="warn-body">
+                                <strong>Tensão Teórica da Rede Elétrica AC:</strong>
+                                <p id="calc-voltage-warning-text">Valores como 240V são teóricos. A bancada do kit Arduino opera com segurança até 24.0V DC. Ao aplicar, a fonte será ajustada para 24.0V e o resistor será mantido.</p>
+                            </div>
+                        </div>
+
+                        <!-- Ações do Modal -->
+                        <div class="calc-actions-row">
+                            <button type="button" id="btn-apply-calc-to-sim" class="btn-apply-calc">
+                                <span>⚡</span> Aplicar Valores no Simulador
+                            </button>
+                            <button type="button" id="btn-calc-close-alt" class="btn-secondary-calc">
+                                Fechar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- BARRA DE STATUS FINA NO RODAPÉ -->

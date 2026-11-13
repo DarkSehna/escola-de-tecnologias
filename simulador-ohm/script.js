@@ -224,6 +224,10 @@
         branch1: createSlot('led', 330),
         branch2: createSlot('buzzer', 1000),
 
+        // Arquitetura de Proteção em Paralelo (Opção Didática)
+        parallelProtectionMode: 'individual', // 'individual' | 'shared'
+        sharedParallelResistor: 330, // 0 | 330 | 1000 Ω (no barramento principal antes do split)
+
         // Resultados da simulação
         telemetry: {
             currentTotal: 0,
@@ -496,58 +500,114 @@
             t.i1 = t.currentTotal;
             t.i2 = t.currentTotal;
         } else {
-            // CIRCUITO EM PARALELO: dois ramos recebem V_bat independentemente
-            function solveBranch(branch) {
-                const r = getSlotOhmicResistance(branch, true);
-                const vf = getSlotForwardVoltage(branch);
-                let i = 0;
-                let ledOver = false;
-                let short = false;
+            // CIRCUITO EM PARALELO: suporta Resistores Individuais ou Resistor Geral Único
+            if (state.parallelProtectionMode === 'shared') {
+                const rShared = state.sharedParallelResistor || 0;
 
-                if (r < 0.5 && vf === 0) {
-                    short = true;
-                    i = state.voltage / 0.5;
-                } else if (state.voltage <= vf && vf > 0) {
-                    i = 0;
-                } else {
-                    i = (state.voltage - vf) / Math.max(0.5, r);
-                    if (branch.type === 'led' && i > 0.03) {
-                        ledOver = true;
+                const getBranchI = (branch, vNode) => {
+                    const r = getSlotOhmicResistance(branch, false);
+                    const vf = getSlotForwardVoltage(branch);
+                    if (vNode <= vf) return 0;
+                    return (vNode - vf) / Math.max(0.5, r);
+                };
+
+                let vNode = state.voltage;
+                if (rShared > 0) {
+                    let low = 0;
+                    let high = state.voltage;
+                    for (let step = 0; step < 16; step++) {
+                        const mid = (low + high) / 2;
+                        const iTotal = getBranchI(state.branch1, mid) + getBranchI(state.branch2, mid);
+                        const drop = iTotal * rShared;
+                        if (mid + drop < state.voltage) {
+                            low = mid;
+                        } else {
+                            high = mid;
+                        }
                     }
+                    vNode = (low + high) / 2;
                 }
 
-                // Tensão efetiva sobre o componente (descontando resistor protetor no ramo)
-                const vSeriesDrop = (branch.type === 'led' || branch.type === 'buzzer' || branch.type === 'motor')
-                    ? i * (branch.parallelSeriesR || 0)
-                    : 0;
-                const vComp = Math.max(0, state.voltage - vSeriesDrop);
+                const i1 = getBranchI(state.branch1, vNode);
+                const i2 = getBranchI(state.branch2, vNode);
 
-                return { i, r, ledOver, short, vComp };
+                t.i1 = i1;
+                t.i2 = i2;
+                t.v1 = vNode;
+                t.v2 = vNode;
+                t.currentTotal = i1 + i2;
+                t.req = t.currentTotal > 0.00001 ? state.voltage / t.currentTotal : Infinity;
+
+                if (state.branch1.type === 'led' && i1 > 0.03) t.led1Overload = true;
+                if (state.branch2.type === 'led' && i2 > 0.03) t.led2Overload = true;
+
+                if (rShared === 0 && ((state.branch1.type === 'wire' || state.branch2.type === 'wire') || (t.req < 0.5))) {
+                    t.shortCircuit = true;
+                }
+
+                [
+                    { br: state.branch1, vComp: vNode },
+                    { br: state.branch2, vComp: vNode }
+                ].forEach(({ br, vComp }) => {
+                    if (br.type === 'buzzer') {
+                        if (vComp >= 3.0 && vComp <= 5.05) t.buzzerActive = true;
+                        else if (vComp > 5.05) t.buzzerOvervolt = true;
+                        else t.buzzerUndervolt = true;
+                    }
+                });
+            } else {
+                function solveBranch(branch) {
+                    const r = getSlotOhmicResistance(branch, true);
+                    const vf = getSlotForwardVoltage(branch);
+                    let i = 0;
+                    let ledOver = false;
+                    let short = false;
+
+                    if (r < 0.5 && vf === 0) {
+                        short = true;
+                        i = state.voltage / 0.5;
+                    } else if (state.voltage <= vf && vf > 0) {
+                        i = 0;
+                    } else {
+                        i = (state.voltage - vf) / Math.max(0.5, r);
+                        if (branch.type === 'led' && i > 0.03) {
+                            ledOver = true;
+                        }
+                    }
+
+                    // Tensão efetiva sobre o componente (descontando resistor protetor no ramo)
+                    const vSeriesDrop = (branch.type === 'led' || branch.type === 'buzzer' || branch.type === 'motor')
+                        ? i * (branch.parallelSeriesR || 0)
+                        : 0;
+                    const vComp = Math.max(0, state.voltage - vSeriesDrop);
+
+                    return { i, r, ledOver, short, vComp };
+                }
+
+                const b1 = solveBranch(state.branch1);
+                const b2 = solveBranch(state.branch2);
+
+                t.i1 = b1.i;
+                t.i2 = b2.i;
+                t.v1 = state.voltage;
+                t.v2 = state.voltage;
+                t.currentTotal = b1.i + b2.i;
+                t.req = t.currentTotal > 0.00001 ? state.voltage / t.currentTotal : Infinity;
+                t.led1Overload = b1.ledOver;
+                t.led2Overload = b2.ledOver;
+                t.shortCircuit = b1.short || b2.short;
+
+                [
+                    { br: state.branch1, res: b1 },
+                    { br: state.branch2, res: b2 }
+                ].forEach(({ br, res }) => {
+                    if (br.type === 'buzzer') {
+                        if (res.vComp >= 3.0 && res.vComp <= 5.05) t.buzzerActive = true;
+                        else if (res.vComp > 5.05) t.buzzerOvervolt = true;
+                        else t.buzzerUndervolt = true;
+                    }
+                });
             }
-
-            const b1 = solveBranch(state.branch1);
-            const b2 = solveBranch(state.branch2);
-
-            t.i1 = b1.i;
-            t.i2 = b2.i;
-            t.v1 = state.voltage;
-            t.v2 = state.voltage;
-            t.currentTotal = b1.i + b2.i;
-            t.req = t.currentTotal > 0.00001 ? state.voltage / t.currentTotal : Infinity;
-            t.led1Overload = b1.ledOver;
-            t.led2Overload = b2.ledOver;
-            t.shortCircuit = b1.short || b2.short;
-
-            [
-                { br: state.branch1, res: b1 },
-                { br: state.branch2, res: b2 }
-            ].forEach(({ br, res }) => {
-                if (br.type === 'buzzer') {
-                    if (res.vComp >= 3.0 && res.vComp <= 5.05) t.buzzerActive = true;
-                    else if (res.vComp > 5.05) t.buzzerOvervolt = true;
-                    else t.buzzerUndervolt = true;
-                }
-            });
         }
 
         state.telemetry = t;
@@ -670,7 +730,50 @@
         `;
     }
 
+    function buildParallelArchCardHTML() {
+        return `
+            <div class="parallel-arch-card">
+                <div class="parallel-arch-header">
+                    <span class="parallel-arch-title-badge">🛡️ ARQUITETURA DE PROTEÇÃO (PARALELO)</span>
+                </div>
+                <div class="parallel-arch-options" role="group" aria-label="Arquitetura de proteção dos ramos">
+                    <button type="button" class="arch-toggle-btn ${state.parallelProtectionMode === 'individual' ? 'active' : ''}" data-arch="individual">
+                        <span style="font-size:1.15rem;">🔀</span>
+                        <div>
+                            <div><strong>Resistores Separados por Ramo</strong></div>
+                            <div style="font-size:0.71rem; opacity:0.85;">Padrão recomendado: cada carga tem seu resistor</div>
+                        </div>
+                    </button>
+                    <button type="button" class="arch-toggle-btn ${state.parallelProtectionMode === 'shared' ? 'active' : ''}" data-arch="shared">
+                        <span style="font-size:1.15rem;">🛑</span>
+                        <div>
+                            <div><strong>1 Resistor Geral Único no Barramento</strong></div>
+                            <div style="font-size:0.71rem; opacity:0.85;">Experimento didático: as duas cargas disputam corrente!</div>
+                        </div>
+                    </button>
+                </div>
+                ${state.parallelProtectionMode === 'shared' ? `
+                    <div class="parallel-shared-res-row">
+                        <span>Valor do Resistor Geral:</span>
+                        <div class="kit-quick-resistors">
+                            <button type="button" class="shared-res-btn kit-res-btn ${state.sharedParallelResistor === 0 ? 'active' : ''}" data-shared-res="0">0 Ω (Direto)</button>
+                            <button type="button" class="shared-res-btn kit-res-btn ${state.sharedParallelResistor === 330 ? 'active' : ''}" data-shared-res="330">330 Ω</button>
+                            <button type="button" class="shared-res-btn kit-res-btn ${state.sharedParallelResistor === 1000 ? 'active' : ''}" data-shared-res="1000">1 kΩ</button>
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
     function buildParallelSeriesLimiterHTML(slotKey, slotObj) {
+        if (state.parallelProtectionMode === 'shared') {
+            return `
+                <div style="margin-top:0.35rem; border-top:1px dashed rgba(148,163,184,0.2); padding-top:0.4rem; font-size:0.73rem; color:#94a3b8;">
+                    🛡️ Protegido pelo <strong>Resistor Geral (${formatResistance(state.sharedParallelResistor)})</strong> antes do nó.
+                </div>
+            `;
+        }
         const rProt = slotObj.parallelSeriesR || 0;
         return `
             <div style="margin-top:0.35rem; border-top:1px dashed rgba(148,163,184,0.2); padding-top:0.45rem;">
@@ -693,6 +796,7 @@
                 buildSlotCardHTML('slot2', '📦 COMPONENTE 2 (CARGA PRINCIPAL)', 'slot-2', state.slot2, false, false);
         } else {
             kitSlotsContainer.innerHTML =
+                buildParallelArchCardHTML() +
                 buildSlotCardHTML('branch1', '🔀 RAMO 1 (PARALELO)', 'slot-1', state.branch1, false, true) +
                 buildSlotCardHTML('branch2', '🔀 RAMO 2 (PARALELO)', 'slot-2', state.branch2, false, true);
         }
@@ -772,6 +876,24 @@
     });
 
     kitSlotsContainer.addEventListener('click', (e) => {
+        const archBtn = e.target.closest('.arch-toggle-btn');
+        if (archBtn) {
+            state.parallelProtectionMode = archBtn.dataset.arch;
+            audio.playClick();
+            rebuildKitSlotsUI();
+            solveCircuit();
+            return;
+        }
+
+        const sharedResBtn = e.target.closest('.shared-res-btn');
+        if (sharedResBtn) {
+            state.sharedParallelResistor = parseInt(sharedResBtn.dataset.sharedRes, 10) || 0;
+            audio.playClick();
+            rebuildKitSlotsUI();
+            solveCircuit();
+            return;
+        }
+
         const tileBtn = e.target.closest('.kit-tile-btn');
         if (tileBtn) {
             const key = tileBtn.dataset.slot;
@@ -1042,13 +1164,26 @@
             setSwitchState(true);
         }
     });
-    window.addEventListener('pointerup', () => {
+    window.addEventListener('pointerup', (ev) => {
         if (state.switchMode === 'hold' && state.switchClosed) {
             setSwitchState(false);
         }
         if (state.isHoldingCanvasSwitch) {
             state.isHoldingCanvasSwitch = false;
             if (state.switchMode === 'hold') setSwitchState(false);
+        }
+        if (activeDragTarget) {
+            if (activeDragTarget.type === 'battery' && !activeDragTarget.hasMoved) {
+                const voltPresets = [3.3, 5.0, 9.0, 12.0, 24.0];
+                let currentIdx = voltPresets.findIndex(v => Math.abs(v - state.voltage) < 0.15);
+                let nextIdx = (currentIdx + 1) % voltPresets.length;
+                if (currentIdx === -1) nextIdx = 1;
+                syncVoltageUI(voltPresets[nextIdx]);
+                audio.playClick();
+                solveCircuit();
+            }
+            activeDragTarget = null;
+            try { canvas.releasePointerCapture(ev.pointerId); } catch (_) {}
         }
     });
 
@@ -1083,7 +1218,7 @@
         }
     });
 
-    // Clique/Toque direto na Chave Táctil desenhada no Canvas
+    // --- INTERAÇÃO TÁTIL DIRETA NOS COMPONENTES DO CANVAS ---
     function getCanvasCoords(ev) {
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
@@ -1094,23 +1229,281 @@
         };
     }
 
-    function isNearPushButton(pt) {
-        return Math.abs(pt.x - SWITCH_X) <= 44 && Math.abs(pt.y - SWITCH_Y) <= 32;
+    function getCanvasInteractiveElement(pt) {
+        // 1. Chave Push-Button
+        if (Math.abs(pt.x - SWITCH_X) <= 44 && Math.abs(pt.y - SWITCH_Y) <= 32) {
+            return {
+                type: 'switch',
+                x: SWITCH_X,
+                y: SWITCH_Y,
+                radius: 28,
+                hint: state.switchMode === 'hold' ? '🔘 Chave Táctil (Segure para conduzir)' : '🔘 Chave Táctil (Clique para Ligar / Desligar)'
+            };
+        }
+
+        // 2. Bateria / Fonte DC
+        const batX = CX;
+        const batY = CY + CH / 2;
+        if (Math.abs(pt.x - batX) <= 32 && Math.abs(pt.y - batY) <= 52) {
+            return {
+                type: 'battery',
+                x: batX,
+                y: batY,
+                radius: 36,
+                hint: `⚡ Fonte DC: Clique p/ ciclar presets | Arraste p/ regular (${state.voltage.toFixed(1)}V)`
+            };
+        }
+
+        // 3. Resistor Geral Compartilhado (Em Paralelo)
+        if (state.mode === 'parallel' && state.parallelProtectionMode === 'shared' && (state.sharedParallelResistor || 0) > 0) {
+            const shX = 325;
+            const shY = CY;
+            if (Math.hypot(pt.x - shX, pt.y - shY) <= 30) {
+                return {
+                    type: 'sharedResistor',
+                    x: shX,
+                    y: shY,
+                    radius: 28,
+                    hint: `🛑 Resistor Geral: Clique para ciclar (${formatResistance(state.sharedParallelResistor)} ➔ próximo)`
+                };
+            }
+        }
+
+        // 4. Componentes nos Slots (Série vs Paralelo)
+        if (state.mode === 'series') {
+            const s1X = 465;
+            const s1Y = CY;
+            if (Math.hypot(pt.x - s1X, pt.y - s1Y) <= 38) {
+                const s = state.slot1;
+                let hint = '📦 Componente 1';
+                if (s.type === 'resistor') hint = `🛑 Resistor: Clique para ciclar (${formatResistance(s.resistance)} ➔ próximo)`;
+                else if (s.type === 'led') hint = `💡 LED: Clique para alternar cor (${LED_COLOR_STYLES[s.ledColor]?.label || 'Cor'})`;
+                else if (s.type === 'potentiometer') hint = `🎛️ Potenciômetro: Arraste para calibrar (${formatResistance(s.potValue)})`;
+                else if (s.type === 'ldr') hint = `☀️ Sensor LDR: Arraste para variar luz (${s.ldrLight}%)`;
+                return { type: 'component', slotKey: 'slot1', slot: s, x: s1X, y: s1Y, horizontal: true, radius: 32, hint };
+            }
+
+            const s2X = CX + CW;
+            const s2Y = CY + CH / 2;
+            if (Math.hypot(pt.x - s2X, pt.y - s2Y) <= 38) {
+                const s = state.slot2;
+                let hint = '📦 Componente 2';
+                if (s.type === 'resistor') hint = `🛑 Resistor: Clique para ciclar (${formatResistance(s.resistance)} ➔ próximo)`;
+                else if (s.type === 'led') hint = `💡 LED: Clique para alternar cor (${LED_COLOR_STYLES[s.ledColor]?.label || 'Cor'})`;
+                else if (s.type === 'potentiometer') hint = `🎛️ Potenciômetro: Arraste para calibrar (${formatResistance(s.potValue)})`;
+                else if (s.type === 'ldr') hint = `☀️ Sensor LDR: Arraste para variar luz (${s.ldrLight}%)`;
+                else if (s.type === 'buzzer') hint = `🔊 Buzzer 5V: Ativa entre 3.0V e 5.0V`;
+                else if (s.type === 'motor') hint = `⚙️ Motor DC: Gira com a corrente`;
+                return { type: 'component', slotKey: 'slot2', slot: s, x: s2X, y: s2Y, horizontal: false, radius: 32, hint };
+            }
+        } else {
+            // Paralelo - Ramo 1
+            const b1X = B1_X;
+            const b1Y = CY + CH / 2;
+            if (Math.hypot(pt.x - b1X, pt.y - b1Y) <= 38) {
+                const s = state.branch1;
+                let hint = '🔀 Ramo 1';
+                if (s.type === 'resistor') hint = `🛑 Resistor Ramo 1: Clique para ciclar (${formatResistance(s.resistance)})`;
+                else if (s.type === 'led') hint = `💡 LED: Clique para alternar cor (${LED_COLOR_STYLES[s.ledColor]?.label || 'Cor'})`;
+                else if (s.type === 'potentiometer') hint = `🎛️ Potenciômetro: Arraste para calibrar (${formatResistance(s.potValue)})`;
+                else if (s.type === 'ldr') hint = `☀️ Sensor LDR: Arraste para variar luz (${s.ldrLight}%)`;
+                return { type: 'component', slotKey: 'branch1', slot: s, x: b1X, y: b1Y, horizontal: false, radius: 32, hint };
+            }
+
+            // Paralelo - Ramo 2
+            const b2X = B2_X;
+            const b2Y = CY + CH / 2;
+            if (Math.hypot(pt.x - b2X, pt.y - b2Y) <= 38) {
+                const s = state.branch2;
+                let hint = '🔀 Ramo 2';
+                if (s.type === 'resistor') hint = `🛑 Resistor Ramo 2: Clique para ciclar (${formatResistance(s.resistance)})`;
+                else if (s.type === 'led') hint = `💡 LED: Clique para alternar cor (${LED_COLOR_STYLES[s.ledColor]?.label || 'Cor'})`;
+                else if (s.type === 'potentiometer') hint = `🎛️ Potenciômetro: Arraste para calibrar (${formatResistance(s.potValue)})`;
+                else if (s.type === 'ldr') hint = `☀️ Sensor LDR: Arraste para variar luz (${s.ldrLight}%)`;
+                else if (s.type === 'buzzer') hint = `🔊 Buzzer 5V: Ativa entre 3.0V e 5.0V`;
+                else if (s.type === 'motor') hint = `⚙️ Motor DC: Gira com a corrente`;
+                return { type: 'component', slotKey: 'branch2', slot: s, x: b2X, y: b2Y, horizontal: false, radius: 32, hint };
+            }
+        }
+
+        return null;
     }
+
+    let canvasHoverTarget = null;
+    let activeDragTarget = null;
 
     canvas.addEventListener('pointermove', (ev) => {
         const pt = getCanvasCoords(ev);
-        canvas.style.cursor = isNearPushButton(pt) ? 'pointer' : 'default';
+
+        // Se estiver em modo de arraste (Bateria, Potenciômetro ou LDR)
+        if (activeDragTarget) {
+            const tgt = activeDragTarget;
+
+            if (tgt.type === 'battery') {
+                const delta = (pt.x - tgt.startX) + (tgt.startY - pt.y);
+                if (Math.abs(delta) > 3) tgt.hasMoved = true;
+                const newV = Math.max(1.0, Math.min(24.0, Math.round((tgt.startVolt + delta * 0.08) * 10) / 10));
+                if (Math.abs(newV - state.voltage) >= 0.08) {
+                    syncVoltageUI(newV);
+                    throttleClickSound();
+                    solveCircuit();
+                }
+                return;
+            }
+
+            const delta = tgt.horizontal
+                ? (pt.x - tgt.startX)
+                : (tgt.startX - pt.x); // para cima/direita aumenta
+
+            if (tgt.type === 'potentiometer') {
+                const newVal = Math.max(0, Math.min(10000, Math.round(tgt.startVal + delta * 32)));
+                state[tgt.slotKey].potValue = newVal;
+                const potSlider = kitSlotsContainer.querySelector(`.slot-pot-slider[data-slot="${tgt.slotKey}"]`);
+                if (potSlider) potSlider.value = newVal;
+                const potLbl = document.getElementById(`pot-val-${tgt.slotKey}`);
+                if (potLbl) potLbl.textContent = formatResistance(newVal);
+                throttleClickSound();
+                solveCircuit();
+            } else if (tgt.type === 'ldr') {
+                const newPct = Math.max(0, Math.min(100, Math.round(tgt.startVal + delta * 0.75)));
+                state[tgt.slotKey].ldrLight = newPct;
+                const ldrSlider = kitSlotsContainer.querySelector(`.slot-ldr-slider[data-slot="${tgt.slotKey}"]`);
+                if (ldrSlider) ldrSlider.value = newPct;
+                const ldrLbl = document.getElementById(`ldr-val-${tgt.slotKey}`);
+                if (ldrLbl) ldrLbl.textContent = `${newPct}% (${formatResistance(ldrLightToResistance(newPct))})`;
+                throttleClickSound();
+                solveCircuit();
+            }
+            return;
+        }
+
+        canvasHoverTarget = getCanvasInteractiveElement(pt);
+        canvas.style.cursor = canvasHoverTarget ? 'pointer' : 'default';
+    });
+
+    canvas.addEventListener('pointerleave', () => {
+        if (!activeDragTarget) {
+            canvasHoverTarget = null;
+        }
     });
 
     canvas.addEventListener('pointerdown', (ev) => {
         const pt = getCanvasCoords(ev);
-        if (!isNearPushButton(pt)) return;
-        if (state.switchMode === 'hold') {
-            state.isHoldingCanvasSwitch = true;
-            setSwitchState(true);
-        } else {
-            setSwitchState(!state.switchClosed);
+        const target = getCanvasInteractiveElement(pt);
+        if (!target) return;
+
+        // 1. Chave Push-Button
+        if (target.type === 'switch') {
+            if (state.switchMode === 'hold') {
+                state.isHoldingCanvasSwitch = true;
+                setSwitchState(true);
+            } else {
+                setSwitchState(!state.switchClosed);
+            }
+            return;
+        }
+
+        // 2. Bateria / Fonte DC - Inicia captura (arraste contínuo ou clique)
+        if (target.type === 'battery') {
+            activeDragTarget = {
+                type: 'battery',
+                startX: pt.x,
+                startY: pt.y,
+                startVolt: state.voltage,
+                hasMoved: false
+            };
+            try { canvas.setPointerCapture(ev.pointerId); } catch (_) {}
+            return;
+        }
+
+        // 3. Resistor Geral no barramento de Paralelo
+        if (target.type === 'sharedResistor') {
+            const sharedPresets = [0, 330, 1000];
+            let currentIdx = sharedPresets.findIndex(r => r === state.sharedParallelResistor);
+            let nextIdx = (currentIdx + 1) % sharedPresets.length;
+            if (currentIdx === -1) nextIdx = 1;
+            state.sharedParallelResistor = sharedPresets[nextIdx];
+            audio.playClick();
+            rebuildKitSlotsUI();
+            solveCircuit();
+            return;
+        }
+
+        // 4. Componentes nos Slots
+        if (target.type === 'component') {
+            const slotKey = target.slotKey;
+            const s = target.slot;
+
+            // Resistor: cicla valores mais comuns do kit (330 Ω -> 1 kΩ -> 10 kΩ)
+            if (s.type === 'resistor') {
+                const resPresets = [330, 1000, 10000];
+                let currentIdx = resPresets.findIndex(r => r === s.resistance);
+                let nextIdx = (currentIdx + 1) % resPresets.length;
+                if (currentIdx === -1) nextIdx = 0;
+                s.resistance = resPresets[nextIdx];
+                audio.playClick();
+                rebuildKitSlotsUI();
+                solveCircuit();
+                return;
+            }
+
+            // LED: cicla cor (red -> yellow -> green)
+            if (s.type === 'led') {
+                const ledColors = ['red', 'yellow', 'green'];
+                let currentIdx = ledColors.indexOf(s.ledColor);
+                let nextIdx = (currentIdx + 1) % ledColors.length;
+                if (currentIdx === -1) nextIdx = 0;
+                s.ledColor = ledColors[nextIdx];
+                audio.playClick();
+                rebuildKitSlotsUI();
+                solveCircuit();
+                return;
+            }
+
+            // Potenciômetro: inicia arraste interativo
+            if (s.type === 'potentiometer') {
+                activeDragTarget = {
+                    type: 'potentiometer',
+                    slotKey: slotKey,
+                    startX: pt.x,
+                    startY: pt.y,
+                    startVal: s.potValue,
+                    horizontal: target.horizontal
+                };
+                try { canvas.setPointerCapture(ev.pointerId); } catch (_) {}
+                return;
+            }
+
+            // LDR: inicia arraste interativo de luz
+            if (s.type === 'ldr') {
+                activeDragTarget = {
+                    type: 'ldr',
+                    slotKey: slotKey,
+                    startX: pt.x,
+                    startY: pt.y,
+                    startVal: s.ldrLight,
+                    horizontal: target.horizontal
+                };
+                try { canvas.setPointerCapture(ev.pointerId); } catch (_) {}
+                return;
+            }
+        }
+    });
+
+    canvas.addEventListener('pointerup', (ev) => {
+        if (activeDragTarget) {
+            if (activeDragTarget.type === 'battery' && !activeDragTarget.hasMoved) {
+                // Clique simples sem arrastar: cicla presets da bancada
+                const voltPresets = [3.3, 5.0, 9.0, 12.0, 24.0];
+                let currentIdx = voltPresets.findIndex(v => Math.abs(v - state.voltage) < 0.15);
+                let nextIdx = (currentIdx + 1) % voltPresets.length;
+                if (currentIdx === -1) nextIdx = 1;
+                syncVoltageUI(voltPresets[nextIdx]);
+                audio.playClick();
+                solveCircuit();
+            }
+            activeDragTarget = null;
+            try { canvas.releasePointerCapture(ev.pointerId); } catch (_) {}
         }
     });
 
@@ -1177,7 +1570,261 @@
         }
     });
 
-    // --- 11. ANIMAÇÃO ANTI-ALIASING E TRAJETÓRIAS DE ELÉTRONS ---
+    // --- 11. MODAL CALCULADORA DA LEI DE OHM & TRÍADE DE FÓRMULAS ---
+    const modalOhmCalc = document.getElementById('modal-ohm-calc');
+    const btnCloseCalcModal = document.getElementById('btn-close-calc-modal');
+    const btnCalcCloseAlt = document.getElementById('btn-calc-close-alt');
+    const btnApplyCalcToSim = document.getElementById('btn-apply-calc-to-sim');
+
+    const btnFormulaV = document.getElementById('btn-formula-v');
+    const btnFormulaI = document.getElementById('btn-formula-i');
+    const btnFormulaR = document.getElementById('btn-formula-r');
+    const btnOpenCalc = document.getElementById('btn-open-calc');
+
+    const sectorBtnV = document.getElementById('sector-btn-v');
+    const sectorBtnR = document.getElementById('sector-btn-r');
+    const sectorBtnI = document.getElementById('sector-btn-i');
+
+    const calcModeButtons = document.querySelectorAll('.calc-mode-btn');
+
+    const inputCalcV = document.getElementById('calc-input-v');
+    const inputCalcI = document.getElementById('calc-input-i');
+    const inputCalcR = document.getElementById('calc-input-r');
+
+    const roleCalcV = document.getElementById('role-calc-v');
+    const roleCalcI = document.getElementById('role-calc-i');
+    const roleCalcR = document.getElementById('role-calc-r');
+
+    const hintCalcI = document.getElementById('hint-calc-i');
+    const hintCalcR = document.getElementById('hint-calc-r');
+
+    const calcStepFormula = document.getElementById('calc-step-formula');
+    const calcPowerReadout = document.getElementById('calc-power-readout');
+
+    let calcTarget = 'r'; // 'v' | 'i' | 'r'
+    let calcCurrentUnit = 'ma'; // 'ma' | 'a'
+    let calcResistUnit = 'ohm'; // 'ohm' | 'kohm'
+
+    function setCalcTarget(target) {
+        calcTarget = target;
+
+        calcModeButtons.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.target === target);
+        });
+
+        if (sectorBtnV) sectorBtnV.classList.toggle('active', target === 'v');
+        if (sectorBtnI) sectorBtnI.classList.toggle('active', target === 'i');
+        if (sectorBtnR) sectorBtnR.classList.toggle('active', target === 'r');
+
+        if (inputCalcV) {
+            inputCalcV.readOnly = (target === 'v');
+            inputCalcV.classList.toggle('is-result', target === 'v');
+            if (roleCalcV) roleCalcV.textContent = (target === 'v' ? '(Resultado)' : '(Entrada)');
+        }
+        if (inputCalcI) {
+            inputCalcI.readOnly = (target === 'i');
+            inputCalcI.classList.toggle('is-result', target === 'i');
+            if (roleCalcI) roleCalcI.textContent = (target === 'i' ? '(Resultado)' : '(Entrada)');
+        }
+        if (inputCalcR) {
+            inputCalcR.readOnly = (target === 'r');
+            inputCalcR.classList.toggle('is-result', target === 'r');
+            if (roleCalcR) roleCalcR.textContent = (target === 'r' ? '(Resultado)' : '(Entrada)');
+        }
+
+        recalculateOhmModal();
+    }
+
+    function recalculateOhmModal() {
+        if (!inputCalcV || !inputCalcI || !inputCalcR) return;
+
+        let vVal = parseFloat(inputCalcV.value.replace(',', '.')) || 0;
+        let iInputVal = parseFloat(inputCalcI.value.replace(',', '.')) || 0;
+        let rInputVal = parseFloat(inputCalcR.value.replace(',', '.')) || 0;
+
+        let iAmps = calcCurrentUnit === 'ma' ? (iInputVal / 1000.0) : iInputVal;
+        let rOhms = calcResistUnit === 'kohm' ? (rInputVal * 1000.0) : rInputVal;
+
+        if (calcTarget === 'r') {
+            if (iAmps > 0.0000001) {
+                rOhms = vVal / iAmps;
+                const rDisplay = calcResistUnit === 'kohm' ? (rOhms / 1000.0) : rOhms;
+                inputCalcR.value = calcResistUnit === 'kohm' ? rDisplay.toFixed(3) : rDisplay.toFixed(1);
+                if (calcStepFormula) {
+                    calcStepFormula.textContent = `R = V / I  ➔  R = ${vVal.toFixed(2)} V ÷ ${iAmps.toFixed(4)} A = ${formatResistance(rOhms)}`;
+                }
+            } else {
+                inputCalcR.value = '0';
+                rOhms = 0;
+                if (calcStepFormula) {
+                    calcStepFormula.textContent = 'R = V / I  ➔  Corrente nula (I = 0) equivale a circuito aberto (Resistência infinita).';
+                }
+            }
+        } else if (calcTarget === 'i') {
+            if (rOhms > 0.0001) {
+                iAmps = vVal / rOhms;
+                const iDisplay = calcCurrentUnit === 'ma' ? (iAmps * 1000.0) : iAmps;
+                inputCalcI.value = calcCurrentUnit === 'ma' ? iDisplay.toFixed(2) : iDisplay.toFixed(4);
+                if (calcStepFormula) {
+                    calcStepFormula.textContent = `I = V / R  ➔  I = ${vVal.toFixed(2)} V ÷ ${formatResistance(rOhms)} = ${formatCurrent(iAmps)}`;
+                }
+            } else {
+                inputCalcI.value = '0';
+                iAmps = 0;
+                if (calcStepFormula) {
+                    calcStepFormula.textContent = 'I = V / R  ➔  Resistência nula (0 Ω) causaria um curto-circuito!';
+                }
+            }
+        } else if (calcTarget === 'v') {
+            vVal = rOhms * iAmps;
+            inputCalcV.value = vVal.toFixed(2);
+            if (calcStepFormula) {
+                calcStepFormula.textContent = `V = R · I  ➔  V = ${formatResistance(rOhms)} × ${iAmps.toFixed(4)} A = ${vVal.toFixed(2)} V`;
+            }
+        }
+
+        const powerWatts = vVal * iAmps;
+        if (calcPowerReadout) {
+            calcPowerReadout.textContent = `⚡ Potência Dissipada: P = V · I = ${powerWatts.toFixed(3)} W (${(powerWatts * 1000).toFixed(1)} mW)`;
+        }
+
+        // Alerta didático se a tensão for maior que o limite de bancada (24V DC)
+        const warnContainer = document.getElementById('calc-voltage-warning');
+        const warnText = document.getElementById('calc-voltage-warning-text');
+        if (warnContainer) {
+            if (vVal > 24.0) {
+                warnContainer.classList.remove('hidden');
+                if (warnText) {
+                    warnText.textContent = `A tensão calculada (${vVal.toFixed(1)} V) é teórica (ex: rede elétrica AC ou alta potência). A bancada de testes do Kit Arduino opera com segurança até 24.0 V DC. Ao clicar em "Aplicar", a fonte será ajustada para 24.0 V e o resistor calculado de ${formatResistance(rOhms)} será mantido.`;
+                }
+            } else {
+                warnContainer.classList.add('hidden');
+            }
+        }
+
+        if (hintCalcI) {
+            hintCalcI.textContent = `${(iAmps * 1000).toFixed(2)} mA = ${iAmps.toFixed(4)} A`;
+        }
+        if (hintCalcR) {
+            hintCalcR.textContent = `${rOhms.toFixed(1)} Ω = ${(rOhms / 1000).toFixed(3)} kΩ`;
+        }
+    }
+
+    function openCalcModal(preferredTarget = 'r') {
+        if (!modalOhmCalc) return;
+        modalOhmCalc.classList.remove('hidden');
+        modalOhmCalc.style.display = 'flex';
+
+        inputCalcV.value = state.voltage.toFixed(1);
+        if (state.telemetry && state.telemetry.currentTotal > 0.00001) {
+            calcCurrentUnit = 'ma';
+            inputCalcI.value = (state.telemetry.currentTotal * 1000).toFixed(1);
+        } else {
+            inputCalcI.value = '20';
+            calcCurrentUnit = 'ma';
+        }
+
+        const modalUnitBtnsI = modalOhmCalc.querySelectorAll('#group-calc-i .unit-btn');
+        modalUnitBtnsI.forEach(b => b.classList.toggle('active', b.dataset.unit === calcCurrentUnit));
+
+        const modalUnitBtnsR = modalOhmCalc.querySelectorAll('#group-calc-r .unit-btn');
+        modalUnitBtnsR.forEach(b => b.classList.toggle('active', b.dataset.unit === calcResistUnit));
+
+        setCalcTarget(preferredTarget);
+        audio.playClick();
+    }
+
+    function closeCalcModal() {
+        if (!modalOhmCalc) return;
+        modalOhmCalc.classList.add('hidden');
+        modalOhmCalc.style.display = 'none';
+    }
+
+    function applyCalcToSimulator() {
+        const vInputVal = parseFloat(inputCalcV.value.replace(',', '.')) || 5.0;
+        let rInputVal = parseFloat(inputCalcR.value.replace(',', '.')) || 250;
+        let rOhms = calcResistUnit === 'kohm' ? (rInputVal * 1000.0) : rInputVal;
+        rOhms = Math.max(1, Math.min(100000, Math.round(rOhms)));
+
+        syncVoltageUI(vInputVal); // Sincroniza e normaliza com segurança para <= 24.0V
+
+        if (state.mode === 'series') {
+            state.slot1.type = 'resistor';
+            state.slot1.resistance = rOhms;
+        } else {
+            state.branch1.type = 'resistor';
+            state.branch1.resistance = rOhms;
+        }
+
+        rebuildKitSlotsUI();
+        solveCircuit();
+        audio.playClick();
+        closeCalcModal();
+
+        if (vInputVal > 24.0) {
+            statusMessage.textContent = `[ BANCADA ARDUINO (MÁX 24V) ] Tensão teórica de ${vInputVal.toFixed(1)}V ajustada para 24.0V (limite seguro do kit). Resistor = ${formatResistance(rOhms)} aplicado!`;
+            statusMessage.style.color = '#fbbf24';
+        } else {
+            statusMessage.textContent = `[ BANCADA ATUALIZADA ] Tensão = ${state.voltage.toFixed(1)}V | Resistor = ${formatResistance(rOhms)} aplicado com sucesso!`;
+            statusMessage.style.color = '#34d399';
+        }
+    }
+
+    // Listeners da Tríade de Fórmulas e Modal
+    if (btnFormulaV) btnFormulaV.addEventListener('click', () => openCalcModal('v'));
+    if (btnFormulaI) btnFormulaI.addEventListener('click', () => openCalcModal('i'));
+    if (btnFormulaR) btnFormulaR.addEventListener('click', () => openCalcModal('r'));
+    if (btnOpenCalc) btnOpenCalc.addEventListener('click', () => openCalcModal(calcTarget));
+
+    if (sectorBtnV) sectorBtnV.addEventListener('click', () => { setCalcTarget('v'); audio.playClick(); });
+    if (sectorBtnI) sectorBtnI.addEventListener('click', () => { setCalcTarget('i'); audio.playClick(); });
+    if (sectorBtnR) sectorBtnR.addEventListener('click', () => { setCalcTarget('r'); audio.playClick(); });
+
+    calcModeButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            setCalcTarget(btn.dataset.target);
+            audio.playClick();
+        });
+    });
+
+    if (inputCalcV) inputCalcV.addEventListener('input', recalculateOhmModal);
+    if (inputCalcI) inputCalcI.addEventListener('input', recalculateOhmModal);
+    if (inputCalcR) inputCalcR.addEventListener('input', recalculateOhmModal);
+
+    if (modalOhmCalc) {
+        modalOhmCalc.querySelectorAll('.unit-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const group = e.target.closest('.calc-field-group');
+                if (!group) return;
+                const unit = btn.dataset.unit;
+                if (group.id === 'group-calc-i') {
+                    calcCurrentUnit = unit;
+                    group.querySelectorAll('.unit-btn').forEach(b => b.classList.toggle('active', b === btn));
+                } else if (group.id === 'group-calc-r') {
+                    calcResistUnit = unit;
+                    group.querySelectorAll('.unit-btn').forEach(b => b.classList.toggle('active', b === btn));
+                }
+                audio.playClick();
+                recalculateOhmModal();
+            });
+        });
+
+        if (btnCloseCalcModal) btnCloseCalcModal.addEventListener('click', closeCalcModal);
+        if (btnCalcCloseAlt) btnCalcCloseAlt.addEventListener('click', closeCalcModal);
+        if (btnApplyCalcToSim) btnApplyCalcToSim.addEventListener('click', applyCalcToSimulator);
+
+        modalOhmCalc.addEventListener('click', (e) => {
+            if (e.target === modalOhmCalc) closeCalcModal();
+        });
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modalOhmCalc && !modalOhmCalc.classList.contains('hidden')) {
+            closeCalcModal();
+        }
+    });
+
+    // --- 12. ANIMAÇÃO ANTI-ALIASING E TRAJETÓRIAS DE ELÉTRONS ---
     function computeSafeElectronSpeed(currentAmps, spacingPx) {
         if (!state.switchClosed || currentAmps <= 0.00001) return 0;
         // Fórmula exigida com proteção de Nyquist (< 45% da distância entre partículas)
@@ -1690,14 +2337,13 @@
     function drawComponentAt(slot, x, y, horizontal, current, overloaded, rotDeg, isParallelBranch = false) {
         const scale = isParallelBranch ? 0.85 : 1.0;
 
-        // Em paralelo, se houver resistor protetor em série no ramo, desenha ele no topo do ramo
-        if (isParallelBranch && (slot.parallelSeriesR || 0) > 0 && ['led', 'buzzer', 'motor'].includes(slot.type)) {
+        // Em paralelo, se houver resistor protetor em série no ramo (modo individual), desenha ele no topo do ramo
+        const hasBranchSeriesR = isParallelBranch && state.parallelProtectionMode === 'individual' && (slot.parallelSeriesR || 0) > 0 && ['led', 'buzzer', 'motor'].includes(slot.type);
+        if (hasBranchSeriesR) {
             drawResistorGraphic(x, CY + 68, false, slot.parallelSeriesR, 0.72, `${formatResistance(slot.parallelSeriesR)}`);
         }
 
-        const compY = (isParallelBranch && (slot.parallelSeriesR || 0) > 0 && ['led', 'buzzer', 'motor'].includes(slot.type))
-            ? y + 36
-            : y;
+        const compY = hasBranchSeriesR ? y + 36 : y;
 
         switch (slot.type) {
             case 'wire':
@@ -1782,7 +2428,14 @@
             ctx.fillText(`I = ${formatCurrent(t.currentTotal)}`, 368, CY + CH);
             ctx.restore();
         } else {
-            drawVoltmeterBadge(SPLIT_X - 45, CY, state.switchClosed ? `${state.voltage.toFixed(1)} V` : '0.0 V (Aberto)', 'Tensão nos Ramos', '#ff9d00', true);
+            // No modo compartilhado com Resistor Geral, mede a tensão real sobre os ramos após a queda (V_nó)
+            const isShared = state.parallelProtectionMode === 'shared' && (state.sharedParallelResistor || 0) > 0;
+            const vBranch = state.switchClosed ? (isShared ? t.v1 : state.voltage) : 0;
+            const vLabel = isShared ? `V_nó = ${vBranch.toFixed(2)} V` : `${vBranch.toFixed(1)} V`;
+            const vSub = isShared ? 'Tensão pós-resistor' : 'Tensão nos Ramos';
+            const voltBadgeX = isShared ? (SPLIT_X + 45) : (SPLIT_X - 45);
+
+            drawVoltmeterBadge(voltBadgeX, CY, state.switchClosed ? vLabel : '0.0 V (Aberto)', vSub, '#ff9d00', true);
             drawVoltmeterBadge(SPLIT_X - 45, CY + CH, 'GND: 0.0 V', `It = ${formatCurrent(t.currentTotal)}`, '#00bfff', false);
 
             // Rótulos de corrente em cada ramo
@@ -1793,6 +2446,79 @@
             ctx.fillText(`I1=${formatCurrent(t.i1)}`, B1_X, CY + CH + 20);
             ctx.fillStyle = '#7dd3fc';
             ctx.fillText(`I2=${formatCurrent(t.i2)}`, B2_X, CY + CH + 20);
+            ctx.restore();
+        }
+    }
+
+    function drawCanvasHoverFeedback() {
+        const target = activeDragTarget
+            ? {
+                x: activeDragTarget.type === 'battery' ? CX : (activeDragTarget.compX || (activeDragTarget.horizontal ? 465 : (activeDragTarget.slotKey === 'branch1' ? B1_X : (CX + CW)))),
+                y: activeDragTarget.type === 'battery' ? (CY + CH / 2) : (activeDragTarget.compY || (activeDragTarget.horizontal ? CY : (CY + CH / 2))),
+                radius: 34,
+                type: activeDragTarget.type,
+                hint: activeDragTarget.type === 'battery'
+                    ? `⚡ Fonte DC: ${state.voltage.toFixed(1)} V (Arraste para regular)`
+                    : (activeDragTarget.type === 'potentiometer'
+                        ? `🎛️ Calibrando: ${formatResistance(state[activeDragTarget.slotKey].potValue)} (Arraste para ajustar)`
+                        : `☀️ Luz LDR: ${state[activeDragTarget.slotKey].ldrLight}% (Arraste para ajustar)`)
+            }
+            : canvasHoverTarget;
+
+        if (!target) return;
+
+        ctx.save();
+        // 1. Halo circular ou retangular neon pulsante
+        const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 180);
+        ctx.strokeStyle = activeDragTarget ? '#f59e0b' : '#38bdf8';
+        ctx.shadowColor = activeDragTarget ? 'rgba(245, 158, 11, 0.75)' : 'rgba(56, 189, 248, 0.75)';
+        ctx.shadowBlur = 12 + 6 * pulse;
+        ctx.lineWidth = 2.5;
+
+        if (target.type === 'battery') {
+            ctx.beginPath();
+            ctx.roundRect(target.x - 26, target.y - 48, 52, 96, 10);
+            ctx.stroke();
+        } else if (target.type === 'switch') {
+            ctx.beginPath();
+            ctx.roundRect(target.x - 30, target.y - 20, 60, 40, 8);
+            ctx.stroke();
+        } else {
+            ctx.beginPath();
+            ctx.arc(target.x, target.y, (target.radius || 32) + 4, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+        ctx.restore();
+
+        // 2. Micro-balão / Tooltip tátil de instrução flutuante
+        if (target.hint) {
+            ctx.save();
+            ctx.font = '600 11px Outfit, sans-serif';
+            const metrics = ctx.measureText(target.hint);
+            const boxW = metrics.width + 24;
+            const boxH = 26;
+
+            let tipX = target.x;
+            let tipY = target.y - (target.type === 'battery' ? 62 : 46);
+
+            if (tipY < 20) tipY = target.y + 46;
+            if (tipX - boxW / 2 < 12) tipX = boxW / 2 + 12;
+            if (tipX + boxW / 2 > canvas.width - 12) tipX = canvas.width - boxW / 2 - 12;
+
+            ctx.fillStyle = 'rgba(10, 15, 28, 0.94)';
+            ctx.strokeStyle = activeDragTarget ? '#f59e0b' : '#38bdf8';
+            ctx.lineWidth = 1.5;
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.roundRect(tipX - boxW / 2, tipY - boxH / 2, boxW, boxH, 6);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#f8fafc';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(target.hint, tipX, tipY);
             ctx.restore();
         }
     }
@@ -1818,6 +2544,11 @@
         // Chave Táctil interativa no fio superior
         drawPushButtonSwitch(SWITCH_X, SWITCH_Y, state.switchClosed);
 
+        // Resistor Geral no barramento de Paralelo (quando em modo Geral)
+        if (state.mode === 'parallel' && state.parallelProtectionMode === 'shared' && state.sharedParallelResistor > 0) {
+            drawResistorGraphic(320, CY, true, state.sharedParallelResistor, 0.88, `${formatResistance(state.sharedParallelResistor)}`);
+        }
+
         // Componentes de Carga
         const t = state.telemetry;
         if (state.mode === 'series') {
@@ -1829,6 +2560,7 @@
         }
 
         drawCircuitMeasurements();
+        drawCanvasHoverFeedback();
         animatePhysics();
 
         requestAnimationFrame(renderLoop);

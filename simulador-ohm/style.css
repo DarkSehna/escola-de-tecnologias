@@ -189,14 +189,30 @@ html, body {
     gap: 0.5rem;
 }
 
-.badge {
+.formula-buttons-group {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.badge-btn {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.76rem;
     font-weight: 700;
-    padding: 0.32rem 0.65rem;
-    border-radius: 7px;
+    padding: 0.35rem 0.65rem;
+    border-radius: 8px;
     border: 1px solid var(--color-border);
     white-space: nowrap;
+    cursor: pointer;
+    background: transparent;
+    transition: var(--transition);
+    user-select: none;
+}
+
+.badge-btn:hover {
+    transform: translateY(-1.5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .badge-volt {
@@ -204,11 +220,40 @@ html, body {
     border-color: var(--color-wire-high-glow);
     background: rgba(255, 157, 0, 0.08);
 }
+.badge-volt:hover {
+    background: rgba(255, 157, 0, 0.22);
+    box-shadow: 0 0 14px rgba(255, 157, 0, 0.45);
+}
 
 .badge-amp {
     color: var(--color-wire-low);
     border-color: var(--color-wire-low-glow);
     background: rgba(0, 191, 255, 0.08);
+}
+.badge-amp:hover {
+    background: rgba(0, 191, 255, 0.22);
+    box-shadow: 0 0 14px rgba(0, 191, 255, 0.45);
+}
+
+.badge-ohm {
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.35);
+    background: rgba(16, 185, 129, 0.08);
+}
+.badge-ohm:hover {
+    background: rgba(16, 185, 129, 0.22);
+    box-shadow: 0 0 14px rgba(16, 185, 129, 0.45);
+}
+
+.badge-calc {
+    color: #c084fc;
+    border-color: rgba(168, 85, 247, 0.4);
+    background: rgba(168, 85, 247, 0.12);
+}
+.badge-calc:hover {
+    background: #a855f7;
+    color: #ffffff;
+    box-shadow: 0 0 16px rgba(168, 85, 247, 0.6);
 }
 
 /* WORKSPACE 3 COLUNAS ZERO-SCROLL */
@@ -1068,5 +1113,650 @@ html, body {
     }
     .canvas-tip {
         display: none;
+    }
+}
+
+/* ==========================================================================
+   BOTÃO CTA DA CALCULADORA NO CABEÇALHO
+   ========================================================================== */
+.calc-header-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.22) 0%, rgba(99, 102, 241, 0.18) 100%);
+    border: 1.5px solid rgba(168, 85, 247, 0.55);
+    color: #f3e8ff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.42rem 0.85rem;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 0 14px rgba(168, 85, 247, 0.2);
+    white-space: nowrap;
+}
+
+.calc-header-cta-btn:hover {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.38) 0%, rgba(99, 102, 241, 0.32) 100%);
+    border-color: #c084fc;
+    color: #ffffff;
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.45);
+    transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   SELETOR DE ARQUITETURA DE PROTEÇÃO (PARALELO)
+   ========================================================================== */
+.parallel-arch-card {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.75) 100%);
+    border: 1.5px solid rgba(56, 189, 248, 0.5);
+    border-radius: 14px;
+    padding: 0.85rem 0.95rem;
+    margin-bottom: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4), 0 0 15px rgba(56, 189, 248, 0.18);
+}
+
+.parallel-arch-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.parallel-arch-title-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #38bdf8;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.parallel-arch-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.arch-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    background: rgba(15, 23, 42, 0.75);
+    border: 1.5px solid rgba(148, 163, 184, 0.25);
+    color: #cbd5e1;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.55rem 0.75rem;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+}
+
+.arch-toggle-btn:hover {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: #38bdf8;
+    color: #f8fafc;
+}
+
+.arch-toggle-btn.active {
+    background: linear-gradient(135deg, rgba(2, 132, 199, 0.35) 0%, rgba(56, 189, 248, 0.18) 100%);
+    border-color: #38bdf8;
+    color: #ffffff;
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
+}
+
+.parallel-arch-desc {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    line-height: 1.35;
+}
+
+.parallel-shared-res-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0.45rem;
+    border-top: 1px dashed rgba(148, 163, 184, 0.25);
+    font-size: 0.76rem;
+    color: #cbd5e1;
+}
+
+/* ==========================================================================
+   MODAL CALCULADORA INTERATIVA DA LEI DE OHM
+   ========================================================================== */
+.modal-overlay.hidden {
+    display: none !important;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(7, 9, 13, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    padding: 1rem;
+    animation: fadeInModal 0.25s ease;
+}
+
+.calc-card {
+    background: #0d121f;
+    border: 1.5px solid rgba(168, 85, 247, 0.35);
+    border-radius: 24px;
+    padding: 2rem;
+    max-width: 860px;
+    width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), 0 0 35px rgba(168, 85, 247, 0.2);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+    animation: zoomInModal 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+[data-theme="light"] .calc-card {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.2);
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-normal);
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.modal-close-btn:hover {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: #ef4444;
+    color: #ef4444;
+    transform: rotate(90deg);
+}
+
+.calc-header {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding-right: 2.5rem;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 1rem;
+}
+
+.calc-badge-icon {
+    font-size: 2.2rem;
+    line-height: 1;
+}
+
+.calc-header h2 {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--color-text-white);
+    margin-bottom: 0.2rem;
+}
+
+.calc-subtitle {
+    font-size: 0.85rem;
+    color: var(--color-text-normal);
+}
+
+.calc-body-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+/* TRIÂNGULO MNEMÔNICO DA LEI DE OHM */
+.triangle-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--color-border);
+    border-radius: 18px;
+    padding: 1.25rem;
+}
+
+[data-theme="light"] .triangle-container {
+    background: #f8fafc;
+}
+
+.ohm-triangle {
+    width: 210px;
+    height: 190px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.03);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    padding: 0.8rem;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.4);
+}
+
+.triangle-sector {
+    width: 100%;
+    border: 1.5px solid transparent;
+    border-radius: 12px;
+    padding: 0.6rem;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.05);
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+}
+
+.triangle-sector:hover {
+    transform: scale(1.03);
+}
+
+.triangle-sector.active {
+    box-shadow: 0 0 16px rgba(168, 85, 247, 0.5);
+    border-width: 2px;
+}
+
+.sector-v {
+    color: #ff9d00;
+}
+.sector-v.active {
+    border-color: #ff9d00;
+    background: rgba(255, 157, 0, 0.18);
+    box-shadow: 0 0 16px rgba(255, 157, 0, 0.5);
+}
+
+.sector-r {
+    color: #10b981;
+}
+.sector-r.active {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.18);
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.5);
+}
+
+.sector-i {
+    color: #00bfff;
+}
+.sector-i.active {
+    border-color: #00bfff;
+    background: rgba(0, 191, 255, 0.18);
+    box-shadow: 0 0 16px rgba(0, 191, 255, 0.5);
+}
+
+.sector-symbol {
+    font-size: 1.6rem;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1;
+}
+
+.sector-name {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    opacity: 0.85;
+}
+
+.triangle-divider-h {
+    width: 100%;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.25);
+    margin: 0.45rem 0;
+    border-radius: 2px;
+}
+
+.triangle-bottom-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 0.4rem;
+    width: 100%;
+}
+
+.triangle-divider-v {
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.4);
+    user-select: none;
+}
+
+.triangle-tip {
+    font-size: 0.76rem;
+    color: var(--color-text-normal);
+    line-height: 1.4;
+    text-align: center;
+}
+
+/* PAINEL DE CAMPOS E RESULTADO */
+.calc-inputs-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.calc-mode-selector {
+    display: flex;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 0.25rem;
+    gap: 0.25rem;
+}
+
+.calc-mode-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--color-text-normal);
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.45rem 0.65rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+.calc-mode-btn.active {
+    background: var(--color-accent);
+    color: #000000;
+    box-shadow: 0 2px 10px rgba(0, 255, 204, 0.3);
+}
+
+.calc-fields-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.calc-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 0.75rem 0.95rem;
+    transition: var(--transition);
+}
+
+[data-theme="light"] .calc-field-group {
+    background: #f8fafc;
+}
+
+.calc-field-group.is-target {
+    border-color: #a855f7;
+    background: rgba(168, 85, 247, 0.08);
+}
+
+.calc-field-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.82rem;
+    color: var(--color-text-white);
+}
+
+.field-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+.dot-v { background: #ff9d00; box-shadow: 0 0 8px #ff9d00; }
+.dot-i { background: #00bfff; box-shadow: 0 0 8px #00bfff; }
+.dot-r { background: #10b981; box-shadow: 0 0 8px #10b981; }
+
+.field-role {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+}
+
+.calc-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.calc-input-wrapper input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1.5px solid var(--color-border);
+    color: var(--color-text-white);
+    padding: 0.45rem 0.75rem;
+    border-radius: 9px;
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    outline: none;
+    transition: var(--transition);
+}
+
+.calc-input-wrapper input:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+}
+
+.calc-input-wrapper input.is-result {
+    background: rgba(168, 85, 247, 0.15);
+    border-color: #a855f7;
+    color: #f3e8ff;
+    font-size: 1.15rem;
+}
+
+.calc-unit {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-text-normal);
+    min-width: 60px;
+}
+
+.unit-toggle {
+    display: flex;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 7px;
+    padding: 0.15rem;
+}
+
+.unit-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 0.25rem 0.55rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.unit-btn.active {
+    background: var(--color-accent);
+    color: #000000;
+}
+
+.conversion-hint {
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* PASSO A PASSO DIDÁTICO */
+.calc-step-by-step {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px dashed var(--color-border);
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+[data-theme="light"] .calc-step-by-step {
+    background: #f1f5f9;
+}
+
+.step-label {
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    letter-spacing: 0.05em;
+}
+
+.step-formula {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #38bdf8;
+}
+
+.power-readout {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #facc15;
+}
+
+/* ALERTA DIDÁTICO PARA TENSÕES TEÓRICAS ACIMA DE 24V */
+.calc-voltage-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.45);
+    border-radius: 10px;
+    padding: 0.65rem 0.85rem;
+    margin-top: 0.35rem;
+    color: #fef3c7;
+    font-size: 0.76rem;
+    line-height: 1.35;
+    animation: fadeInModal 0.2s ease;
+}
+
+.calc-voltage-warning.hidden {
+    display: none !important;
+}
+
+.calc-voltage-warning .warn-icon {
+    font-size: 1.15rem;
+    line-height: 1;
+}
+
+.calc-voltage-warning strong {
+    color: #fbbf24;
+    display: block;
+    margin-bottom: 0.15rem;
+}
+
+.calc-voltage-warning p {
+    margin: 0;
+    color: #fed7aa;
+}
+
+/* AÇÕES DO MODAL */
+.calc-actions-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.btn-apply-calc {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    cursor: pointer;
+    background: linear-gradient(135deg, #10b981, #00ffcc);
+    border: none;
+    color: #000000;
+    box-shadow: 0 4px 16px rgba(0, 255, 204, 0.35);
+    transition: var(--transition);
+    font-family: inherit;
+}
+
+.btn-apply-calc:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(0, 255, 204, 0.55);
+}
+
+.btn-secondary-calc {
+    padding: 0.75rem 1.25rem;
+    border-radius: 12px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-normal);
+    transition: var(--transition);
+    font-family: inherit;
+}
+
+.btn-secondary-calc:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--color-text-white);
+}
+
+@keyframes fadeInModal {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes zoomInModal {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@media (max-width: 768px) {
+    .calc-body-grid {
+        grid-template-columns: 1fr;
+    }
+    .triangle-container {
+        padding: 0.75rem;
+    }
+    .ohm-triangle {
+        width: 100%;
+        max-width: 240px;
     }
 }
