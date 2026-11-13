@@ -13,6 +13,7 @@
 }
 
 :root {
+    color-scheme: dark;
     /* Cores de Fundo */
     --color-bg-dark: #070a13;
     --color-bg-deep: #0b0f19;
@@ -55,6 +56,7 @@
 }
 
 [data-theme="light"] {
+    color-scheme: light;
     --color-bg-dark: #f8fafc;
     --color-bg-deep: #e2e8f0;
     --color-bg-card: rgba(255, 255, 255, 0.95);
@@ -242,10 +244,24 @@ body {
     line-height: 1.1;
 }
 
-.brand {
-    color: var(--color-text-white);
+.brand,
+.logo-title .brand,
+.logo-main {
+    color: #ffffff;
     display: inline-block;
     letter-spacing: -0.02em;
+}
+
+[data-theme="light"] .brand,
+[data-theme="light"] .logo-title .brand,
+[data-theme="light"] .logo-main {
+    color: #0f172a !important;
+}
+
+[data-theme="dark"] .brand,
+[data-theme="dark"] .logo-title .brand,
+[data-theme="dark"] .logo-main {
+    color: #ffffff !important;
 }
 
 .sub-brand {

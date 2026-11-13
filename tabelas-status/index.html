@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabelas de Status &amp; Balanceamento | Escola de Tecnologias</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='18'>⚖️</text></svg>">
+    <!-- Fontes Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- CONTAINER DE BRILHO DE FUNDO -->
+    <div class="bg-glow"></div>
+
+    <!-- CABEÇALHO DA FERRAMENTA -->
+    <header class="app-header">
+        <div class="header-left">
+            <a href="../" class="back-btn" title="Voltar ao Portal Principal">
+                <span>←</span> Voltar ao Portal
+            </a>
+            <div class="brand-block">
+                <h1>Tabelas de Status &amp; Balanceamento</h1>
+                <span class="badge-pill">Game Lab: Design &amp; Programação • camelCase</span>
+            </div>
+        </div>
+
+        <!-- BARRA SUPERIOR DE AÇÕES & PRESETS -->
+        <div class="header-actions">
+            <div class="preset-selector-group">
+                <span class="preset-label">Modelos de Aula:</span>
+                <div class="preset-buttons">
+                    <button type="button" class="btn-preset active" data-preset="metroidvania" title="Plataforma e Metroidvania (Construct 3 & GameMaker)">
+                        <span>🏃</span> Plataforma
+                    </button>
+                    <button type="button" class="btn-preset" data-preset="topview" title="TopView / Ação estilo Zelda com Box2D">
+                        <span>🗡️</span> TopView
+                    </button>
+                    <button type="button" class="btn-preset" data-preset="space" title="Space Shooter / Navinha Arcade">
+                        <span>🚀</span> Space Shooter
+                    </button>
+                    <button type="button" class="btn-preset" data-preset="rpg" title="RPG Tático / Turnos">
+                        <span>🛡️</span> RPG Tático
+                    </button>
+                </div>
+            </div>
+
+            <div class="header-controls">
+                <button type="button" class="lang-toggle-btn" aria-label="Alternar Idioma"></button>
+                <button type="button" class="theme-toggle-btn" aria-label="Alternar Tema"></button>
+            </div>
+        </div>
+    </header>
+
+    <!-- BANCADA PRINCIPAL FLUIDA -->
+    <main class="workbench">
+
+        <!-- COLUNA 1: TABELA DE STATUS DAS ENTIDADES -->
+        <section class="panel panel-entities" aria-label="Tabela de status das entidades">
+            <div class="panel-header">
+                <div>
+                    <h2>Entidades &amp; Atributos do Jogo</h2>
+                    <p>Edite os atributos numéricos em tempo real. Padrão <code>camelCase</code> pronto para exportação.</p>
+                </div>
+                <div class="panel-header-buttons">
+                    <button type="button" id="btnAddEntity" class="btn-primary">
+                        <span>➕</span> Nova Entidade
+                    </button>
+                    <button type="button" id="btnResetTable" class="btn-secondary" title="Restaurar o modelo padrão ativo">
+                        <span>🔄</span> Restaurar Preset
+                    </button>
+                </div>
+            </div>
+
+            <!-- TABELA RESPONSIVA COM ROLAGEM HORIZONTAL SUAVE -->
+            <div class="table-responsive-wrapper">
+                <table class="entities-table" id="entitiesTable">
+                    <thead>
+                        <tr>
+                            <th class="th-name">Nome da Entidade</th>
+                            <th class="th-type">Tipo</th>
+                            <th class="th-stat" title="Pontos de Vida">hp</th>
+                            <th class="th-stat" title="Vida Máxima">maxHp</th>
+                            <th class="th-stat" title="Poder de Ataque">damage</th>
+                            <th class="th-stat" title="Defesa / Absorção">defense</th>
+                            <th class="th-stat" title="Velocidade de Movimento">spd</th>
+                            <th class="th-stat" title="XP ou Pontos Concedidos">scoreValue</th>
+                            <th class="th-actions">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="entitiesTableBody">
+                        <!-- Linhas geradas dinamicamente via script.js -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- BARRA DE RESUMO RÁPIDO DA TABELA -->
+            <div class="table-summary-bar">
+                <span id="summaryEntitiesCount">4 entidades cadastradas</span>
+                <span class="summary-separator">•</span>
+                <span id="summaryAvgHp">HP médio: 86</span>
+                <span class="summary-separator">•</span>
+                <span id="summaryAvgDamage">Dano médio: 21</span>
+            </div>
+        </section>
+
+        <!-- COLUNA 2: SIMULADOR TTK & CURVA DE PROGRESSÃO -->
+        <aside class="panel panel-analysis" aria-label="Simulador de combate e progressão">
+
+            <!-- BLOCO 1: SIMULADOR DE COMBATE & TIME-TO-KILL (TTK) -->
+            <div class="analysis-card ttk-card">
+                <div class="card-header-row">
+                    <div class="card-title-badge">
+                        <span>⚔️</span>
+                        <h3>Simulador de Combate (TTK)</h3>
+                    </div>
+                    <div class="formula-toggle" role="group" aria-label="Fórmula de cálculo">
+                        <button type="button" class="formula-btn active" data-formula="simple" title="Ação / Arcade: Dano = Máx(1, Ataque - Defesa)">
+                            Simples (Atk - Def)
+                        </button>
+                        <button type="button" class="formula-btn" data-formula="rpg" title="RPG / Atenuação percentual de armadura">
+                            RPG (Percentual)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="ttk-selectors-row">
+                    <div class="selector-field">
+                        <label for="selectAttacker">Atacante:</label>
+                        <select id="selectAttacker" class="cyber-select"></select>
+                    </div>
+                    <div class="vs-badge">VS</div>
+                    <div class="selector-field">
+                        <label for="selectDefender">Defensor / Alvo:</label>
+                        <select id="selectDefender" class="cyber-select"></select>
+                    </div>
+                </div>
+
+                <!-- RESULTADOS DO TTK -->
+                <div class="ttk-metrics-grid">
+                    <div class="metric-box">
+                        <span class="metric-label">Dano Líquido / Golpe</span>
+                        <span class="metric-value" id="valNetDamage">--</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Golpes p/ Derrotar</span>
+                        <span class="metric-value highlight" id="valHitsToKill">--</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Tempo Estimado (TTK)</span>
+                        <span class="metric-value" id="valTtkTime">--</span>
+                    </div>
+                </div>
+
+                <!-- SEMÁFORO / ALERTA DE BALANCEAMENTO -->
+                <div id="ttkPacingAlert" class="pacing-alert alert-balanced">
+                    <span class="alert-icon">🟢</span>
+                    <div class="alert-text">
+                        <strong id="alertTitle">Ritmo Equilibrado</strong>
+                        <p id="alertDesc">O combate exige engajamento sem se tornar cansativo ou punitivo demais.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BLOCO 2: CURVA DE PROGRESSÃO POR NÍVEL (1 A 10) -->
+            <div class="analysis-card progression-card">
+                <div class="card-header-row">
+                    <div class="card-title-badge">
+                        <span>📈</span>
+                        <h3>Progressão por Nível (1 a 10)</h3>
+                    </div>
+                    <div class="progression-controls">
+                        <select id="selectProgEntity" class="cyber-select-sm" title="Escolha a entidade para simular"></select>
+                        <select id="selectProgCurve" class="cyber-select-sm" title="Tipo de curva matemática">
+                            <option value="linear">Linear (+15% p/ nível)</option>
+                            <option value="rpg">RPG Exponencial (^1.15)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="chart-wrapper">
+                    <canvas id="progressionCanvas" width="520" height="180" aria-label="Gráfico de progressão de atributos"></canvas>
+                </div>
+
+                <div class="chart-legend">
+                    <span class="legend-item"><span class="legend-color legend-hp"></span> hp (Vida)</span>
+                    <span class="legend-item"><span class="legend-color legend-dmg"></span> damage (Ataque)</span>
+                    <span class="legend-item"><span class="legend-color legend-def"></span> defense (Defesa)</span>
+                </div>
+            </div>
+
+        </aside>
+
+    </main>
+
+    <!-- PAINEL INFERIOR: CENTRAL DE EXPORTAÇÃO DE CÓDIGO (CAMELCASE) -->
+    <section class="export-section" aria-label="Central de exportação para motores e GDD">
+        <div class="export-container">
+            <div class="export-header-row">
+                <div class="export-title-block">
+                    <h2>Central de Exportação de Código</h2>
+                    <p>Variáveis padronizadas em <code>camelCase</code> prontas para copiar e colar no GameMaker, Construct 3 ou no seu GDD.</p>
+                </div>
+                <div class="export-tabs-row" role="tablist">
+                    <button type="button" class="export-tab active" data-export-tab="gamemaker" role="tab" aria-selected="true">
+                        <span>🎮</span> GameMaker (GML)
+                    </button>
+                    <button type="button" class="export-tab" data-export-tab="construct" role="tab" aria-selected="false">
+                        <span>🧱</span> Construct 3
+                    </button>
+                    <button type="button" class="export-tab" data-export-tab="markdown" role="tab" aria-selected="false">
+                        <span>📝</span> Markdown (GDD)
+                    </button>
+                    <button type="button" class="export-tab" data-export-tab="json" role="tab" aria-selected="false">
+                        <span>💾</span> JSON / Backup
+                    </button>
+                </div>
+            </div>
+
+            <!-- CONTEÚDO DAS ABAS DE EXPORTAÇÃO -->
+            <div class="export-content-body">
+                
+                <!-- ABA 1: GAMEMAKER -->
+                <div id="tabContentGamemaker" class="export-tab-panel active">
+                    <div class="panel-subbar">
+                        <span class="subbar-desc">Cole o código no evento <strong>Create</strong> de cada objeto ou use a <strong>Struct Global</strong> no script de inicialização:</span>
+                        <div class="subbar-actions">
+                            <label class="radio-inline">
+                                <input type="radio" name="gmStyle" value="create" checked> Variáveis no Create
+                            </label>
+                            <label class="radio-inline">
+                                <input type="radio" name="gmStyle" value="struct"> Struct Global
+                            </label>
+                            <button type="button" id="btnCopyGml" class="btn-copy">
+                                <span>📋</span> Copiar GML
+                            </button>
+                        </div>
+                    </div>
+                    <pre class="code-box"><code id="codeOutputGml">// Código GML gerado automaticamente</code></pre>
+                </div>
+
+                <!-- ABA 2: CONSTRUCT 3 -->
+                <div id="tabContentConstruct" class="export-tab-panel">
+                    <div class="panel-subbar">
+                        <span class="subbar-desc">Crie estas <strong>Variáveis de Instância</strong> no painel de propriedades do Construct 3 ou carregue via Dictionary JSON:</span>
+                        <div class="subbar-actions">
+                            <label class="radio-inline">
+                                <input type="radio" name="c3Style" value="instance" checked> Guia de Variáveis
+                            </label>
+                            <label class="radio-inline">
+                                <input type="radio" name="c3Style" value="json"> Dictionary JSON
+                            </label>
+                            <button type="button" id="btnCopyC3" class="btn-copy">
+                                <span>📋</span> Copiar para Construct 3
+                            </button>
+                        </div>
+                    </div>
+                    <pre class="code-box"><code id="codeOutputC3">// Especificações do Construct 3</code></pre>
+                </div>
+
+                <!-- ABA 3: MARKDOWN (GDD) -->
+                <div id="tabContentMarkdown" class="export-tab-panel">
+                    <div class="panel-subbar">
+                        <span class="subbar-desc">Tabela em Markdown pronta para colar na seção <strong>Mecânicas &amp; Entidades</strong> do seu Game Design Document (GDD):</span>
+                        <button type="button" id="btnCopyMarkdown" class="btn-copy">
+                            <span>📋</span> Copiar Markdown do GDD
+                        </button>
+                    </div>
+                    <pre class="code-box"><code id="codeOutputMarkdown">// Tabela Markdown</code></pre>
+                </div>
+
+                <!-- ABA 4: JSON / BACKUP -->
+                <div id="tabContentJson" class="export-tab-panel">
+                    <div class="panel-subbar">
+                        <span class="subbar-desc">Salve sua tabela completa para continuar o balanceamento na próxima aula ou carregue um arquivo existente:</span>
+                        <div class="subbar-actions">
+                            <button type="button" id="btnDownloadJson" class="btn-action-primary">
+                                <span>💾</span> Baixar Arquivo JSON
+                            </button>
+                            <label class="btn-action-secondary">
+                                <span>📂</span> Carregar JSON
+                                <input type="file" id="fileInputJson" accept=".json" style="display: none;">
+                            </label>
+                            <button type="button" id="btnCopyRawJson" class="btn-copy">
+                                <span>📋</span> Copiar JSON
+                            </button>
+                        </div>
+                    </div>
+                    <pre class="code-box"><code id="codeOutputRawJson">// JSON Completo</code></pre>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- NOTIFICAÇÃO TOAST VISUAL -->
+    <div id="toastFeedback" class="toast-feedback" role="status" aria-live="polite"></div>
+
+    <!-- SCRIPTS GLOBAIS -->
+    <script src="../lang-toggle.js"></script>
+    <script src="../theme-toggle.js"></script>
+    <script src="../lock-listener.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

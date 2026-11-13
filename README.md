@@ -8,7 +8,7 @@
 
 ## 🧭 Visão Geral
 
-O **Portal do Laboratório de Tecnologias** reúne **19 ferramentas e simuladores autorais** executados 100% no navegador (Client-Side e APIs modernas), sem necessidade de instalações complexas. O ambiente é projetado com estética cyberpunk limpa, suporte universal a **Modo Escuro / Claro**, **seletor de idiomas (Português / Inglês)**, **painel administrativo do professor com PIN** e **sistema de proteção e identificação de compatibilidade por dispositivo (Celular vs. Computador)**.
+O **Portal do Laboratório de Tecnologias** reúne **20 ferramentas e simuladores autorais** executados 100% no navegador (Client-Side e APIs modernas), sem necessidade de instalações complexas. O ambiente é projetado com estética cyberpunk limpa, suporte universal a **Modo Escuro / Claro**, **seletor de idiomas (Português / Inglês)**, **painel administrativo do professor com PIN** e **sistema de proteção e identificação de compatibilidade por dispositivo (Celular vs. Computador)**.
 
 ---
 
@@ -30,10 +30,12 @@ flowchart TD
     Track1 --> T1E["Imagens Binárias & Matriz"]
     Track1 --> T1F["Feedback de Jogos"]
     Track1 --> T1G["Estúdio de Prompts & ComfyUI"]
+    Track1 --> T1H["Tabelas de Status & Balanceamento"]
     
     Track2 --> T2A["Lab de Física 2D"]
     Track2 --> T2B["Simulador FSM"]
     Track2 --> T2C["Assistente IA - Games ✨"]
+    Track2 --> T2D["Tabelas de Status & Balanceamento"]
     
     Track3 --> T3A["Giro de Robô 2D"]
     Track3 --> T3B["Lei de Ohm (Kit Arduino)"]
@@ -49,7 +51,7 @@ flowchart TD
 
 ---
 
-## 🛠️ Catálogo Completo de Ferramentas (19 Simuladores)
+## 🛠️ Catálogo Completo de Ferramentas (20 Simuladores)
 
 | # | Ferramenta | Trilha Principal | Compatibilidade | Descrição Pedagógica |
 |:---:|:---|:---|:---:|:---|
@@ -60,18 +62,23 @@ flowchart TD
 | **05** | [`binario-pixelart/`](./binario-pixelart/) | 🎨 Game Lab: Design | 🖥️ Computador | Laboratório de matriz binária (1-Bit e 2-Bits), decodificador de enigmas e exportação de sprites para o Piskel. |
 | **06** | [`feedback-jogos/`](./feedback-jogos/) | 🎨 Game Lab: Design | 🖥️ Computador | Formulário anônimo e dashboard visual de avaliação UX e playtesting dos jogos dos alunos. |
 | **07** | [`seletor-prompts/`](./seletor-prompts/) | 🎨 Game Lab: Design | 🖥️ Computador | Estúdio de montagem de prompts visuais em português para SDXL, trava SFW integrada e launcher do ComfyUI local. |
-| **08** | [`lab-fisica-2d/`](./lab-fisica-2d/) | 💻 Game Lab: Programação | 🖥️ Computador | Simulador interativo em Canvas a 60 FPS para teste de gravidade, forças vetoriais, atrito e colisão elástica. |
-| **09** | [`simulador-fsm/`](./simulador-fsm/) | 💻 Game Lab: Programação | 🖥️ Computador | Editor visual de Máquinas de Estados Finitos com nós conectáveis e transição dinâmica de lógica. |
-| **10** | [`assistente-ia/?area=games`](./assistente-ia/index.html?area=games) | 💻 Game Lab: Programação | 🖥️ Computador | Chatbot com IA para suporte a Game Design, Construct 3, GameMaker GML e avaliação estilo Metacritic. |
-| **11** | [`simulador-giro-robotico/`](./simulador-giro-robotico/) | ⚙️ Robótica | 🖥️ Computador | Estudo da cinemática diferencial com tração diferencial de rodas, odometria e trajetórias 2D. |
-| **12** | [`simulador-ohm/`](./simulador-ohm/) | ⚙️ Robótica | 🖥️ Computador | Lei de Ohm interativa com peças reais do Kit Arduino (protoboard, resistores coloridos, LEDs, 9V/5V) em circuitos série e paralelo. |
-| **13** | [`hacker-lockpicking/`](./hacker-lockpicking/) | ⚙️ Robótica | 🖥️ Computador | Desafio interativo de lockpicking conectado ao hardware físico de Arduino via Web Serial API ou simulador virtual. |
-| **14** | [`assistente-ia/?area=robotica`](./assistente-ia/index.html?area=robotica) | ⚙️ Robótica | 🖥️ Computador | Agente de IA para mentoria de robótica com Lego, placas Arduino, sensores ultrassônicos e ponte H. |
-| **15** | [`obr-placar-treino/`](./obr-placar-treino/) | 🏆 Treinamento Robótica | 📱 Celular & PC | Cronômetro oficial e pontuador de regras da OBR (Olimpíada Brasileira de Robótica) com desconto automático por tentativas. |
-| **16** | [`simulador-seguidor-linha/`](./simulador-seguidor-linha/) | 🏆 Treinamento Robótica | 🖥️ Computador | Simulador físico de pista com calibração em tempo real de ganhos PID (Kp, Ki, Kd), posição de sensores e engrenagens. |
-| **17** | [`prancheta-fll/`](./prancheta-fll/) | 🏆 Treinamento Robótica | 🖥️ Computador | Prancheta tática para traçado de rotas autônomas, marcação de missões e notas de estratégia da temporada FLL. |
-| **18** | [`telemetria-coaching/`](./telemetria-coaching/) | 🏆 Treinamento Robótica | 📱 Celular & PC | Diagnóstico automático de voltas por IA Multimodal (Gemini via Cloudflare Worker) com timeline de oscilações e ajuste fino de PID. |
-| **19** | [`assistente-ia/?area=treinamento`](./assistente-ia/index.html?area=treinamento) | 🏆 Treinamento Robótica | 🖥️ Computador | Suporte inteligente para algoritmos de competição em Python, montagem estrutural e estratégias de pontuação. |
+| **08** | [`tabelas-status/`](./tabelas-status/) | 🎨 Design & 💻 Programação | 🖥️ Computador | Tabela editável de atributos numéricos, simulador de tempo de combate (TTK), curvas de nível e exportação em `camelCase` para Construct 3 e GameMaker. |
+| **09** | [`lab-fisica-2d/`](./lab-fisica-2d/) | 💻 Game Lab: Programação | 🖥️ Computador | Simulador interativo em Canvas a 60 FPS para teste de gravidade, forças vetoriais, atrito e colisão elástica. |
+| **10** | [`simulador-fsm/`](./simulador-fsm/) | 💻 Game Lab: Programação | 🖥️ Computador | Editor visual de Máquinas de Estados Finitos com nós conectáveis e transição dinâmica de lógica. |
+| **11** | [`assistente-ia/?area=games`](./assistente-ia/index.html?area=games) | 💻 Game Lab: Programação | 🖥️ Computador | Chatbot com IA para suporte a Game Design, Construct 3, GameMaker GML e avaliação estilo Metacritic. |
+| **12** | [`simulador-giro-robotico/`](./simulador-giro-robotico/) | ⚙️ Robótica | 🖥️ Computador | Estudo da cinemática diferencial com tração diferencial de rodas, odometria e trajetórias 2D. |
+| **13** | [`simulador-ohm/`](./simulador-ohm/) | ⚙️ Robótica | 🖥️ Computador | Lei de Ohm interativa com peças reais do Kit Arduino (protoboard, resistores coloridos, LEDs, 9V/5V) em circuitos série e paralelo. |
+| **14** | [`hacker-lockpicking/`](./hacker-lockpicking/) | ⚙️ Robótica | 🖥️ Computador | Desafio interativo de lockpicking conectado ao hardware físico de Arduino via Web Serial API ou simulador virtual. |
+| **15** | [`assistente-ia/?area=robotica`](./assistente-ia/index.html?area=robotica) | ⚙️ Robótica | 🖥️ Computador | Agente de IA para mentoria de robótica com Lego, placas Arduino, sensores ultrassônicos e ponte H. |
+| **16** | [`obr-placar-treino/`](./obr-placar-treino/) | 🏆 Treinamento Robótica | 📱 Celular & PC | Cronômetro oficial e pontuador de regras da OBR (Olimpíada Brasileira de Robótica) com desconto automático por tentativas. |
+| **17** | [`simulador-seguidor-linha/`](./simulador-seguidor-linha/) | 🏆 Treinamento Robótica | 🖥️ Computador | Simulador físico de pista com calibração em tempo real de ganhos PID (Kp, Ki, Kd), posição de sensores e engrenagens. |
+| **18** | [`prancheta-fll/`](./prancheta-fll/) | 🏆 Treinamento Robótica | 🖥️ Computador | Prancheta tática para traçado de rotas autônomas, marcação de missões e notas de estratégia da temporada FLL. |
+| **19** | [`telemetria-coaching/`](./telemetria-coaching/) | 🏆 Treinamento Robótica | 📱 Celular & PC | Diagnóstico automático de voltas por IA Multimodal (Gemini via Cloudflare Worker) com timeline de oscilações e ajuste fino de PID. |
+| **20** | [`assistente-ia/?area=treinamento`](./assistente-ia/index.html?area=treinamento) | 🏆 Treinamento Robótica | 🖥️ Computador | Suporte inteligente para algoritmos de competição em Python, montagem estrutural e estratégias de pontuação. |
+
+> [!NOTE]
+> **Convenção de Nomenclatura de Código Didático (`camelCase`):**  
+> Toda a codificação, variáveis e snippets entregues aos estudantes (GameMaker GML, Construct 3, fórmulas matemáticas) seguem rigorosamente o padrão `camelCase` (ex: `maxHp`, `scoreValue`, `damage`, `spd`), alinhando a prática pedagógica com os padrões ensinados nas aulas.
 
 ---
 

@@ -83,6 +83,7 @@
             "action_open_board": "Abrir Prancheta",
             "action_analyze_lap": "Analisar Volta",
             "action_open_studio": "Abrir Estúdio",
+            "action_balance_stats": "Balancear Jogo",
             "status_in_maintenance": "🔒 Em Manutenção",
 
             // Cards de Ferramentas - Detalhes
@@ -113,6 +114,10 @@
             "card_prompts_tag": "Design • IA & ComfyUI",
             "card_prompts_title": "Estúdio de Prompts & ComfyUI ✨",
             "card_prompts_desc": "Monte prompts visuais em português com tradução automática para SDXL, trava SFW e launcher do ComfyUI local.",
+
+            "card_status_tag": "Design & Programação • Balanceamento",
+            "card_status_title": "Tabelas de Status & Balanceamento ⚖️",
+            "card_status_desc": "Planeje atributos numéricos, simule tempo de combate (TTK), curvas de nível e exporte código pronto em camelCase para Construct 3 e GameMaker.",
 
             "card_fisica_tag": "Programação • Canvas 2D",
             "card_fisica_title": "Lab de Física 2D",
@@ -237,6 +242,7 @@
             "action_open_board": "Open Board",
             "action_analyze_lap": "Analyze Lap",
             "action_open_studio": "Open Studio",
+            "action_balance_stats": "Balance Stats",
             "status_in_maintenance": "🔒 Under Maintenance",
 
             // Tool Cards - Details
@@ -267,6 +273,10 @@
             "card_prompts_tag": "Design • AI & ComfyUI",
             "card_prompts_title": "Prompt Studio & ComfyUI ✨",
             "card_prompts_desc": "Build visual prompts in Portuguese with automatic SDXL translation, SFW shield and local ComfyUI launcher.",
+
+            "card_status_tag": "Design & Programming • Balancing",
+            "card_status_title": "Stat Tables & Game Balancing ⚖️",
+            "card_status_desc": "Design numeric entity stats, simulate combat TTK, level curves, and export clean camelCase snippets for Construct 3 and GameMaker.",
 
             "card_fisica_tag": "Programming • 2D Canvas",
             "card_fisica_title": "2D Physics Lab",
