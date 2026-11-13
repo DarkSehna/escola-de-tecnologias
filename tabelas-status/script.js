@@ -48,7 +48,9 @@ const PRESETS = {
 const state = {
     currentPreset: 'metroidvania',
     entities: JSON.parse(JSON.stringify(PRESETS.metroidvania.entities)),
-    formula: 'simple', // 'simple' | 'rpg'
+    formula: 'simple', // 'simple' | 'rpg' | 'custom'
+    classicFormula: 'min1', // 'min1' | 'pokemon' | 'lol' | 'true' | 'free'
+    freeFormulaText: 'max(1, atk * 1.5 - def)',
     attackerId: 'player',
     defenderId: 'inimigoPatrulha',
     progEntityId: 'player',
@@ -64,11 +66,13 @@ document.addEventListener('DOMContentLoaded', () => {
     initTableEvents();
     initTtkControls();
     initProgressionControls();
+    initExportModal();
     initExportTabs();
     initClipboardButtons();
     initJsonFileHandler();
 
     renderTable();
+    updateBalanceHud();
     updateTtkSelects();
     calculateTtk();
     drawProgressionChart();
@@ -97,6 +101,7 @@ function initPresets() {
             state.progEntityId = state.entities[0]?.id || '';
 
             renderTable();
+            updateBalanceHud();
             updateTtkSelects();
             calculateTtk();
             drawProgressionChart();
@@ -112,6 +117,7 @@ function initPresets() {
             const activePreset = PRESETS[state.currentPreset] || PRESETS.metroidvania;
             state.entities = JSON.parse(JSON.stringify(activePreset.entities));
             renderTable();
+            updateBalanceHud();
             updateTtkSelects();
             calculateTtk();
             drawProgressionChart();
@@ -220,7 +226,7 @@ function renderTable() {
         });
     });
 
-    updateSummaryBar();
+    updateBalanceHud();
 }
 
 function handleTableFieldChange(e) {
@@ -235,11 +241,33 @@ function handleTableFieldChange(e) {
         if (field === 'maxHp' && val < 1) val = 1;
     }
 
-    state.entities[idx][field] = val;
+    const entity = state.entities[idx];
+
+    // VÍNCULO PEDAGÓGICO: hp e maxHp sincronizados com trava
+    if (field === 'maxHp') {
+        const prevMax = entity.maxHp;
+        entity.maxHp = val;
+        // Se o hp anterior era igual ao maxHp antigo (spawn com vida cheia) ou se ficou maior que o novo maxHp:
+        if (entity.hp === prevMax || entity.hp > val) {
+            entity.hp = val;
+            const hpInput = document.querySelector(`input[data-index="${idx}"][data-field="hp"]`);
+            if (hpInput) hpInput.value = val;
+        }
+    } else if (field === 'hp') {
+        // Trava pedagógica: hp não pode exceder maxHp
+        if (val > entity.maxHp) {
+            val = entity.maxHp;
+            e.target.value = val;
+            showToast(`⚠️ O hp atual foi limitado ao maxHp (${entity.maxHp})!`);
+        }
+        entity.hp = val;
+    } else {
+        entity[field] = val;
+    }
 
     // Se mudou o nome, recalcula ID em camelCase limpo
     if (field === 'name') {
-        state.entities[idx].id = toCamelCase(val) || `entidade${idx + 1}`;
+        entity.id = toCamelCase(val) || `entidade${idx + 1}`;
     }
 
     // Se alterou tipo, atualiza cor visual da badge do select
@@ -247,7 +275,7 @@ function handleTableFieldChange(e) {
         e.target.className = `select-type type-${val}`;
     }
 
-    updateSummaryBar();
+    updateBalanceHud();
     updateTtkSelects();
     calculateTtk();
     drawProgressionChart();
@@ -264,6 +292,7 @@ function duplicateEntity(index) {
 
     state.entities.splice(index + 1, 0, copy);
     renderTable();
+    updateBalanceHud();
     updateTtkSelects();
     calculateTtk();
     drawProgressionChart();
@@ -279,6 +308,7 @@ function deleteEntity(index) {
 
     const removed = state.entities.splice(index, 1)[0];
     renderTable();
+    updateBalanceHud();
     updateTtkSelects();
     calculateTtk();
     drawProgressionChart();
@@ -286,19 +316,53 @@ function deleteEntity(index) {
     showToast(`Entidade "${removed.name}" removida.`);
 }
 
-function updateSummaryBar() {
-    const countEl = document.getElementById('summaryEntitiesCount');
-    const hpEl = document.getElementById('summaryAvgHp');
-    const dmgEl = document.getElementById('summaryAvgDamage');
+function updateBalanceHud() {
+    const heroes = state.entities.filter(e => e.type === 'hero');
+    const enemies = state.entities.filter(e => e.type === 'enemy');
+    const bosses = state.entities.filter(e => e.type === 'boss');
 
-    const total = state.entities.length;
-    if (countEl) countEl.textContent = `${total} entidade${total > 1 ? 's' : ''} cadastrada${total > 1 ? 's' : ''}`;
+    const mainHero = heroes[0] || state.entities[0];
+    const hudHeroStats = document.getElementById('hudHeroStats');
+    const hudHeroSub = document.getElementById('hudHeroSub');
 
-    if (total > 0) {
-        const avgHp = Math.round(state.entities.reduce((acc, cur) => acc + (cur.hp || 0), 0) / total);
-        const avgDmg = Math.round(state.entities.reduce((acc, cur) => acc + (cur.damage || 0), 0) / total);
-        if (hpEl) hpEl.textContent = `HP médio: ${avgHp}`;
-        if (dmgEl) dmgEl.textContent = `Dano médio: ${avgDmg}`;
+    if (mainHero && hudHeroStats && hudHeroSub) {
+        hudHeroStats.textContent = `maxHp: ${mainHero.maxHp} • Dano: ${mainHero.damage}`;
+        hudHeroSub.textContent = `Defesa: ${mainHero.defense} • Velocidade: ${mainHero.spd}`;
+    }
+
+    const hudEnemyCount = document.getElementById('hudEnemyCount');
+    const hudEnemyStats = document.getElementById('hudEnemyStats');
+    const hudEnemySub = document.getElementById('hudEnemySub');
+
+    if (enemies.length > 0) {
+        const avgHp = Math.round(enemies.reduce((acc, cur) => acc + (cur.maxHp || 0), 0) / enemies.length);
+        const avgDmg = Math.round(enemies.reduce((acc, cur) => acc + (cur.damage || 0), 0) / enemies.length);
+        const heroAtk = mainHero ? mainHero.damage : 1;
+        const avgHits = Math.max(1, Math.ceil(avgHp / Math.max(1, heroAtk)));
+
+        if (hudEnemyCount) hudEnemyCount.textContent = enemies.length;
+        if (hudEnemyStats) hudEnemyStats.textContent = `maxHp Médio: ${avgHp} • Dano: ${avgDmg}`;
+        if (hudEnemySub) hudEnemySub.textContent = `Média para derrotar: ~${avgHits}x golpes`;
+    } else {
+        if (hudEnemyCount) hudEnemyCount.textContent = '0';
+        if (hudEnemyStats) hudEnemyStats.textContent = 'Nenhum lacaio';
+        if (hudEnemySub) hudEnemySub.textContent = 'Adicione inimigos para comparar';
+    }
+
+    const hudBossStats = document.getElementById('hudBossStats');
+    const hudBossSub = document.getElementById('hudBossSub');
+
+    if (bosses.length > 0) {
+        const mainBoss = bosses[0];
+        const heroHp = mainHero ? mainHero.maxHp : 100;
+        const bossDmg = Math.max(1, mainBoss.damage - (mainHero ? mainHero.defense : 0));
+        const heroHitsToSurvive = Math.max(1, Math.ceil(heroHp / bossDmg));
+
+        if (hudBossStats) hudBossStats.textContent = `${mainBoss.name} • maxHp: ${mainBoss.maxHp} • Dano: ${mainBoss.damage}`;
+        if (hudBossSub) hudBossSub.textContent = `Pacing: Jogador aguenta ~${heroHitsToSurvive}x golpes do Chefe`;
+    } else {
+        if (hudBossStats) hudBossStats.textContent = 'Nenhum Chefe Definido';
+        if (hudBossSub) hudBossSub.textContent = 'Mude o tipo de uma entidade para Chefe';
     }
 }
 
@@ -307,14 +371,38 @@ function updateSummaryBar() {
 // ==========================================================================
 function initTtkControls() {
     const formulaButtons = document.querySelectorAll('.formula-btn');
+    const customRow = document.getElementById('customFormulaRow');
+    const selectClassic = document.getElementById('selectClassicFormula');
+    const inputCustom = document.getElementById('inputCustomFormula');
+
     formulaButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             formulaButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             state.formula = btn.dataset.formula;
+            if (customRow) {
+                customRow.style.display = state.formula === 'custom' ? 'block' : 'none';
+            }
             calculateTtk();
         });
     });
+
+    if (selectClassic) {
+        selectClassic.addEventListener('change', () => {
+            state.classicFormula = selectClassic.value;
+            if (inputCustom) {
+                inputCustom.style.display = state.classicFormula === 'free' ? 'inline-block' : 'none';
+            }
+            calculateTtk();
+        });
+    }
+
+    if (inputCustom) {
+        inputCustom.addEventListener('input', () => {
+            state.freeFormulaText = inputCustom.value;
+            calculateTtk();
+        });
+    }
 
     const selectAttacker = document.getElementById('selectAttacker');
     const selectDefender = document.getElementById('selectDefender');
@@ -410,16 +498,32 @@ function calculateTtk() {
 
     if (!attacker || !defender) return;
 
-    let netDamage = 0;
+    let netDamage = 1;
+    const atk = Math.max(0, attacker.damage);
+    const def = Math.max(0, defender.defense);
+
     if (state.formula === 'simple') {
-        netDamage = Math.max(1, attacker.damage - defender.defense);
-    } else {
-        // Fórmula clássica de mitigação percentual
-        const defFactor = 100 / (100 + Math.max(0, defender.defense));
-        netDamage = Math.max(1, Math.round(attacker.damage * defFactor));
+        netDamage = Math.max(1, atk - def);
+    } else if (state.formula === 'rpg') {
+        const defFactor = 100 / (100 + def);
+        netDamage = Math.max(1, Math.round(atk * defFactor));
+    } else if (state.formula === 'custom') {
+        if (state.classicFormula === 'min1') {
+            netDamage = Math.max(1, atk - def);
+        } else if (state.classicFormula === 'pokemon') {
+            netDamage = Math.max(1, Math.floor((2 * atk) / Math.max(1, def)) + 2);
+        } else if (state.classicFormula === 'lol') {
+            netDamage = Math.max(1, Math.round(atk * (100 / (100 + def))));
+        } else if (state.classicFormula === 'true') {
+            netDamage = Math.max(1, atk);
+        } else if (state.classicFormula === 'free') {
+            netDamage = evaluateSafeFormula(state.freeFormulaText, atk, def);
+        }
     }
 
-    const hitsToKill = Math.ceil(defender.hp / netDamage);
+    // O combate no simulador sempre avalia o defensor com seu teto de HP Máximo
+    const defenderHp = Math.max(1, defender.maxHp || defender.hp || 1);
+    const hitsToKill = Math.ceil(defenderHp / netDamage);
 
     // Velocidade de ataque aproximada (baseada no atributo spd ou cadência de 1.2s padrão)
     const attacksPerSec = attacker.spd > 0 ? (0.6 + attacker.spd * 0.15) : 0.8;
@@ -429,31 +533,107 @@ function calculateTtk() {
     if (valHits) valHits.textContent = `${hitsToKill}x`;
     if (valTime) valTime.textContent = `~${ttkSeconds}s`;
 
-    // Avaliação de Semáforo / Pacing
+    // Avaliação de Semáforo / Pacing Pedagógico com foco no JOGADOR
     if (alertBox && alertTitle && alertDesc) {
         alertBox.className = 'pacing-alert';
+        const iconEl = alertBox.querySelector('.alert-icon');
 
-        if (attacker.damage <= defender.defense && state.formula === 'simple') {
+        if (attacker.damage <= defender.defense && (state.formula === 'simple' || state.classicFormula === 'min1')) {
             alertBox.classList.add('alert-invulnerable');
-            alertBox.querySelector('.alert-icon').textContent = '🔴';
+            if (iconEl) iconEl.textContent = '🔴';
             alertTitle.textContent = 'Alerta: Defesa Impenetrável!';
-            alertDesc.textContent = `O atacante causa dano mínimo residual (1). Aumente o dano ou reduza a defesa do ${defender.name}.`;
-        } else if (hitsToKill <= 2) {
-            alertBox.classList.add('alert-fragile');
-            alertBox.querySelector('.alert-icon').textContent = '🟡';
-            alertTitle.textContent = 'Atenção: Combate Muito Rápido / One-Shot!';
-            alertDesc.textContent = `O ${defender.name} é derrotado em ${hitsToKill} golpe(s). Se for um jogador ou chefe, pode causar frustração.`;
-        } else if (hitsToKill >= 15) {
-            alertBox.classList.add('alert-sponge');
-            alertBox.querySelector('.alert-icon').textContent = '🟠';
-            alertTitle.textContent = 'Atenção: Inimigo Esponja de Dano!';
-            alertDesc.textContent = `São necessários ${hitsToKill} golpes (~${ttkSeconds}s). O combate pode ficar monótono para os alunos.`;
+            alertDesc.textContent = `O atacante causa apenas dano mínimo residual (1). Aumente o dano do atacante ou reduza a defesa de ${defender.name}.`;
+        } else if (defender.type === 'boss') {
+            // CHEFE: exige desafio épico para o jogador
+            if (hitsToKill <= 5) {
+                alertBox.classList.add('alert-fragile');
+                if (iconEl) iconEl.textContent = '🟡';
+                alertTitle.textContent = 'Atenção: Chefe Frágil Demais!';
+                alertDesc.textContent = `O clímax da batalha dura apenas ${hitsToKill} golpes (~${ttkSeconds}s). Aumente o maxHp ou defesa para desafiar o jogador.`;
+            } else if (hitsToKill >= 8 && hitsToKill <= 28) {
+                alertBox.classList.add('alert-balanced');
+                if (iconEl) iconEl.textContent = '🟢';
+                alertTitle.textContent = 'Batalha de Chefe Épica!';
+                alertDesc.textContent = `Combate exige ${hitsToKill} golpes (~${ttkSeconds}s). Ótimo para o jogador memorizar padrões de esquiva e ataque!`;
+            } else if (hitsToKill > 28) {
+                alertBox.classList.add('alert-sponge');
+                if (iconEl) iconEl.textContent = '🟠';
+                alertTitle.textContent = 'Atenção: Batalha Exaustiva!';
+                alertDesc.textContent = `São necessários ${hitsToKill} golpes (~${ttkSeconds}s). Pode cansar o jogador se o chefe não tiver fases visuais ou checkpoints.`;
+            } else {
+                alertBox.classList.add('alert-balanced');
+                if (iconEl) iconEl.textContent = '🟢';
+                alertTitle.textContent = 'Ritmo Aceitável para Chefe';
+                alertDesc.textContent = `Duração de ${hitsToKill} golpes (~${ttkSeconds}s). Oferece um bom desafio sem travar a experiência do jogador.`;
+            }
+        } else if (defender.type === 'hero') {
+            // HERÓI É O DEFENSOR: avalia se o player morre fácil demais
+            if (hitsToKill <= 2) {
+                alertBox.classList.add('alert-invulnerable');
+                if (iconEl) iconEl.textContent = '💀';
+                alertTitle.textContent = 'Perigo: Alta Punição!';
+                alertDesc.textContent = `O jogador é derrotado em apenas ${hitsToKill} golpe(s) (~${ttkSeconds}s). Ideal para jogos Soulslike ou Arcade clássico.`;
+            } else if (hitsToKill >= 3 && hitsToKill <= 7) {
+                alertBox.classList.add('alert-balanced');
+                if (iconEl) iconEl.textContent = '🟢';
+                alertTitle.textContent = 'Sobrevivência Equilibrada!';
+                alertDesc.textContent = `O jogador aguenta ${hitsToKill} golpes sofridos (~${ttkSeconds}s), com tempo justo para desviar ou se curar.`;
+            } else {
+                alertBox.classList.add('alert-fragile');
+                if (iconEl) iconEl.textContent = '🛡️';
+                alertTitle.textContent = 'Jogador Muito Resistente!';
+                alertDesc.textContent = `O jogador aguenta ${hitsToKill} golpes (~${ttkSeconds}s). O jogo pode perder a sensação de tensão ou risco.`;
+            }
         } else {
-            alertBox.classList.add('alert-balanced');
-            alertBox.querySelector('.alert-icon').textContent = '🟢';
-            alertTitle.textContent = 'Ritmo Equilibrado!';
-            alertDesc.textContent = `Combate dura ${hitsToKill} golpes (~${ttkSeconds}s), ideal para ação dinâmica sem ser punitivo.`;
+            // INIMIGO COMUM: foco em ritmo ágil
+            if (hitsToKill <= 2) {
+                alertBox.classList.add('alert-balanced');
+                if (iconEl) iconEl.textContent = '⚡';
+                alertTitle.textContent = 'Lacaio Ágil e Frágil';
+                alertDesc.textContent = `O jogador derrota este lacaio em ${hitsToKill} golpe(s) (~${ttkSeconds}s). Perfeito para manter a sensação de poder e ritmo rápido.`;
+            } else if (hitsToKill >= 3 && hitsToKill <= 6) {
+                alertBox.classList.add('alert-balanced');
+                if (iconEl) iconEl.textContent = '⚖️';
+                alertTitle.textContent = 'Combate Equilibrado!';
+                alertDesc.textContent = `O confronto dura ${hitsToKill} golpes (~${ttkSeconds}s). Exige timing do jogador sem travar a exploração da fase.`;
+            } else {
+                alertBox.classList.add('alert-sponge');
+                if (iconEl) iconEl.textContent = '🟠';
+                alertTitle.textContent = 'Atenção: Inimigo Esponja de Dano!';
+                alertDesc.textContent = `São necessários ${hitsToKill} golpes (~${ttkSeconds}s). O combate contra um inimigo comum pode ficar monótono para o jogador.`;
+            }
         }
+    }
+}
+
+/**
+ * Avaliador seguro de fórmulas livres para alunos
+ * Permite somente identificadores atk, def, operadores matemáticos e Math.*
+ */
+function evaluateSafeFormula(expr, atk, def) {
+    if (!expr || typeof expr !== 'string') return Math.max(1, atk - def);
+    try {
+        // Substitui atk e def por valores numéricos literais
+        let sanitized = expr
+            .toLowerCase()
+            .replace(/\batk\b/g, `(${atk})`)
+            .replace(/\bdef\b/g, `(${def})`)
+            .replace(/\bmax\b/g, 'Math.max')
+            .replace(/\bmin\b/g, 'Math.min')
+            .replace(/\bfloor\b/g, 'Math.floor')
+            .replace(/\bround\b/g, 'Math.round')
+            .replace(/\bceil\b/g, 'Math.ceil');
+
+        // Whitelist estrita de caracteres permitidos
+        if (!/^[0-9+\-*/().,\sMathmaxinflooroundceil]+$/.test(sanitized)) {
+            return Math.max(1, atk - def);
+        }
+
+        const res = Function(`"use strict"; return (${sanitized});`)();
+        const num = parseFloat(res);
+        return isNaN(num) ? Math.max(1, atk - def) : Math.max(1, Math.round(num));
+    } catch (e) {
+        return Math.max(1, atk - def);
     }
 }
 
@@ -587,8 +767,45 @@ function drawProgressionChart() {
 }
 
 // ==========================================================================
-// 5. CENTRAL DE EXPORTAÇÃO (CAMELCASE RIGOROSO)
+// 5. CENTRAL DE EXPORTAÇÃO (MODAL FLUTUANTE & CAMELCASE RIGOROSO)
 // ==========================================================================
+function initExportModal() {
+    const modal = document.getElementById('exportModal');
+    const btnOpen = document.getElementById('btnOpenExportModal');
+    const btnClose = document.getElementById('btnCloseExportModal');
+
+    if (btnOpen && modal) {
+        btnOpen.addEventListener('click', () => {
+            updateCodeOutputs();
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        });
+    }
+
+    function closeModal() {
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    }
+
+    if (btnClose) {
+        btnClose.addEventListener('click', closeModal);
+    }
+
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal && modal.style.display === 'flex') {
+            closeModal();
+        }
+    });
+}
+
 function initExportTabs() {
     const tabButtons = document.querySelectorAll('.export-tab');
     tabButtons.forEach(btn => {

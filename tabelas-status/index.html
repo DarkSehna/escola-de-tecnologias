@@ -66,6 +66,9 @@
                     <p>Edite os atributos numéricos em tempo real. Padrão <code>camelCase</code> pronto para exportação.</p>
                 </div>
                 <div class="panel-header-buttons">
+                    <button type="button" id="btnOpenExportModal" class="btn-export-trigger" title="Abrir Central de Exportação de Código">
+                        <span>📤</span> Exportar Código
+                    </button>
                     <button type="button" id="btnAddEntity" class="btn-primary">
                         <span>➕</span> Nova Entidade
                     </button>
@@ -97,13 +100,32 @@
                 </table>
             </div>
 
-            <!-- BARRA DE RESUMO RÁPIDO DA TABELA -->
-            <div class="table-summary-bar">
-                <span id="summaryEntitiesCount">4 entidades cadastradas</span>
-                <span class="summary-separator">•</span>
-                <span id="summaryAvgHp">HP médio: 86</span>
-                <span class="summary-separator">•</span>
-                <span id="summaryAvgDamage">Dano médio: 21</span>
+            <!-- PAINEL HUD DE BALANCEAMENTO PEDAGÓGICO (MÉTRICAS SEPARADAS) -->
+            <div class="balance-hud-grid">
+                <div class="hud-card hud-hero">
+                    <div class="hud-icon">🛡️</div>
+                    <div class="hud-info">
+                        <span class="hud-label">Herói Principal</span>
+                        <strong class="hud-value" id="hudHeroStats">HP: 100 • Dano: 20</strong>
+                        <small class="hud-sub" id="hudHeroSub">Defesa: 5 • Velocidade: 4.0</small>
+                    </div>
+                </div>
+                <div class="hud-card hud-enemy">
+                    <div class="hud-icon">👾</div>
+                    <div class="hud-info">
+                        <span class="hud-label">Inimigos Comuns (<span id="hudEnemyCount">2</span>)</span>
+                        <strong class="hud-value" id="hudEnemyStats">HP Médio: 23 • Dano: 13</strong>
+                        <small class="hud-sub" id="hudEnemySub">Média para derrotar: ~2x golpes</small>
+                    </div>
+                </div>
+                <div class="hud-card hud-boss">
+                    <div class="hud-icon">👑</div>
+                    <div class="hud-info">
+                        <span class="hud-label">Chefe / Boss</span>
+                        <strong class="hud-value" id="hudBossStats">HP: 200 • Dano: 35</strong>
+                        <small class="hud-sub" id="hudBossSub">Pacing: Herói aguenta ~3 golpes</small>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -124,6 +146,23 @@
                         <button type="button" class="formula-btn" data-formula="rpg" title="RPG / Atenuação percentual de armadura">
                             RPG (Percentual)
                         </button>
+                        <button type="button" class="formula-btn" data-formula="custom" title="Fórmulas clássicas ou expressão matemática livre">
+                            📐 Customizada
+                        </button>
+                    </div>
+                </div>
+
+                <!-- LINHA DE CONFIGURAÇÃO DE FÓRMULA CUSTOMIZADA (OPCIONAL) -->
+                <div id="customFormulaRow" class="custom-formula-row" style="display: none;">
+                    <div class="custom-formula-inputs">
+                        <select id="selectClassicFormula" class="cyber-select-sm" title="Presets clássicos da indústria de jogos">
+                            <option value="min1">Dano Mínimo: max(1, Atk - Def)</option>
+                            <option value="pokemon">Pokémon: floor(2 * Atk / max(1, Def)) + 2</option>
+                            <option value="lol">LoL / DOTA: round(Atk * 100 / (100 + Def))</option>
+                            <option value="true">Dano Verdadeiro: Atk (Sem Defesa)</option>
+                            <option value="free">Fórmula Livre (Atk, Def)</option>
+                        </select>
+                        <input type="text" id="inputCustomFormula" class="cyber-input-sm" value="max(1, atk * 1.5 - def)" placeholder="Ex: atk * 1.5 - def" style="display: none;" title="Digite uma fórmula matemática usando atk e def">
                     </div>
                 </div>
 
@@ -196,12 +235,13 @@
 
     </main>
 
-    <!-- PAINEL INFERIOR: CENTRAL DE EXPORTAÇÃO DE CÓDIGO (CAMELCASE) -->
-    <section class="export-section" aria-label="Central de exportação para motores e GDD">
-        <div class="export-container">
+    <!-- MODAL FLUTUANTE: CENTRAL DE EXPORTAÇÃO DE CÓDIGO (CAMELCASE) -->
+    <div id="exportModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle" style="display: none;">
+        <div class="modal-content export-modal-card">
+            <button type="button" id="btnCloseExportModal" class="modal-close-btn" aria-label="Fechar Janela de Exportação">✕</button>
             <div class="export-header-row">
                 <div class="export-title-block">
-                    <h2>Central de Exportação de Código</h2>
+                    <h2 id="exportModalTitle">Central de Exportação de Código</h2>
                     <p>Variáveis padronizadas em <code>camelCase</code> prontas para copiar e colar no GameMaker, Construct 3 ou no seu GDD.</p>
                 </div>
                 <div class="export-tabs-row" role="tablist">
@@ -294,7 +334,7 @@
 
             </div>
         </div>
-    </section>
+    </div>
 
     <!-- NOTIFICAÇÃO TOAST VISUAL -->
     <div id="toastFeedback" class="toast-feedback" role="status" aria-live="polite"></div>

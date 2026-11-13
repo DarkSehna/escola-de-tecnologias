@@ -115,7 +115,7 @@
             "card_prompts_title": "Estúdio de Prompts & ComfyUI ✨",
             "card_prompts_desc": "Monte prompts visuais em português com tradução automática para SDXL, trava SFW e launcher do ComfyUI local.",
 
-            "card_status_tag": "Design & Programação • Balanceamento",
+            "card_status_tag": "Programação • Balanceamento",
             "card_status_title": "Tabelas de Status & Balanceamento ⚖️",
             "card_status_desc": "Planeje atributos numéricos, simule tempo de combate (TTK), curvas de nível e exporte código pronto em camelCase para Construct 3 e GameMaker.",
 
@@ -274,7 +274,7 @@
             "card_prompts_title": "Prompt Studio & ComfyUI ✨",
             "card_prompts_desc": "Build visual prompts in Portuguese with automatic SDXL translation, SFW shield and local ComfyUI launcher.",
 
-            "card_status_tag": "Design & Programming • Balancing",
+            "card_status_tag": "Programming • Balancing",
             "card_status_title": "Stat Tables & Game Balancing ⚖️",
             "card_status_desc": "Design numeric entity stats, simulate combat TTK, level curves, and export clean camelCase snippets for Construct 3 and GameMaker.",
 

@@ -25,27 +25,26 @@ flowchart TD
     
     Track1 --> T1A["Gerador de GDD"]
     Track1 --> T1B["Gerador de Mapas 2D"]
-    Track1 --> T1C["Criador de Timelines"]
-    Track1 --> T1D["Montador de Tilesets"]
+    Track1 --> T1C["Montador de Tilesets"]
+    Track1 --> T1D["Estúdio de Prompts & ComfyUI"]
     Track1 --> T1E["Imagens Binárias & Matriz"]
-    Track1 --> T1F["Feedback de Jogos"]
-    Track1 --> T1G["Estúdio de Prompts & ComfyUI"]
-    Track1 --> T1H["Tabelas de Status & Balanceamento"]
+    Track1 --> T1F["Criador de Timelines"]
+    Track1 --> T1G["Feedback de Jogos"]
     
     Track2 --> T2A["Lab de Física 2D"]
-    Track2 --> T2B["Simulador FSM"]
-    Track2 --> T2C["Assistente IA - Games ✨"]
-    Track2 --> T2D["Tabelas de Status & Balanceamento"]
+    Track2 --> T2B["Tabelas de Status & Balanceamento"]
+    Track2 --> T2C["Simulador FSM"]
+    Track2 --> T2D["Assistente IA - Games ✨"]
     
-    Track3 --> T3A["Giro de Robô 2D"]
-    Track3 --> T3B["Lei de Ohm (Kit Arduino)"]
+    Track3 --> T3A["Lei de Ohm (Kit Arduino)"]
+    Track3 --> T3B["Giro de Robô 2D"]
     Track3 --> T3C["Hacker Lockpicking (Serial)"]
     Track3 --> T3D["Assistente IA - Robótica ✨"]
     
     Track4 --> T4A["OBR Placar Treino"]
     Track4 --> T4B["Seguidor de Linha (PID)"]
-    Track4 --> T4C["Prancheta de Táticas FLL"]
-    Track4 --> T4D["Telemetria & Coaching (IA)"]
+    Track4 --> T4C["Telemetria & Coaching (IA)"]
+    Track4 --> T4D["Prancheta de Táticas FLL"]
     Track4 --> T4E["Assistente IA - Treinamento ✨"]
 ```
 
@@ -57,23 +56,23 @@ flowchart TD
 |:---:|:---|:---|:---:|:---|
 | **01** | [`gerador-gdd/`](./gerador-gdd/) | 🎨 Game Lab: Design | 🖥️ Computador | Criação estruturada de Game Design Documents com exportação local em JSON e Markdown. |
 | **02** | [`gerador-mapas/`](./gerador-mapas/) | 🎨 Game Lab: Design | 🖥️ Computador | Grid interativo para level design de fases de plataforma 2D com exportação em PNG e JSON. |
-| **03** | [`criador-timelines/`](./criador-timelines/) | 🎨 Game Lab: Design | 🖥️ Computador | Planejamento da progressão e escopo de fases com termômetro inteligente de viabilidade. |
-| **04** | [`montador-tilesets/`](./montador-tilesets/) | 🎨 Game Lab: Design | 🖥️ Computador | Empacotador de spritesheets em grade (16x16, 32x32, 64x64) com remoção de fundo para Construct 3 e GameMaker. |
+| **03** | [`montador-tilesets/`](./montador-tilesets/) | 🎨 Game Lab: Design | 🖥️ Computador | Empacotador de spritesheets em grade (16x16, 32x32, 64x64) com remoção de fundo para Construct 3 e GameMaker. |
+| **04** | [`seletor-prompts/`](./seletor-prompts/) | 🎨 Game Lab: Design | 🖥️ Computador | Estúdio de montagem de prompts visuais em português para SDXL, trava SFW integrada e launcher do ComfyUI local. |
 | **05** | [`binario-pixelart/`](./binario-pixelart/) | 🎨 Game Lab: Design | 🖥️ Computador | Laboratório de matriz binária (1-Bit e 2-Bits), decodificador de enigmas e exportação de sprites para o Piskel. |
-| **06** | [`feedback-jogos/`](./feedback-jogos/) | 🎨 Game Lab: Design | 🖥️ Computador | Formulário anônimo e dashboard visual de avaliação UX e playtesting dos jogos dos alunos. |
-| **07** | [`seletor-prompts/`](./seletor-prompts/) | 🎨 Game Lab: Design | 🖥️ Computador | Estúdio de montagem de prompts visuais em português para SDXL, trava SFW integrada e launcher do ComfyUI local. |
-| **08** | [`tabelas-status/`](./tabelas-status/) | 🎨 Design & 💻 Programação | 🖥️ Computador | Tabela editável de atributos numéricos, simulador de tempo de combate (TTK), curvas de nível e exportação em `camelCase` para Construct 3 e GameMaker. |
-| **09** | [`lab-fisica-2d/`](./lab-fisica-2d/) | 💻 Game Lab: Programação | 🖥️ Computador | Simulador interativo em Canvas a 60 FPS para teste de gravidade, forças vetoriais, atrito e colisão elástica. |
+| **06** | [`criador-timelines/`](./criador-timelines/) | 🎨 Game Lab: Design | 🖥️ Computador | Planejamento da progressão e escopo de fases com termômetro inteligente de viabilidade. |
+| **07** | [`feedback-jogos/`](./feedback-jogos/) | 🎨 Game Lab: Design | 🖥️ Computador | Formulário anônimo e dashboard visual de avaliação UX e playtesting dos jogos dos alunos. |
+| **08** | [`lab-fisica-2d/`](./lab-fisica-2d/) | 💻 Game Lab: Programação | 🖥️ Computador | Simulador interativo em Canvas a 60 FPS para teste de gravidade, forças vetoriais, atrito e colisão elástica. |
+| **09** | [`tabelas-status/`](./tabelas-status/) | 💻 Game Lab: Programação | 🖥️ Computador | Tabela editável de atributos numéricos, simulador de tempo de combate (TTK), curvas de nível e exportação em `camelCase` para Construct 3 e GameMaker. |
 | **10** | [`simulador-fsm/`](./simulador-fsm/) | 💻 Game Lab: Programação | 🖥️ Computador | Editor visual de Máquinas de Estados Finitos com nós conectáveis e transição dinâmica de lógica. |
 | **11** | [`assistente-ia/?area=games`](./assistente-ia/index.html?area=games) | 💻 Game Lab: Programação | 🖥️ Computador | Chatbot com IA para suporte a Game Design, Construct 3, GameMaker GML e avaliação estilo Metacritic. |
-| **12** | [`simulador-giro-robotico/`](./simulador-giro-robotico/) | ⚙️ Robótica | 🖥️ Computador | Estudo da cinemática diferencial com tração diferencial de rodas, odometria e trajetórias 2D. |
-| **13** | [`simulador-ohm/`](./simulador-ohm/) | ⚙️ Robótica | 🖥️ Computador | Lei de Ohm interativa com peças reais do Kit Arduino (protoboard, resistores coloridos, LEDs, 9V/5V) em circuitos série e paralelo. |
+| **12** | [`simulador-ohm/`](./simulador-ohm/) | ⚙️ Robótica | 🖥️ Computador | Lei de Ohm interativa com peças reais do Kit Arduino (protoboard, resistores coloridos, LEDs, 9V/5V) em circuitos série e paralelo. |
+| **13** | [`simulador-giro-robotico/`](./simulador-giro-robotico/) | ⚙️ Robótica | 🖥️ Computador | Estudo da cinemática diferencial com tração diferencial de rodas, odometria e trajetórias 2D. |
 | **14** | [`hacker-lockpicking/`](./hacker-lockpicking/) | ⚙️ Robótica | 🖥️ Computador | Desafio interativo de lockpicking conectado ao hardware físico de Arduino via Web Serial API ou simulador virtual. |
 | **15** | [`assistente-ia/?area=robotica`](./assistente-ia/index.html?area=robotica) | ⚙️ Robótica | 🖥️ Computador | Agente de IA para mentoria de robótica com Lego, placas Arduino, sensores ultrassônicos e ponte H. |
 | **16** | [`obr-placar-treino/`](./obr-placar-treino/) | 🏆 Treinamento Robótica | 📱 Celular & PC | Cronômetro oficial e pontuador de regras da OBR (Olimpíada Brasileira de Robótica) com desconto automático por tentativas. |
 | **17** | [`simulador-seguidor-linha/`](./simulador-seguidor-linha/) | 🏆 Treinamento Robótica | 🖥️ Computador | Simulador físico de pista com calibração em tempo real de ganhos PID (Kp, Ki, Kd), posição de sensores e engrenagens. |
-| **18** | [`prancheta-fll/`](./prancheta-fll/) | 🏆 Treinamento Robótica | 🖥️ Computador | Prancheta tática para traçado de rotas autônomas, marcação de missões e notas de estratégia da temporada FLL. |
-| **19** | [`telemetria-coaching/`](./telemetria-coaching/) | 🏆 Treinamento Robótica | 📱 Celular & PC | Diagnóstico automático de voltas por IA Multimodal (Gemini via Cloudflare Worker) com timeline de oscilações e ajuste fino de PID. |
+| **18** | [`telemetria-coaching/`](./telemetria-coaching/) | 🏆 Treinamento Robótica | 📱 Celular & PC | Diagnóstico automático de voltas por IA Multimodal (Gemini via Cloudflare Worker) com timeline de oscilações e ajuste fino de PID. |
+| **19** | [`prancheta-fll/`](./prancheta-fll/) | 🏆 Treinamento Robótica | 🖥️ Computador | Prancheta tática para traçado de rotas autônomas, marcação de missões e notas de estratégia da temporada FLL. |
 | **20** | [`assistente-ia/?area=treinamento`](./assistente-ia/index.html?area=treinamento) | 🏆 Treinamento Robótica | 🖥️ Computador | Suporte inteligente para algoritmos de competição em Python, montagem estrutural e estratégias de pontuação. |
 
 > [!NOTE]
